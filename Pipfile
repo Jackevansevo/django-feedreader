@@ -1,0 +1,40 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[dev-packages]
+flake8 = "*"
+coverage = "*"
+ipython = "*"
+black = "*"
+mypy = "*"
+django-stubs = "*"
+pywatchman = "*"
+ipdb = "*"
+isort = "*"
+django-debug-toolbar = "*"
+pgcli = "*"
+pre-commit = "*"
+
+[requires]
+python_version = "3.10"
+
+[packages]
+whitenoise = "*"
+gunicorn = "*"
+sentry-sdk = "*"
+httpx = "*"
+django = "*"
+unidecode = "*"
+listparser = "*"
+celery = {extras = ["redis"], version = "*"}
+django-celery-beat = "*"
+flower = "*"
+feedparser = "*"
+psycopg2-binary = "*"
+dj-database-url = "*"
+django-environ = "*"
+
+[pipenv]
+allow_prereleases = true

@@ -1,0 +1,121 @@
+{% extends 'feeds/base.html' %}
+
+{% load static %}
+
+{% block content %}
+<form id='file-upload-form' method="post" enctype="multipart/form-data">
+  {% csrf_token %}
+  <div class="field">
+    <div id="file-js-example" class="file has-name">
+      <label class="file-label">
+	<input class="file-input" type="file" name="file" required>
+	<span class="file-cta">
+	  <span class="file-icon">
+	    <i class="fas fa-upload"></i>
+	  </span>
+	  <span class="file-label">
+	    Choose an OPML file...
+	  </span>
+	</span>
+	<span class="file-name">
+	  No file uploaded
+	</span>
+      </label>
+    </div>
+  </div>
+  <div class="field">
+    <div class="control">
+      <button id="file-upload-button" type="submit" class="button is-primary">Submit</button>
+    </div>
+  </div>
+</form>
+<br>
+<br>
+<div class="table-container">
+<table id="results" class="table is-striped is-narrow is-hoverable" style="display:none">
+	<thead>
+		<tr>
+			<th>External URL</th>
+			<th>Status</th>
+			<th>URL</th>
+	  </tr>
+	</thead>
+  <tbody>
+  </tbody>
+</table>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+const fileInput = document.querySelector('#file-js-example input[type=file]');
+fileInput.onchange = () => {
+	if (fileInput.files.length > 0) {
+		const fileName = document.querySelector('#file-js-example .file-name');
+		fileName.textContent = fileInput.files[0].name;
+	}
+}
+
+
+function getStatus(task) {
+	fetch(`/task/${task.id}`, {
+		method: 'GET',
+		headers: {
+			'Content-Type': 'application/json'
+		},
+	})
+		.then(response => response.json())
+		.then(resp => {
+			if (resp.status === 'SUCCESS' || resp.status === 'FAILURE') {
+				let html = `
+					<tr id="${resp.id}">
+					<td><a href=${task.url}>${task.url}</a></td>
+					<td>${resp.status}</td>
+					<td><a href=${resp.result.url}>${resp.result.url}</a></td>
+					</tr>`
+			  document.getElementById(task.id).innerHTML = html;
+				return false;
+			};
+			setTimeout(function() {
+				getStatus(task);
+			}, 1000);
+		})
+		.catch(err => console.log(err));
+}
+
+const resultsSection = document.getElementById("results");
+const form = document.getElementById("file-upload-form");
+const submitButton = document.getElementById("file-upload-button");
+form.addEventListener("submit", function(event) {
+	event.preventDefault();
+	// Disable the button
+	formData = new FormData(event.target);
+	formData.append('file', fileInput.files[0])
+	submitButton.disabled = true;
+	fetch(event.target.action, {
+		method: 'POST',
+		body: formData,
+	}).then((resp) => {
+		return resp.json();
+	}).then((resp) => {
+		results.style.display = '';
+		for (task of resp.tasks) {
+			getStatus(task);
+		}
+		for (task of resp.tasks.reverse()) {
+			let html = `
+				<tr id="${task.id}">
+				  <td><a href=${task.url}>${task.url}</a></td>
+				  <td>pending</td>
+				  <td>...</td>
+				</tr>`
+			let newrow = results.querySelector('tbody').insertRow(0);
+			newrow.innerHTML = html;
+			newrow.id = task.id;
+			console.log('added', task);
+		}
+	}).catch((error) => {
+		alert(error)
+	});
+}, true);
+</script>
+{% endblock %}

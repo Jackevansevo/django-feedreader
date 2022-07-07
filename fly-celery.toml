@@ -1,0 +1,15 @@
+app = "feedreader-celery"
+kill_signal = "SIGINT"
+kill_timeout = 5
+processes = []
+
+[env]
+  HOSTNAME = "feedreader-celery.fly.dev"
+
+[build]
+  build-target = "prod"
+
+[experimental]
+  allowed_public_ports = []
+  auto_rollback = true
+  cmd = ["celery", "-A", "feedreader", "worker", "-B", "-l", "info", "-n", "worker2@%h"]

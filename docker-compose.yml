@@ -1,0 +1,67 @@
+version: "3.9"
+   
+services:
+  redis:
+    image: redis
+    ports:
+      - "6379:6379"
+  db:
+    image: postgres
+    volumes:
+      - ./data/db:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+  app:
+    volumes:
+      - .:/app
+      -  ~/.config/pgcli/history:/root/.config/pgcli/history
+      - ~/.ipython/profile_default/history.sqlite:/root/.ipython/profile_default/history.sqlite
+    build:
+      context: .
+      target: dev
+    command: python manage.py runserver 0.0.0.0:8000
+    ports:
+      - "8000:8000"
+    environment:
+      - DB_HOST=db
+      - POSTGRES_NAME=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - PGPASSWORD=postgres
+      - DEBUG
+    depends_on:
+      - db
+      - redis
+  celery:
+    volumes:
+      - .:/app
+    build:
+      context: .
+      target: dev
+    command: python manage.py celery
+    environment:
+      - DB_HOST=db
+      - POSTGRES_NAME=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - DEBUG
+    depends_on:
+      - db
+      - redis
+  flower:
+    build:
+      context: .
+      target: prod
+    command: celery -A feedreader flower
+    ports:
+      - "5555:5555"
+    environment:
+      - DB_HOST=db
+      - POSTGRES_NAME=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    depends_on:
+      - db
+      - redis

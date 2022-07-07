@@ -1,0 +1,3 @@
+from .site_wide_login_required_middleware import SiteWideLoginRequiredMiddleware
+
+__all__ = [SiteWideLoginRequiredMiddleware]

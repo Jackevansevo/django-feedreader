@@ -1,0 +1,86 @@
+{% extends 'feeds/base.html' %}
+{% load humanize %}
+{% block title %} - {{ feed.title }}{% endblock %}
+{% block content %}
+<nav class="breadcrumb" aria-label="breadcrumbs">
+  <ul>
+    <li><a href="{% url 'feeds:index' %}">Home</a></li>
+    <li><a href="{% url 'feeds:feed-list' %}">Feeds</a></li>
+    <li class="is-active"><a href="{{ feed.get_absolute_url }}" aria-current="page">{{ feed.title }}</a></li>
+  </ul>
+</nav>
+<main>
+  <h1 class="title">{{ feed.title }}</h1>
+  {% if subscription.category %}
+    <h2 class="subtitle">{{ subscription.category }}</h2>
+  {% endif %}
+  <h6 class="subtitle is-6">Last checked {{ subscription.feed.last_checked | naturaltime }}</h6>
+  <div class="field is-grouped">
+    <p class="control">
+    <a class="button is-normal is-link is-light" href="{{ subscription.feed.link }}">
+      <span class="icon-text">
+	<span class="icon is-small">
+      	<i class="fa-solid fa-arrow-up-right-from-square"></i>
+	</span>
+	<span>View site</span>
+      </span>
+    </a>
+    </p>
+    <p class="control">
+    <a class="button is-normal is-link is-warning is-light" href="{{ subscription.feed.url }}">
+      <span class="icon-text">
+	<span class="icon is-small">
+	  <i class="fas fa-rss"></i>
+	</span>
+	<span>Feed</span>
+      </span>
+    </a>
+    </p>
+    <p class="control">
+    <a class="button is-normal is-link is-danger is-light" href="{% url 'feeds:subscription-delete' subscription.pk %}">
+      <span class="icon-text">
+	<span class="icon is-small">
+	  <i class="fas fa-trash"></i>
+	</span>
+	<span>Delete</span>
+    </a>
+    </p>
+  </div>
+<div class="table-container">
+  <table class="table is-striped is-hoverable is-fullwidth">
+    <tr>
+      <th>
+	<span class="icon-text">
+	  <span class="icon">
+	    <i class="fas fa-list"></i>
+	  </span>
+	  <span>Title</span>
+	</span>
+      </th>
+      <th>
+	<span class="icon-text">
+	  <span class="icon">
+	    <i class="fas fa-calendar"></i>
+	  </span>
+	  <span>Published</span>
+	</span>
+      </th>
+    </tr>
+    {% for entry in feed.entries.all %}
+    <tr>
+      <td>
+	<a href="{{ entry.get_absolute_url }}">{{ entry.title }}</a>
+      </td>
+      <td>
+	{% if entry.updated %}
+	{{ entry.updated | date }}
+	{% else %}
+	{{ entry.published | date }}
+	{% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+</main>
+{% endblock %}

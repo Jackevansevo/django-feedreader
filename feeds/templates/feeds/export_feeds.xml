@@ -1,0 +1,17 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no' ?>
+<opml version="1.0">
+<head>
+  <title>FeedReader Subscribed feeds</title>
+  <dateCreated>{% now "SHORT_DATETIME_FORMAT" %}</dateCreated>
+</head>
+<body>
+  {% regroup subscriptions by category__name as subscriptions_by_category %}
+  {% for category in subscriptions_by_category %}
+  <outline {% if category.grouper %}title="{{ category.grouper }}"{% endif %}>
+    {% for subscription in category.list %}
+      <outline xmlUrl="{{ subscription.feed__url }}" htmlUrl="{{ subscription.feed__link }}" title="{{ subscription.feed__title }}" subtitle="{{ subscription.feed__subtitle }}" />
+    {% endfor %}
+  </outline>
+  {% endfor %}
+</body>
+</opml>

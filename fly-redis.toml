@@ -1,0 +1,19 @@
+# fly.toml file generated for feedreader-redis on 2022-07-07T11:18:54+01:00
+
+app = "feedreader-redis"
+kill_signal = "SIGINT"
+kill_timeout = 5
+processes = []
+
+[build]
+  image = "flyio/redis:6.2.6"
+
+[experimental]
+  allowed_public_ports = []
+  auto_rollback = true
+
+[[mounts]]
+  destination = "/data"
+  source = "redis_server"
+
+[[services]]

@@ -1,0 +1,36 @@
+{% extends 'feeds/base.html' %}
+{% block content %}
+<h1 class="title">{{ category.name }}</h1>
+</br>
+  <a class="button is-link is-danger is-light" href="{% url 'feeds:category-delete' category.pk %}">
+    <span class="icon-text">
+      <span class="icon">
+	<i class="fas fa-trash"></i>
+      </span>
+      <span>Delete</span>
+  </a>
+</br>
+</br>
+{% if category.subscriptions.all %}
+<div class="table-container">
+  <table class="table is-striped is-hoverable is-fullwidth">
+    <tr>
+      <th>Title</th>
+      <th>Category</th>
+    </tr>
+    {% for subscription in category.subscriptions.all %}
+    <tr>
+      <td>
+	<a href="{{ subscription.get_absolute_url }}">{{ subscription.feed.title }}</a>
+      </td>
+      <td>
+	{{ subscription.category|default:"-"}}
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+{% else %}
+<div class="alert alert-warning">No subscriptions are available. <a class="alert-link" href="{% url 'feeds:feed-add' %}">Add Feed</a></div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,66 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="RSS Feedreader">
+    <meta name="keywords" content="RSS,Django,Python,Blogs,Atom,Feed">
+    <meta name="author" content="Jack Evans">
+    <title>Feedreader{% block title %}{% endblock %}</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'feeds/bulma.min.css' %}">
+    <link rel="shortcut icon" href="{% static 'feeds/favicon.ico' %}" type="image/x-icon" >
+    <script async src="https://kit.fontawesome.com/44c15f8fd8.js" crossorigin="anonymous"></script>
+    <title>FeedReader</title>
+  </head>
+  <body>
+    {% include 'feeds/navbar.html' %}
+    <section class="section">
+      <div class="container">
+	{% if messages %}
+	{% for message in messages %}
+	<div class="notification is-primary">
+	  <button class="delete"></button>
+	  {{ message }}
+	</div>
+	{% endfor %}
+	{% endif %}
+	{% block content %}
+	{% endblock %}
+      </div>
+    </section>
+  </body>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+
+      // Get all "navbar-burger" elements
+      const $navbarBurgers = Array.prototype.slice.call(document.querySelectorAll('.navbar-burger'), 0);
+
+      // Add a click event on each of them
+      $navbarBurgers.forEach( el => {
+	  el.addEventListener('click', () => {
+
+	      // Get the target from the "data-target" attribute
+	      const target = el.dataset.target;
+	      const $target = document.getElementById(target);
+
+	      // Toggle the "is-active" class on both the "navbar-burger" and the "navbar-menu"
+	      el.classList.toggle('is-active');
+	      $target.classList.toggle('is-active');
+
+	      });
+	  (document.querySelectorAll('.notification .delete') || []).forEach(($delete) => {
+	      const $notification = $delete.parentNode;
+
+	      $delete.addEventListener('click', () => {
+		  $notification.parentNode.removeChild($notification);
+		  });
+	      });
+	  });
+
+  });
+  </script>
+  {% block scripts %}
+  {% endblock %}
+</html>

@@ -1,0 +1,9 @@
+{% extends 'feeds/base.html' %}
+{% block content %}
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button class="btn btn-primary" type="submit">Sign Up</button>
+</form>
+Already have an account? <a href="{% url 'login' %}">Login</a>
+{% endblock %}

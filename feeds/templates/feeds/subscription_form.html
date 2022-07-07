@@ -1,0 +1,132 @@
+{% extends 'feeds/base.html' %}
+{% block content %}
+<form id='add-subscription-form' method="post">
+  {% csrf_token %}
+
+  {{ form.non_field_errors }}
+
+  <div class="field">
+
+    <div class="field">
+      <label for="{{ form.url.id_for_label }}" class="label">{{ form.url.label }}</label>
+      <div class="control has-icons-left has-icons-right">
+	<input autofocus {% if form.url.field.required %}required="required" aria-required="true"{% endif %} class="input {% if form.url.errors %}is-danger{% endif %}" id="{{ form.url.id_for_label }}" type="{{ form.url.field.widget.input_type }}" name="{{ form.url.html_name }}" value={{ form.url.value|default:"" }}></input>
+	<span class="icon is-small is-left">
+	  <i class="fas fa-link"></i>
+	</span>
+      </div>
+      {% if form.url.errors %}
+      {% for error in form.url.errors %}
+      <p class="help is-danger">{{ error }}</p>
+      {% endfor %}
+      {% endif %}
+
+    </div>
+
+    <div class="field">
+      <label for="{{ form.category.id_for_label }}" class="label">{{ form.category.label }}</label>
+      <div class="field has-addons">
+	<div class="control is-expanded">
+	  <div class="select is-fullwidth">
+	    <select id="{{ form.category.id_for_label }}" name="{{ form.category.html_name }}">
+	      {% for value, choice in form.category.field.choices %}
+	      <option value={{ value }}>{{ choice }}</option>
+	      {% endfor %}
+	    </select>
+	  </div>
+	</div>
+	<div class="control">
+	  <a class="button is-info" href="{% url 'feeds:category-list' %}">
+	    <span class="icon-text">
+	      <span class="icon">
+		<i class="fas fa-plus"></i>
+	      </span>
+	      <span>Add Category</span>
+	    </span>
+	  </a>
+	</div>
+      </div>
+    </div>
+
+
+    <div class="field is-grouped">
+      <div class="control">
+	<button id="submit-button" class="button is-success" type="submit">
+	    <span class="icon-text">
+	      <span class="icon">
+		<i class="fas fa-check"></i>
+	      </span>
+	      <span>Submit</span>
+	    </span>
+	</button>
+      </div>
+      <div class="control">
+      <a class="button is-normal is-warning is-light" href="{% url 'feeds:opml-import' %}">
+	<span class="icon-text">
+	  <span class="icon is-small">
+	    <i class="fas fa-upload"></i>
+	  </span>
+	  <span>Import</span>
+	</span>
+      </a>
+      </div>
+    </div>
+
+
+</form>
+{% endblock %}
+{% block scripts %}
+<script>
+const addSubscriptionForm = document.getElementById("add-subscription-form");
+const submitButton = document.getElementById("submit-button");
+const icon = submitButton.querySelector('i');
+
+
+function getStatus(task) {
+  fetch(`/task/${task.id}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+  })
+  .then(response => response.json())
+  .then(resp => {
+		if (resp.status === 'SUCCESS') {
+			window.location.replace(resp.result.url);
+		} else if (resp.status == 'FAILURE') {
+			alert('failed to fetch feed')
+			return false
+		}
+    setTimeout(function() {
+      getStatus(task);
+    }, 1000);
+  })
+  .catch(err => console.log(err));
+}
+
+addSubscriptionForm.addEventListener("submit", function(event) {
+	event.preventDefault();
+	submitButton.disabled = true;
+	icon.classList.add('fa-pulse');
+	icon.classList.remove('fa-check');
+	icon.classList.add('fa-arrows-rotate')
+	fetch(event.target.action, {
+		method: 'POST',
+		body: new URLSearchParams(new FormData(event.target))
+	}).then((resp) => {
+		const contentType = resp.headers.get('content-type');
+
+		if (!contentType || !contentType.includes('application/json')) {
+			throw new TypeError("Oops, we haven't got JSON!");
+		}
+
+		event.preventDefault();
+		return resp.json();
+	}).then((task) => {
+		getStatus(task);
+	}).catch((error) => {
+		addSubscriptionForm.submit();
+	});
+}, true);
+</script>
+{% endblock %}

@@ -1,0 +1,165 @@
+{% extends 'feeds/base.html' %}
+{% block content %}
+<nav class="breadcrumb" aria-label="breadcrumbs">
+  <ul>
+    <li class="is-active"><a href="{% url 'feeds:index' %}" aria-current="page">Home</a></li>
+  </ul>
+</nav>
+<form id='refresh-posts-form' method="post" action="{% url 'feeds:feeds-refresh' %}">
+  {% csrf_token %}
+	<button id='refresh-posts-button' class="button is-primary" type="submit">
+		<span class="icon-text">
+			<span class="icon">
+				<i class="fa-solid fa-arrows-rotate"></i>
+			</span>
+			<span>Update</span>
+		</span>
+	</button>
+</form>
+<br>
+{% if page_obj %}
+<div class="table-container">
+  <table class="table is-striped is-narrow is-hoverable is-fullwidth">
+    <tr>
+      <th>
+	<span class="icon-text">
+	  <span class="icon">
+	    <i class="fas fa-list"></i>
+	  </span>
+	  <span>Title</span>
+	</span>
+      </th>
+      <th class="is-hidden-mobile">
+	<span class="icon-text">
+	  <span class="icon">
+	    <i class="fas fa-calendar"></i>
+	  </span>
+	  <span>Published</span>
+	</span>
+      </th>
+      <th>
+	<span class="icon-text">
+	  <span class="icon">
+	    <i class="fas fa-rss"></i>
+	  </span>
+	  <span>Feed</span>
+	</span>
+      </th>
+    </tr>
+    {% for entry in page_obj %}
+    <tr>
+      <td>
+	<a href="{{ entry.get_absolute_url }}">{{ entry.title }}</a>
+      </td>
+      <td class="is-hidden-mobile">
+	{% if entry.updated %}
+	{{ entry.updated | date }}
+	{% else %}
+	{{ entry.published | date }}
+	{% endif %}
+      </td>
+      <td>
+	<a href={{ entry.feed.get_absolute_url }}>{{ entry.feed.title }}</a>
+
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+<nav class="pagination" role="navigation" aria-label="pagination">
+  {% if page_obj.has_previous %}
+  <a href="?page={{ page_obj.previous_page_number }}" class="pagination-previous">Previous</a>
+  {% else %}
+  <a href="#" class="pagination-previous is-disabled">Previous</a>
+  {% endif %}
+  {% if page_obj.has_next %}
+  <a href="?page={{ page_obj.next_page_number }}" class="pagination-next">Next page</a>
+  {% else %}
+  <a href="#" class="pagination-next is-disabled">Next page</a>
+  {% endif %}
+  <ul class="pagination-list">
+    {% if page_obj.has_previous and page_obj.previous_page_number != 1 %}
+    <li>
+      <a href="?page=1" class="pagination-link" aria-label="Goto page 1">1</a>
+    </li>
+    <li>
+      <span class="pagination-ellipsis">&hellip;</span>
+    </li>
+    {% endif %}
+    <li>
+      {% if page_obj.has_previous %}
+      <a href="?page={{ page_obj.previous_page_number }}" class="pagination-link" aria-label="Goto page {{ page_obj.previous_page_number }}">{{ page_obj.previous_page_number }}</a>
+      {% endif %}
+    </li>
+    <li>
+      <a href="?page={{ page_obj.number }}" class="pagination-link is-current" aria-label="Page {{ page_obj.number }}" aria-current="page">{{ page_obj.number }}</a>
+    </li>
+    {% if page_obj.has_next %}
+    <li>
+      <a href="?page={{ page_obj.next_page_number }}" class="pagination-link" aria-label="Goto page {{ page_obj.next_page_number }}">{{ page_obj.next_page_number }}</a>
+    </li>
+    {% endif %}
+    {% if page_obj.has_next and page_obj.paginator.num_pages != page_obj.next_page_number %}
+    <li>
+      <span class="pagination-ellipsis">&hellip;</span>
+    </li>
+    <li>
+      <a href="?page={{ page_obj.paginator.num_pages }}" class="pagination-link" aria-label="Goto page {{ page_obj.paginator.num_pages }}">{{ page_obj.paginator.num_pages }}</a>
+    </li>
+    {% endif %}
+  </ul>
+</nav>
+{% else %}
+<article class="message is-warning">
+  <div class="message-body">
+    <span class="icon">
+      <i class="fas fa-exclamation"></i>
+    </span>
+    <span>No articles available <a href="{% url 'feeds:feed-add' %}">Add a feed</a></span>
+  </div>
+</article>
+{% endif %}
+{% endblock %}
+{% block scripts %}
+<script>
+
+function getStatus(task) {
+	fetch(`/task/${task.id}`, {
+		method: 'GET',
+		headers: {
+			'Content-Type': 'application/json'
+		},
+	})
+		.then(response => response.json())
+		.then(resp => {
+			console.log(resp);
+			if (resp.status === 'SUCCESS' || resp.status === 'FAILURE') window.location.reload();
+			setTimeout(function() {
+				getStatus(task);
+			}, 1000);
+		})
+		.catch(err => console.log(err));
+}
+
+const refreshPostsForm = document.getElementById("refresh-posts-form");
+const submitButton = document.getElementById("refresh-posts-button");
+const icon = submitButton.querySelector('i');
+refreshPostsForm.addEventListener("submit", function(event) {
+	event.preventDefault();
+	// Disable the button
+	submitButton.disabled = true;
+	icon.classList.add('fa-pulse');
+	fetch(event.target.action, {
+		method: 'POST',
+		body: new URLSearchParams(new FormData(event.target))
+	}).then((resp) => {
+		return resp.json();
+	}).then((task) => {
+		console.log(task);
+		getStatus(task)
+	}).catch((error) => {
+		alert(error)
+	});
+}, true);
+</script>
+{% endblock %}

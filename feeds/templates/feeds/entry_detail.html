@@ -1,0 +1,40 @@
+{% extends 'feeds/base.html' %}
+{% block content %}
+<nav class="breadcrumb" aria-label="breadcrumbs">
+  <ul>
+    <li><a href="{% url 'feeds:index' %}">Home</a></li>
+    <li><a href="{% url 'feeds:feed-list' %}">Feeds</a></li>
+    <li><a href="{{ entry.feed.get_absolute_url }}">{{ entry.feed.title }}</a></li>
+    <li class="is-active is-clipped"><a href="#" aria-current="page">{{ entry.title }}</a></li>
+  </ul>
+</nav>
+<h1 class="title">{{ entry.title }}</h1>
+<h2 class="subtitle pt-2">
+    <span class="icon-text">
+      <span class="icon">
+	<i class="fas fa-calendar"></i>
+      </span>
+      <span>Published - {{ entry.published|date }}</span>
+    </span>
+</h2>
+<p class="buttons">
+<a class="button is-link is-light" href="{{ entry.link }}">
+  <span class="icon-text">
+    <span class="icon">
+      <i class="fa-solid fa-arrow-up-right-from-square"></i>
+    </span>
+    <span>View Original</span>
+  </span>
+</a>
+</p>
+<div class="content">
+  {% if entry.summary %}
+  {{ entry.summary|safe }}
+  {% endif %}
+  <br>
+  <br>
+  {% if entry.content %}
+  {{ entry.content|safe }}
+  {% endif %}
+</div>
+{% endblock %}

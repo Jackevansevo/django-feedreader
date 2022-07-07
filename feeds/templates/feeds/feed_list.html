@@ -1,0 +1,101 @@
+{% extends 'feeds/base.html' %}
+{% load humanize %}
+
+
+{% block title %} - Subscriptions{% endblock %}
+{% block content %}
+<nav class="breadcrumb" aria-label="breadcrumbs">
+  <ul>
+    <li><a href="{% url 'feeds:index' %}">Home</a></li>
+    <li class="is-active"><a href="{% url 'feeds:feed-list' %}" aria-current="page">Feeds</a></li>
+  </ul>
+</nav>
+{% if subscriptions %}
+<div class="field is-grouped">
+  <p class="control">
+  <a class="button is-normal is-success is-light" href="{% url 'feeds:feed-add' %}">
+    <span class="icon-text">
+      <span class="icon is-small">
+	<i class="fas fa-plus"></i>
+      </span>
+      <span>Add</span>
+    </span>
+  </a>
+  </p>
+  <p class="control">
+  <a class="button is-normal is-warning is-light" href="{% url 'feeds:opml-import' %}">
+    <span class="icon-text">
+      <span class="icon is-small">
+	<i class="fas fa-upload"></i>
+      </span>
+      <span>Import</span>
+    </span>
+  </a>
+  </p>
+  <p class="control">
+  <a class="button is-normal is-danger is-light" href="{% url 'feeds:opml-export' %}" download>
+    <span class="icon-text">
+      <span class="icon is-small">
+	<i class="fas fa-download"></i>
+      </span>
+      <span>Export</span>
+    </span>
+  </a>
+  </p>
+</div>
+{% endif %}
+{% if subscriptions %}
+<div class="table-container">
+  <table class="table is-striped is-hoverable is-fullwidth">
+    <tr>
+      <th>
+	<span class="icon-text">
+	  <span class="icon">
+	    <i class="fas fa-rss"></i>
+	  </span>
+	  <span>Feed</span>
+	</span>
+      </th>
+      <th class="is-hidden-mobile">
+	<span class="icon-text">
+	  <span class="icon">
+	    <i class="fas fa-clock"></i>
+	  </span>
+	  <span>Added</span>
+	</span>
+      </th>
+      <th>
+	<span class="icon-text">
+	  <span class="icon">
+	    <i class="fas fa-tag"></i>
+	  </span>
+	  <span>Category</span>
+	</span>
+      </th>
+    </tr>
+    {% for subscription in subscriptions %}
+    <tr>
+      <td>
+	<a href="{{ subscription.get_absolute_url }}">{{ subscription.feed.title }}</a>
+      </td>
+      <td class="is-hidden-mobile">
+	{{ subscription.feed.created_at|naturaltime }}
+      </td>
+      <td>
+	{{ subscription.category|default:"-"}}
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+{% else %}
+<article class="message is-warning">
+  <div class="message-body">
+    <span class="icon">
+      <i class="fas fa-exclamation"></i>
+    </span>
+    <span>No feeds available <a href="{% url 'feeds:feed-add' %}">Add a feed</a></span>
+  </div>
+</article>
+{% endif %}
+{% endblock %}

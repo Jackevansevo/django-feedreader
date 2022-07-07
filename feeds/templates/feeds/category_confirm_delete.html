@@ -1,0 +1,9 @@
+{% extends 'feeds/base.html' %}
+{% block content %}
+<form method="post">{% csrf_token %}
+    <p>Are you sure you want to delete category: "{{ object }}"?</p>
+    {{ form }}
+    <br>
+    <button type="submit" class="button is-danger">Confirm</button>
+</form>
+{% endblock %}

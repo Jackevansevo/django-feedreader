@@ -1,0 +1,64 @@
+{% extends 'feeds/base.html' %}
+{% block content %}
+<form method="post">
+  {% csrf_token %}
+  {% if form.non_field_errors %}
+    {% for error in form.non_field_errors %}
+    <article class="message is-danger">
+      <div class="message-body">
+	  <span class="icon">
+	    <i class="fas fa-exclamation"></i>
+	  </span>
+	</span>
+	{{ error }}
+      </div>
+    </article>
+    {% endfor %}
+  {% endif %}
+  <div class="field">
+    <label for="{{ form.username.id_for_label }}" class="label">{{ form.username.label }}</label>
+    <div class="control has-icons-left has-icons-right">
+      <input autofocus class="input" type="{{ form.username.field.widget.input_type }}" name="{{ form.username.html_name }}" id="{{ form.username.id_for_label }}" placeholder="username" value="{{ form.username.value|default:"" }}">
+      <span class="icon is-small is-left">
+	<i class="fas fa-user"></i>
+      </span>
+    </div>
+  </div>
+  {% if form.username.errors %}
+    {% for error in form.username.errors %}
+       <p class="help is-danger">{{ error }}</p>
+     {% endfor %}
+  {% endif %}
+
+  <div class="field">
+    <label for="{{ form.password.id_for_label }}" class="label">{{ form.password.label }}</label>
+    <div class="control has-icons-left has-icons-right">
+      <input class="input" type="{{ form.password.field.widget.input_type }}" name="{{ form.password.html_name }}" id="{{ form.password.id_for_label }}" placeholder="password" value="{{ form.password.value|default:"" }}">
+      <span class="icon is-small is-left">
+	<i class="fas fa-lock"></i>
+      </span>
+    </div>
+  </div>
+  {% if form.password.errors %}
+    {% for error in form.password.errors %}
+       <p class="help is-danger">{{ error }}</p>
+     {% endfor %}
+  {% endif %}
+  <div class="field">
+    <p class="control">
+      <button class="button is-primary" type="submit">Login</button>
+    </p>
+  </div>
+
+</form>
+<br>
+</p>
+<div class="field is-grouped">
+  <p class="control">
+<a class="button is-link is-light"href="{% url 'sign_up' %}">Sign Up</a>
+  </p>
+  <p class="control">
+<a class="button is-link is-danger is-light" href="{% url 'password_reset' %}">Password Reset</a>
+  </p>
+</div>
+{% endblock %}
