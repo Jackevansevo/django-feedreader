@@ -66,6 +66,7 @@ class Feed(models.Model):
 
     @classmethod
     def find_feed_from_url(cls, url):
+        # TODO Cleanup this mess
         parsed = urlparse(url)
 
         if parsed.netloc.endswith("wordpress.com") or parsed.netloc.endswith(
