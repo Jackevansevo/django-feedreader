@@ -65,25 +65,6 @@ class Feed(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     @classmethod
-    def from_parsed_feed(cls, parsed):
-
-        feed = Feed.objects.create(
-            url=parsed.href,
-            title=parsed.feed.get("title"),
-            link=parsed.feed.get("link"),
-        )
-
-        if hasattr(parsed, "etag"):
-            feed.etag = parsed.etag
-        if hasattr(parsed, "modified_parsed"):
-            # TODO the latest version of feedparser has broken this fuck
-            feed.last_modified = datetime.fromtimestamp(mktime(parsed.modified_parsed))
-
-        feed.update_entries(parsed.entries)
-
-        return feed
-
-    @classmethod
     def find_feed_from_url(cls, url):
         parsed = urlparse(url)
 
@@ -141,8 +122,7 @@ class Feed(models.Model):
                 generate_unique_slug(entry)
 
     def save(self, *args, **kwargs):
-        if self._state.adding:
-            self.slug = slugify(unidecode(self.title))
+        self.slug = slugify(unidecode(self.title))
         super(Feed, self).save(*args, **kwargs)
 
     class Meta:

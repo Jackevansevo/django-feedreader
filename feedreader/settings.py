@@ -190,10 +190,3 @@ if not DEBUG:
 CELERY_BROKER_URL = os.environ.get("REDIS_URL", "redis://redis:6379/0")
 CELERY_RESULT_BACKEND = os.environ.get("REDIS_URL", "redis://redis:6379/0")
 CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
-
-CELERYBEAT_SCHEDULE = {
-    "refresh-posts-every-30-minutes": {
-        "task": "feeds.tasks.refresh_feeds",
-        "schedule": 1800.0,
-    }
-}

@@ -19,6 +19,9 @@ import feeds.tasks as tasks
 from .forms import CategoryForm, SignUpForm, SubscriptionCreateForm
 from .models import Category, Entry, Feed, Subscription
 
+# TODO Mechanism to all the subtasks status from a parent tasks
+# Or task status for multiple tasks
+
 
 def task_status(request, task_id):
     task_result = AsyncResult(task_id)
@@ -44,10 +47,10 @@ def import_opml_feeds(request):
 
         async_tasks = []
         for feed in parsed.feeds:
-            task = tasks.add_subscription.delay(feed.url, None, request.user.id)
+            feed_category = feed.categories[0][0]
+            category = feed_category if feed_category != "" else None
+            task = tasks.add_subscription.delay(feed.url, category, request.user.id)
             async_tasks.append({"id": task.id, "url": feed.url})
-
-        print(async_tasks)
 
         return JsonResponse({"tasks": async_tasks})
 
@@ -182,7 +185,7 @@ def feed_create_view(request):
                 # Go and create the feed
                 category = form.cleaned_data["category"]
                 task = tasks.add_subscription.delay(
-                    url, getattr(category, "id", None), request.user.id
+                    url, getattr(category, "name", None), request.user.id
                 )
                 return JsonResponse({"id": task.id})
             else:

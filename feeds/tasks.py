@@ -6,99 +6,86 @@ from celery import group, shared_task
 from django.db import transaction
 from django.db.models import Count
 
-from feeds.models import Feed, Subscription
-
-
-def _fetch_feed(url):
-    try:
-        return Feed.objects.get(url=url)
-    except Feed.DoesNotExist:
-        parsed = feedparser.parse(url)
-        feed = Feed.from_parsed_feed(parsed)
-        feed.save()
-        return feed
+from feeds.models import Category, Feed, Subscription
 
 
 @shared_task
-def add_subscription(url, category_id, user_id):
-    # FIXME Do I need this transaction here?
+def add_subscription(url, category_name, user_id):
     with transaction.atomic():
-        feed = _fetch_feed(url)
-        subscription, created = Subscription.objects.get_or_create(
-            feed=feed, user_id=user_id, category_id=category_id
+        if category_name is not None:
+            category, _ = Category.objects.get_or_create(
+                name=category_name, user_id=user_id
+            )
+        else:
+            category = None
+        feed, _ = _refresh_or_create_feed(url)
+        Subscription.objects.get_or_create(
+            feed=feed, user_id=user_id, category=category
         )
     return {"url": feed.get_absolute_url(), "link": feed.link}
 
 
-@shared_task
-def fetch_feed(url):
-    feed = fetch_feed(url)
+def _refresh_or_create_feed(url):
+    # TODO: Could we avoid multiple trips to the DB to get/update the feed
 
-    return {
-        "feed": {
-            "id": feed.id,
-            "url": feed.url,
-            "last_modified": feed.last_modified,
-            "etag": feed.etag,
-        }
-    }
+    feed, created = Feed.objects.get_or_create(url=url)
+    parsed = feedparser.parse(feed.url, modified=feed.last_modified, etag=feed.etag)
 
-
-def _refresh_feed(feed_id, url, last_modified, etag):
-    parsed = feedparser.parse(url, modified=last_modified, etag=etag)
-
-    try:
-        feed = Feed.objects.get(id=feed_id)
-    except Feed.DoesNotExist:
-        return None
+    if created:
+        feed.title = parsed.feed.get("title")
+        feed.link = parsed.feed.get("link")
 
     update_fields = []
 
     # Temporary redirect
     if parsed.status == 301:
         feed.url = parsed.href
-        update_fields.append("url")
+        if not created:
+            update_fields.append("url")
+
+    # https://feedparser.readthedocs.io/en/latest/http-etag.html
 
     if hasattr(parsed, "etag"):
         feed.etag = parsed.etag
-        update_fields.append("etag")
+        if not created:
+            update_fields.append("etag")
     if hasattr(parsed, "modified_parsed"):
-        # TODO the latest version of feedparser has broken this fuck
         feed.last_modified = datetime.fromtimestamp(mktime(parsed.modified_parsed))
-        update_fields.append("last_modified")
+        if not created:
+            update_fields.append("last_modified")
 
-    feed.update_entries(parsed.entries)
+    if created:
+        feed.save()
+    else:
+        if update_fields:
+            feed.save(update_fields=update_fields)
 
-    updated = False
+    if parsed.entries:
+        feed.update_entries(parsed.entries)
 
-    if update_fields:
-        feed.save(update_fields=update_fields)
-
-    return {
-        "feed": {
-            "id": feed_id,
-            "url": url,
-            "last_modified": feed.last_modified,
-            "etag": feed.etag,
-            "updated": updated,
-        }
-    }
+    return feed, bool(update_fields)
 
 
 @shared_task
 def refresh_feeds():
-    feeds = Feed.objects.values_list("id", "url", "last_modified", "etag")
-    g = group(
-        refresh_feed.s(id, url, last_modified, etag)
-        for (id, url, last_modified, etag) in feeds
-    )
+    # TODO Filter out feeds with no subscribers
+    feeds = Feed.objects.values_list("url", flat=True)
+    g = group(refresh_or_create_feed.s(url) for url in feeds)
     res = g()
     return res
 
 
 @shared_task
-def refresh_feed(feed_id, url, last_modified, etag):
-    return _refresh_feed(feed_id, url, last_modified, etag)
+def refresh_or_create_feed(url):
+    feed, updated = _refresh_or_create_feed(url)
+    return {
+        "feed": {
+            "url": feed.url,
+            "last_modified": feed.last_modified,
+            "etag": feed.etag,
+            "updated": updated,
+        }
+    }
 
 
 @shared_task

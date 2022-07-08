@@ -12,7 +12,11 @@ def restart_celery():
         cmd = "taskkill /f /t /im celery.exe"
 
     subprocess.call(shlex.split(cmd))
-    subprocess.call(shlex.split("celery -A feedreader worker -B -l info -n worker2@%h"))
+    subprocess.call(
+        shlex.split(
+            "celery -A feedreader worker --beat -S django -l info -n worker2@%h"  # noqa
+        )
+    )
 
 
 class Command(BaseCommand):

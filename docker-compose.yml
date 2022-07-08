@@ -1,5 +1,5 @@
 version: "3.9"
-   
+
 services:
   redis:
     image: redis
@@ -14,14 +14,17 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
   app:
+    restart: always
     volumes:
       - .:/app
-      -  ~/.config/pgcli/history:/root/.config/pgcli/history
+      - ~/.config/pgcli/history:/root/.config/pgcli/history
       - ~/.ipython/profile_default/history.sqlite:/root/.ipython/profile_default/history.sqlite
     build:
       context: .
       target: dev
     command: python manage.py runserver 0.0.0.0:8000
+    stdin_open: true
+    tty: true
     ports:
       - "8000:8000"
     environment:
@@ -35,6 +38,7 @@ services:
       - db
       - redis
   celery:
+    restart: always
     volumes:
       - .:/app
     build:

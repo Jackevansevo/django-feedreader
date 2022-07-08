@@ -9,7 +9,6 @@ class SiteWideLoginRequiredMiddleware:
             settings.LOGIN_URL,
             reverse("sign_up"),
             reverse("password_reset"),
-            reverse("feeds:feed-import"),
         )
         self.get_response = get_response
 
