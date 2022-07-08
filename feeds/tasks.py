@@ -10,6 +10,11 @@ from feeds.models import Category, Feed, Subscription
 
 
 @shared_task
+def ping():
+    return "PONG"
+
+
+@shared_task
 def add_subscription(url, category_name, user_id):
     with transaction.atomic():
         if category_name is not None:
