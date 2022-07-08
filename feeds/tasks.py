@@ -31,37 +31,32 @@ def _refresh_or_create_feed(url):
     feed, created = Feed.objects.get_or_create(url=url)
     parsed = feedparser.parse(feed.url, modified=feed.last_modified, etag=feed.etag)
 
+    update_fields = []
+
     if created:
         feed.title = parsed.feed.get("title")
         feed.link = parsed.feed.get("link")
-
-    update_fields = []
+        update_fields = ["title", "slug", "link"]
 
     # Temporary redirect
     if parsed.status == 301:
         feed.url = parsed.href
-        if not created:
-            update_fields.append("url")
+        update_fields.append("url")
 
     # https://feedparser.readthedocs.io/en/latest/http-etag.html
 
     if hasattr(parsed, "etag"):
         feed.etag = parsed.etag
-        if not created:
-            update_fields.append("etag")
+        update_fields.append("etag")
     if hasattr(parsed, "modified_parsed"):
         feed.last_modified = datetime.fromtimestamp(mktime(parsed.modified_parsed))
-        if not created:
-            update_fields.append("last_modified")
+        update_fields.append("last_modified")
 
-    if created:
-        feed.save()
-    else:
-        if update_fields:
-            feed.save(update_fields=update_fields)
+    if update_fields:
+        feed.save(update_fields=update_fields)
 
     if parsed.entries:
-        feed.update_entries(parsed.entries)
+        feed.add_new_entries(parsed.entries)
 
     return feed, bool(update_fields)
 

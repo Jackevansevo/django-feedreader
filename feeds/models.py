@@ -92,13 +92,11 @@ class Feed(models.Model):
     def get_absolute_url(self):
         return reverse("feeds:feed-detail", kwargs={"feed_slug": self.slug})
 
-    def update_entries(self, entries):
-
-        feed_entries = set(self.entries.values_list("link", "title"))
+    def add_new_entries(self, entries):
+        feed_entries = set(self.entries.values_list("link", "guid"))
 
         def not_exists(entry):
-            # TODO Handle post updates
-            return (entry.link, entry.title) not in feed_entries
+            return (entry.link, entry.guid) not in feed_entries
 
         # Attempt to figure out if entries have already been parsed
         new_entries = list(
@@ -158,14 +156,14 @@ class Subscription(models.Model):
 
 class Entry(models.Model):
     title = models.CharField(max_length=200)
-    link = models.URLField()
+    link = models.URLField(unique=True)
     feed = models.ForeignKey(Feed, on_delete=models.CASCADE, related_name="entries")
     published = models.DateTimeField(null=True)
     updated = models.DateTimeField(null=True)
     slug = models.SlugField(max_length=200)
     content = models.TextField(blank=True, null=True)
     summary = models.TextField(blank=True, null=True)
-    guid = models.CharField(max_length=400, blank=True, null=True)
+    guid = models.CharField(max_length=400, blank=True, null=True, unique=True)
     author = models.CharField(max_length=400, blank=True, null=True)
 
     @classmethod
@@ -223,7 +221,6 @@ class Entry(models.Model):
     class Meta:
         verbose_name_plural = "entries"
         ordering = ["-published", "title"]
-        unique_together = [["slug", "feed", "guid"]]
         indexes = [
             models.Index(fields=["guid"]),
         ]
