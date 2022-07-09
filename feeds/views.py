@@ -7,7 +7,7 @@ from django.contrib import messages
 from django.contrib.auth.models import User
 from django.core.paginator import Paginator
 from django.db.utils import IntegrityError
-from django.http import JsonResponse
+from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse_lazy
 from django.views.decorators.http import require_POST
@@ -23,7 +23,7 @@ from .models import Category, Entry, Feed, Subscription
 # Or task status for multiple tasks
 
 
-def task_status(request, task_id):
+def task_status(_: HttpRequest, task_id) -> JsonResponse:
     task_result = AsyncResult(task_id)
     result = {
         "id": task_id,
@@ -34,19 +34,19 @@ def task_status(request, task_id):
 
 
 @require_POST
-def refresh_feed(request):
+def refresh_feed(request: HttpRequest) -> JsonResponse:
     url = request.POST["url"]
     task = tasks.refresh_or_create_feed.delay(url)
     return JsonResponse({"id": task.id})
 
 
 @require_POST
-def refresh_feeds(request):
+def refresh_feeds(_: HttpRequest) -> JsonResponse:
     task = tasks.refresh_feeds.delay()
     return JsonResponse({"id": task.id})
 
 
-def import_opml_feeds(request):
+def import_opml_feeds(request: HttpRequest) -> HttpResponse:
     if request.method == "POST":
         f = request.FILES["file"]
         contents = f.read()
@@ -64,7 +64,7 @@ def import_opml_feeds(request):
     return render(request, "feeds/import_feeds.html")
 
 
-def export_opml_feeds(request):
+def export_opml_feeds(request: HttpRequest) -> HttpResponse:
     subscriptions = (
         Subscription.objects.values(
             "feed__url", "feed__link", "category__name", "feed__title", "feed__subtitle"
@@ -113,7 +113,7 @@ class CategoryDeleteView(DeleteView):
         return super().form_valid(form)
 
 
-def category_list(request):
+def category_list(request: HttpRequest) -> HttpResponse:
     categories = Category.objects.filter(user=request.user)
     if request.method == "POST":
         form = CategoryForm(request.POST)
@@ -134,7 +134,7 @@ def category_list(request):
     )
 
 
-def index(request):
+def index(request: HttpRequest) -> HttpResponse:
     entries = Entry.objects.select_related("feed").filter(
         feed__subscriptions__user=request.user, published__lte=datetime.now()
     )
@@ -144,7 +144,7 @@ def index(request):
     return render(request, "feeds/index.html", {"page_obj": page_obj})
 
 
-def feed_list(request):
+def feed_list(request: HttpRequest) -> HttpResponse:
     subscriptions = (
         Subscription.objects.select_related("feed", "user", "category")
         .filter(user=request.user)
@@ -153,7 +153,7 @@ def feed_list(request):
     return render(request, "feeds/feed_list.html", {"subscriptions": subscriptions})
 
 
-def feed_detail(request, feed_slug):
+def feed_detail(request: HttpRequest, feed_slug: str) -> HttpResponse:
     subscription = get_object_or_404(
         Subscription, feed__slug=feed_slug, user=request.user
     )
@@ -168,7 +168,7 @@ def feed_detail(request, feed_slug):
     )
 
 
-def entry_detail(request, feed_slug, entry_slug):
+def entry_detail(request: HttpRequest, feed_slug: str, entry_slug: str) -> HttpResponse:
     entry = get_object_or_404(
         Entry,
         feed__subscriptions__user=request.user,
@@ -178,7 +178,7 @@ def entry_detail(request, feed_slug, entry_slug):
     return render(request, "feeds/entry_detail.html", {"entry": entry})
 
 
-def feed_create_view(request):
+def feed_create_view(request: HttpRequest) -> HttpResponse:
     if request.method == "POST":
         # create a form instance and populate it with data from the request:
         form = SubscriptionCreateForm(request.POST, user=request.user)
@@ -199,9 +199,8 @@ def feed_create_view(request):
                 form.add_error("url", "Already subscribed to this feed")
                 return render(request, "feeds/subscription_form.html", {"form": form})
 
-    else:
-        form = SubscriptionCreateForm(user=request.user)
-        return render(request, "feeds/subscription_form.html", {"form": form})
+    form = SubscriptionCreateForm(user=request.user)
+    return render(request, "feeds/subscription_form.html", {"form": form})
 
 
 class SubscriptionDeleteView(DeleteView):
