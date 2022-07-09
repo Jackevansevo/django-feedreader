@@ -1,8 +1,6 @@
-from datetime import datetime
-from time import mktime
-
 import feedparser
 from celery import group, shared_task
+from dateutil import parser
 from django.db import transaction
 from django.db.models import Count
 
@@ -56,8 +54,8 @@ def _refresh_or_create_feed(url):
     if hasattr(parsed, "etag"):
         feed.etag = parsed.etag
         update_fields.append("etag")
-    if hasattr(parsed, "modified_parsed"):
-        feed.last_modified = datetime.fromtimestamp(mktime(parsed.modified_parsed))
+    if hasattr(parsed, "modified"):
+        feed.last_modified = parser.parse(parsed.modified)
         update_fields.append("last_modified")
 
     if update_fields:

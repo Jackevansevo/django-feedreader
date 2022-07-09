@@ -1,9 +1,8 @@
 from __future__ import annotations
 
-from datetime import datetime
-from time import mktime
 from urllib.parse import urljoin, urlparse
 
+from dateutil import parser
 from django.conf import settings
 from django.db import IntegrityError, models, transaction
 from django.urls import reverse
@@ -173,17 +172,17 @@ class Entry(models.Model):
         if content is not None:
             content = content[0]["value"]
 
-        published = entry.get("published_parsed")
+        published = entry.get("published")
         if published is not None:
             try:
-                published = datetime.fromtimestamp(mktime(tuple(published)))
+                published = parser.parse(published)
             except ValueError:
                 return None
 
-        updated = entry.get("updated_parsed")
+        updated = entry.get("updated")
         if updated is not None:
             try:
-                updated = datetime.fromtimestamp(mktime(tuple(updated)))
+                updated = parser.parse(updated)
             except ValueError:
                 return None
 
