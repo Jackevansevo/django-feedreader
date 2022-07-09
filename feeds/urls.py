@@ -8,7 +8,8 @@ urlpatterns = [
     path("feeds/", views.feed_list, name="feed-list"),
     path("feeds/import/opml", views.import_opml_feeds, name="opml-import"),
     path("feeds/export/opml", views.export_opml_feeds, name="opml-export"),
-    path("feeds/refresh", views.refresh_feeds, name="feeds-refresh"),
+    path("feeds/refresh", views.refresh_feed, name="feed-refresh"),
+    path("feeds/refresh/all", views.refresh_feeds, name="feeds-refresh"),
     path("categories/", views.category_list, name="category-list"),
     path(
         "category/<slug:slug>", views.CategoryDetail.as_view(), name="category-detail"

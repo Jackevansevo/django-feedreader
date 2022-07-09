@@ -34,6 +34,13 @@ def task_status(request, task_id):
 
 
 @require_POST
+def refresh_feed(request):
+    url = request.POST["url"]
+    task = tasks.refresh_or_create_feed.delay(url)
+    return JsonResponse({"id": task.id})
+
+
+@require_POST
 def refresh_feeds(request):
     task = tasks.refresh_feeds.delay()
     return JsonResponse({"id": task.id})

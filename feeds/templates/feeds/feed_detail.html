@@ -12,75 +12,131 @@
 <main>
   <h1 class="title">{{ feed.title }}</h1>
   {% if subscription.category %}
-    <h2 class="subtitle">{{ subscription.category }}</h2>
+  <h2 class="subtitle">{{ subscription.category }}</h2>
   {% endif %}
   <h6 class="subtitle is-6">Last checked {{ subscription.feed.last_checked | naturaltime }}</h6>
   <div class="field is-grouped">
     <p class="control">
-    <a class="button is-normal is-link is-light" href="{{ subscription.feed.link }}">
-      <span class="icon-text">
-	<span class="icon is-small">
-      	<i class="fa-solid fa-arrow-up-right-from-square"></i>
-	</span>
-	<span>View site</span>
-      </span>
-    </a>
+      <a class="button is-normal is-link is-light" href="{{ subscription.feed.link }}">
+        <span class="icon-text">
+          <span class="icon is-small">
+            <i class="fa-solid fa-arrow-up-right-from-square"></i>
+          </span>
+          <span>View site</span>
+        </span>
+      </a>
     </p>
     <p class="control">
-    <a class="button is-normal is-link is-warning is-light" href="{{ subscription.feed.url }}">
-      <span class="icon-text">
-	<span class="icon is-small">
-	  <i class="fas fa-rss"></i>
-	</span>
-	<span>Feed</span>
-      </span>
-    </a>
+      <a class="button is-normal is-link is-warning is-light" href="{{ subscription.feed.url }}">
+        <span class="icon-text">
+          <span class="icon is-small">
+            <i class="fas fa-rss"></i>
+          </span>
+          <span>Feed</span>
+        </span>
+      </a>
     </p>
     <p class="control">
-    <a class="button is-normal is-link is-danger is-light" href="{% url 'feeds:subscription-delete' subscription.pk %}">
-      <span class="icon-text">
-	<span class="icon is-small">
-	  <i class="fas fa-trash"></i>
-	</span>
-	<span>Delete</span>
-    </a>
+      <a class="button is-normal is-link is-danger is-light"
+        href="{% url 'feeds:subscription-delete' subscription.pk %}">
+        <span class="icon-text">
+          <span class="icon is-small">
+            <i class="fas fa-trash"></i>
+          </span>
+          <span>Delete</span>
+      </a>
     </p>
+    <form id='refresh-feed-form' method="post" action="{% url 'feeds:feed-refresh' %}">
+      {% csrf_token %}
+      <input type="hidden" name="url" value="{{ feed.url }}"></input>
+      <button id='refresh-feed-button' class="button is-primary is-light" type="submit">
+        <span class="icon-text">
+          <span class="icon">
+            <i class="fa-solid fa-arrows-rotate"></i>
+          </span>
+          <span>Update</span>
+        </span>
+      </button>
+    </form>
   </div>
-<div class="table-container">
-  <table class="table is-striped is-hoverable is-fullwidth">
-    <tr>
-      <th>
-	<span class="icon-text">
-	  <span class="icon">
-	    <i class="fas fa-list"></i>
-	  </span>
-	  <span>Title</span>
-	</span>
-      </th>
-      <th>
-	<span class="icon-text">
-	  <span class="icon">
-	    <i class="fas fa-calendar"></i>
-	  </span>
-	  <span>Published</span>
-	</span>
-      </th>
-    </tr>
-    {% for entry in feed.entries.all %}
-    <tr>
-      <td>
-	<a href="{{ entry.get_absolute_url }}">{{ entry.title }}</a>
-      </td>
-      <td>
-	{% if entry.updated %}
-	{{ entry.updated | date }}
-	{% else %}
-	{{ entry.published | date }}
-	{% endif %}
-      </td>
-    </tr>
-    {% endfor %}
-  </table>
-</div>
+  <br>
+  <div class="table-container">
+    <table class="table is-striped is-hoverable is-fullwidth">
+      <tr>
+        <th>
+          <span class="icon-text">
+            <span class="icon">
+              <i class="fas fa-list"></i>
+            </span>
+            <span>Title</span>
+          </span>
+        </th>
+        <th>
+          <span class="icon-text">
+            <span class="icon">
+              <i class="fas fa-calendar"></i>
+            </span>
+            <span>Published</span>
+          </span>
+        </th>
+      </tr>
+      {% for entry in feed.entries.all %}
+      <tr>
+        <td>
+          <a href="{{ entry.get_absolute_url }}">{{ entry.title }}</a>
+        </td>
+        <td>
+          {% if entry.updated %}
+          {{ entry.updated | date }}
+          {% else %}
+          {{ entry.published | date }}
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
 </main>
+{% endblock %}
+{% block scripts %}
+<script>
+function getStatus(task) {
+	fetch(`/task/${task.id}`, {
+		method: 'GET',
+		headers: {
+			'Content-Type': 'application/json'
+		},
+	})
+		.then(response => response.json())
+		.then(resp => {
+			console.log(resp);
+			if (resp.status === 'SUCCESS' || resp.status === 'FAILURE') window.location.reload();
+			setTimeout(function() {
+				getStatus(task);
+			}, 1000);
+		})
+		.catch(err => console.log(err));
+}
+
+const refreshFeedForm = document.getElementById("refresh-feed-form");
+const submitButton = document.getElementById("refresh-feed-button");
+const icon = submitButton.querySelector('i');
+refreshFeedForm.addEventListener("submit", function(event) {
+	event.preventDefault();
+	// Disable the button
+	submitButton.disabled = true;
+	icon.classList.add('fa-pulse');
+	fetch(event.target.action, {
+		method: 'POST',
+		body: new URLSearchParams(new FormData(event.target))
+	}).then((resp) => {
+		return resp.json();
+	}).then((task) => {
+		console.log(task);
+		getStatus(task)
+	}).catch((error) => {
+		alert(error)
+	});
+}, true);
+</script>
 {% endblock %}
