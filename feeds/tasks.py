@@ -68,8 +68,11 @@ def _refresh_or_create_feed(url):
 
 @shared_task
 def refresh_feeds():
-    # TODO Filter out feeds with no subscribers
-    feeds = Feed.objects.values_list("url", flat=True)
+    feeds = (
+        Feed.objects.annotate(subscribers=Count("subscriptions"))
+        .filter(subscribers__gt=0)
+        .values_list("url", flat=True)
+    )
     g = group(refresh_or_create_feed.s(url) for url in feeds)
     res = g()
     return res
