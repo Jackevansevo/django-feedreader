@@ -36,6 +36,9 @@ def _refresh_or_create_feed(url):
     feed, created = Feed.objects.get_or_create(url=url)
     parsed = feedparser.parse(feed.url, modified=feed.last_modified, etag=feed.etag)
 
+    # TODO check if 'lasted_checked' auto_now field is updated on save with
+    # updated_fields
+
     update_fields = []
 
     if created:
@@ -63,7 +66,7 @@ def _refresh_or_create_feed(url):
     if parsed.entries:
         feed.add_new_entries(parsed.entries)
 
-    return feed, bool(update_fields)
+    return feed, bool(parsed.entries)
 
 
 @shared_task
