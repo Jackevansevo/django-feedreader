@@ -52,7 +52,7 @@ HOSTNAME = os.environ.get("HOSTNAME", "localhost")
 if not DEBUG:
     ALLOWED_HOSTS = [HOSTNAME]
 else:
-    ALLOWED_HOSTS = []
+    ALLOWED_HOSTS = ["*"]
 
 if not DEBUG:
     SENTRY_DSN = os.environ.get("SENTRY_DSN")
