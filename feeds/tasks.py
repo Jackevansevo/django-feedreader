@@ -1,3 +1,5 @@
+from urllib.parse import urlparse
+
 import feedparser
 from celery import group, shared_task
 from dateutil import parser
@@ -40,8 +42,13 @@ def _refresh_or_create_feed(url):
     update_fields = []
 
     if created:
-        feed.title = parsed.feed.get("title")
-        feed.link = parsed.feed.get("link")
+        feed.link = parsed.feed.link
+
+        if parsed.feed.title != "":
+            feed.title = parsed.feed.title
+        else:
+            feed.title = urlparse(parsed.feed.link).netloc.lstrip("www.")
+
         update_fields = ["title", "slug", "link"]
 
     # Temporary redirect
