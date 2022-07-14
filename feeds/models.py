@@ -154,12 +154,12 @@ class Subscription(models.Model):
 
 
 class Entry(models.Model):
-    title = models.CharField(max_length=200)
+    title = models.CharField(max_length=300)
     link = models.URLField(unique=True)
     feed = models.ForeignKey(Feed, on_delete=models.CASCADE, related_name="entries")
     published = models.DateTimeField(null=True)
     updated = models.DateTimeField(null=True)
-    slug = models.SlugField(max_length=200)
+    slug = models.SlugField(max_length=300)
     content = models.TextField(blank=True, null=True)
     summary = models.TextField(blank=True, null=True)
     guid = models.CharField(max_length=400, blank=True, null=True, unique=True)
