@@ -218,6 +218,7 @@ class Entry(models.Model):
         return self.title
 
     class Meta:
+        unique_together = ("feed", "slug")
         verbose_name_plural = "entries"
         ordering = ["-published", "title"]
         indexes = [
