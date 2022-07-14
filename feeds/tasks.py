@@ -1,17 +1,18 @@
 from urllib.parse import urlparse
 
 import feedparser
+import httpx
 from celery import group, shared_task
 from dateutil import parser
 from django.db import transaction
 from django.db.models import Count
+from django.utils.http import http_date
 
 from feeds.models import Category, Feed, Subscription
 
+# TODO work out why https://www.jntrnr.com/atom.xml fails in live
 
-@shared_task
-def ping():
-    return "PONG"
+USER_AGENT = "feedreader/1 +https://github.com/Jackevansevo/feedreader/"
 
 
 @shared_task
@@ -34,7 +35,17 @@ def _refresh_or_create_feed(url):
     # TODO: Could we avoid multiple trips to the DB to get/update the feed
 
     feed, created = Feed.objects.get_or_create(url=url)
-    parsed = feedparser.parse(feed.url, modified=feed.last_modified, etag=feed.etag)
+
+    headers = {"User-Agent": USER_AGENT}
+
+    if feed.etag is not None:
+        headers["If-None-Match"] = feed.etag
+    if feed.last_modified is not None:
+        headers["If-Modified-Since"] = http_date(feed.last_modified.timestamp())
+
+    resp = httpx.get(feed.url, headers=headers, follow_redirects=True)
+
+    parsed = feedparser.parse(resp)
 
     # TODO check if 'lasted_checked' auto_now field is updated on save with
     # updated_fields
@@ -51,18 +62,21 @@ def _refresh_or_create_feed(url):
 
         update_fields = ["title", "slug", "link"]
 
+    if resp.status_code == 304:
+        return feed, False
+
     # Temporary redirect
-    if parsed.status == 301:
-        feed.url = parsed.href
+    if resp.history:
+        feed.url = resp.url
         update_fields.append("url")
 
     # https://feedparser.readthedocs.io/en/latest/http-etag.html
 
-    if hasattr(parsed, "etag"):
-        feed.etag = parsed.etag
+    if resp.headers.get("etag"):
+        feed.etag = resp.headers["etag"]
         update_fields.append("etag")
-    if hasattr(parsed, "modified"):
-        feed.last_modified = parser.parse(parsed.modified)
+    if resp.headers.get("last-modified"):
+        feed.last_modified = parser.parse(resp.headers["last-modified"])
         update_fields.append("last_modified")
 
     if update_fields:
