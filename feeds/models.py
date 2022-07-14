@@ -155,7 +155,7 @@ class Subscription(models.Model):
 
 class Entry(models.Model):
     title = models.CharField(max_length=300)
-    link = models.URLField(unique=True)
+    link = models.URLField(unique=True, max_length=300)
     feed = models.ForeignKey(Feed, on_delete=models.CASCADE, related_name="entries")
     published = models.DateTimeField(null=True)
     updated = models.DateTimeField(null=True)
