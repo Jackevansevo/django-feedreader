@@ -10,7 +10,8 @@ from django.utils.http import http_date
 
 from feeds.models import Category, Feed, Subscription
 
-# TODO work out why https://www.jntrnr.com/atom.xml fails in live
+# TODO: Optimize with eventlet:
+# https://github.com/celery/celery/tree/master/examples/eventlet
 
 USER_AGENT = "feedreader/1 +https://github.com/Jackevansevo/feedreader/"
 
