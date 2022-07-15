@@ -108,9 +108,6 @@ class Feed(models.Model):
             )
         )
 
-        if new_entries:
-            print(f"adding new entries for {self}", new_entries)
-
         try:
             # Attempt in a separate transaction
             with transaction.atomic():
@@ -118,6 +115,8 @@ class Feed(models.Model):
         except IntegrityError:
             for entry in new_entries:
                 generate_unique_slug(entry)
+
+        return new_entries
 
     def save(self, *args, **kwargs):
         self.slug = slugify(unidecode(self.title))
