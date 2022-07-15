@@ -10,7 +10,6 @@ from django.db.utils import IntegrityError
 from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse_lazy
-from django.views.decorators.http import require_POST
 from django.views.generic.detail import DetailView
 from django.views.generic.edit import CreateView, DeleteView
 
@@ -31,19 +30,6 @@ def task_status(_: HttpRequest, task_id) -> JsonResponse:
         "result": task_result.result,
     }
     return JsonResponse(result)
-
-
-@require_POST
-def refresh_feed(request: HttpRequest) -> JsonResponse:
-    url = request.POST["url"]
-    task = tasks.refresh_or_create_feed.delay(url)
-    return JsonResponse({"id": task.id})
-
-
-@require_POST
-def refresh_feeds(_: HttpRequest) -> JsonResponse:
-    task = tasks.refresh_feeds.delay()
-    return JsonResponse({"id": task.id})
 
 
 def import_opml_feeds(request: HttpRequest) -> HttpResponse:
