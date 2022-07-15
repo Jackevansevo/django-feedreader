@@ -35,6 +35,7 @@ feedparser = "*"
 psycopg2-binary = "*"
 dj-database-url = "*"
 django-environ = "*"
+eventlet = "*"
 
 [pipenv]
 allow_prereleases = true
