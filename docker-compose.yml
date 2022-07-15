@@ -74,7 +74,7 @@ services:
     build:
       context: .
       target: prod
-    command: celery -A feedreader flower
+    command: celery -A feedreader flower --purge_offline_workers=60
     ports:
       - "5555:5555"
     environment:
