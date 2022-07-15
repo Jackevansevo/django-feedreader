@@ -46,18 +46,6 @@
           <span>Delete</span>
       </a>
     </p>
-    <form id='refresh-feed-form' method="post" action="{% url 'feeds:feed-refresh' %}">
-      {% csrf_token %}
-      <input type="hidden" name="url" value="{{ feed.url }}"></input>
-      <button id='refresh-feed-button' class="button is-primary is-light" type="submit">
-        <span class="icon-text">
-          <span class="icon">
-            <i class="fa-solid fa-arrows-rotate"></i>
-          </span>
-          <span>Update</span>
-        </span>
-      </button>
-    </form>
   </div>
   <br>
   <div class="table-container">
@@ -97,46 +85,4 @@
     </table>
   </div>
 </main>
-{% endblock %}
-{% block scripts %}
-<script>
-function getStatus(task) {
-	fetch(`/task/${task.id}`, {
-		method: 'GET',
-		headers: {
-			'Content-Type': 'application/json'
-		},
-	})
-		.then(response => response.json())
-		.then(resp => {
-			console.log(resp);
-			if (resp.status === 'SUCCESS' || resp.status === 'FAILURE') window.location.reload();
-			setTimeout(function() {
-				getStatus(task);
-			}, 1000);
-		})
-		.catch(err => console.log(err));
-}
-
-const refreshFeedForm = document.getElementById("refresh-feed-form");
-const submitButton = document.getElementById("refresh-feed-button");
-const icon = submitButton.querySelector('i');
-refreshFeedForm.addEventListener("submit", function(event) {
-	event.preventDefault();
-	// Disable the button
-	submitButton.disabled = true;
-	icon.classList.add('fa-pulse');
-	fetch(event.target.action, {
-		method: 'POST',
-		body: new URLSearchParams(new FormData(event.target))
-	}).then((resp) => {
-		return resp.json();
-	}).then((task) => {
-		console.log(task);
-		getStatus(task)
-	}).catch((error) => {
-		alert(error)
-	});
-}, true);
-</script>
 {% endblock %}
