@@ -49,4 +49,5 @@ class EntryAdmin(admin.ModelAdmin):
 
 @admin.register(Subscription)
 class SubscriptionAdmin(admin.ModelAdmin):
-    list_display = ("user", "feed", "category")
+    list_display = ("feed", "user", "category")
+    search_fields = ["feed", "user", "category"]
