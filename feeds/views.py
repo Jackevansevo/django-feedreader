@@ -1,5 +1,3 @@
-from datetime import datetime
-
 import listparser
 from celery.result import AsyncResult
 from django.conf import settings
@@ -10,6 +8,7 @@ from django.db.utils import IntegrityError
 from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse_lazy
+from django.utils import timezone
 from django.views.generic.detail import DetailView
 from django.views.generic.edit import CreateView, DeleteView
 
@@ -122,7 +121,7 @@ def category_list(request: HttpRequest) -> HttpResponse:
 
 def index(request: HttpRequest) -> HttpResponse:
     entries = Entry.objects.select_related("feed").filter(
-        feed__subscriptions__user=request.user, published__lte=datetime.now()
+        feed__subscriptions__user=request.user, published__lte=timezone.now()
     )
     paginator = Paginator(entries, 50)
     page_number = request.GET.get("page")
