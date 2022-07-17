@@ -179,11 +179,17 @@ class Entry(models.Model):
         summary = entry.get("summary")
 
         if summary is not None:
-            # Strip out any continue reading links
+
+            # Strip out any images
             soup = BeautifulSoup(summary, features="html.parser")
+            for img in soup.findAll("img"):
+                img.extract()
+
+            # Strip out any continue reading links
             for a_tag in soup.findAll("a"):
                 if "continue reading" in a_tag.text.lower():
                     a_tag.extract()
+
             summary = str(soup)
 
         if content is None and summary is not None:
