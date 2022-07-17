@@ -1,5 +1,13 @@
 {% extends 'feeds/base.html' %}
 {% block content %}
+<div class="card">
+  <div class="card-header">
+    <span class="icon is-small">
+      <i class="fa fa-user-plus"></i>
+    </span>
+    <span>&nbsp;Sign up</span>
+  </div>
+  <div class="card-body">
 <form method="post">
   {% csrf_token %}
   {{ form }}
@@ -7,4 +15,6 @@
 </form>
 <br>
 Already have an account? <a href="{% url 'login' %}">Login</a>
+  </div>
+</div>
 {% endblock %}

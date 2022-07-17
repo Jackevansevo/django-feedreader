@@ -16,7 +16,7 @@ class CategoryForm(forms.ModelForm):
 
 
 class SubscriptionCreateForm(forms.ModelForm):
-    url = forms.URLField(label="URL")
+    url = forms.URLField(label="URL", widget=forms.URLInput(attrs={"autofocus": True}))
 
     def __init__(self, *args, **kwargs):
         user = kwargs.pop("user")

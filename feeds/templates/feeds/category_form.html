@@ -1,19 +1,30 @@
 {% extends 'feeds/base.html' %}
 {% block content %}
-<form method="post">
-    {% csrf_token %}
-    {{ form.non_field_errors }}
-    {{ form.as_p }}
-    <button class="btn btn-success" type="submit">Create</button>
-</form>
-<br>
-<div class="content">
-  <ul>
-  {% for category in categories %}
-    <li>
-      <a href="{{ category.get_absolute_url }}">{{ category }}</a>
-    </li>
-  {% endfor %}
-  </ul>
+<div class="card">
+  <div class="card-header">
+    <span class="icon is-small">
+      <i class="fa fa-tags"></i>
+    </span>
+    <span class="icon is-small">
+      <i class="fa fa-plus"></i>
+    </span>
+    <span>&nbsp;Add Category</span>
+  </div>
+  <div class="card-body">
+    <form method="post">
+      {% csrf_token %}
+      {{ form.non_field_errors }}
+      {{ form.as_p }}
+      <button class="btn btn-success" type="submit">Create</button>
+    </form>
+  </div>
 </div>
+<br>
+
+<ul class="list-group list-group-flush">
+  {% for category in categories %}
+  <a class="list-group-item list-group-item-action" href="{{ category.get_absolute_url }}">{{ category }}</a>
+  {% endfor %}
+</ul>
+
 {% endblock %}

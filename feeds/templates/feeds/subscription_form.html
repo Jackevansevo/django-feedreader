@@ -1,19 +1,30 @@
 {% extends 'feeds/base.html' %}
 {% block content %}
-<form id='add-subscription-form' method="post">
-  {% csrf_token %}
-  {{ form.as_p }}
-  <button id="submit-button" class="btn btn-success" type="submit">
-    <span class="icon-text">
-      <span class="icon">
-	<i class="fas fa-check"></i>
-      </span>
-      <span>Submit</span>
+<div class="card">
+  <div class="card-header">
+    <span class="icon is-small">
+      <i class="fa fa-rss"></i>
     </span>
-  </button>
-
-
-</form>
+    <span class="icon is-small">
+      <i class="fa fa-plus"></i>
+    </span>
+    <span>&nbsp;Add feed</span>
+  </div>
+  <div class="card-body">
+    <form id='add-subscription-form' method="post">
+      {% csrf_token %}
+      {{ form.as_p }}
+      <button id="submit-button" class="btn btn-success" type="submit">
+	<span class="icon-text">
+	  <span class="icon">
+	    <i class="fas fa-check"></i>
+	  </span>
+	  <span>Submit</span>
+	</span>
+      </button>
+    </form>
+  </div>
+</div>
 {% endblock %}
 {% block scripts %}
 <script>
