@@ -3,21 +3,8 @@
 <form method="post">
     {% csrf_token %}
     {{ form.non_field_errors }}
-    <div class="field">
-      <label for="{{ form.name.id_for_label }}" class="label">{{ form.name.label }}</label>
-      <div class="control has-icons-left has-icons-right">
-	<input autofocus class="input {% if form.name.errors %}is-danger{% endif %}" type="{{ form.name.field.widget.input_type }}" name="{{ form.name.html_name }}" id="{{ form.name.id_for_label }}" value="{{ form.name.value|default:"" }}">
-	<span class="icon is-small is-left">
-	  <i class="fas fa-tag"></i>
-	</span>
-      </div>
-    </div>
-    {% if form.name.errors %}
-    {% for error in form.name.errors %}
-    <p class="help is-danger">{{ error }}</p>
-    {% endfor %}
-    {% endif %}
-    <button class="button is-success" type="submit">Create</button>
+    {{ form.as_p }}
+    <button class="btn btn-success" type="submit">Create</button>
 </form>
 <br>
 <div class="content">

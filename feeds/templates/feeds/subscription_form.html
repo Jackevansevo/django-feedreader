@@ -2,75 +2,15 @@
 {% block content %}
 <form id='add-subscription-form' method="post">
   {% csrf_token %}
-
-  {{ form.non_field_errors }}
-
-  <div class="field">
-
-    <div class="field">
-      <label for="{{ form.url.id_for_label }}" class="label">{{ form.url.label }}</label>
-      <div class="control has-icons-left has-icons-right">
-	<input autofocus {% if form.url.field.required %}required="required" aria-required="true"{% endif %} class="input {% if form.url.errors %}is-danger{% endif %}" id="{{ form.url.id_for_label }}" type="{{ form.url.field.widget.input_type }}" name="{{ form.url.html_name }}" value={{ form.url.value|default:"" }}></input>
-	<span class="icon is-small is-left">
-	  <i class="fas fa-link"></i>
-	</span>
-      </div>
-      {% if form.url.errors %}
-      {% for error in form.url.errors %}
-      <p class="help is-danger">{{ error }}</p>
-      {% endfor %}
-      {% endif %}
-
-    </div>
-
-    <div class="field">
-      <label for="{{ form.category.id_for_label }}" class="label">{{ form.category.label }}</label>
-      <div class="field has-addons">
-	<div class="control is-expanded">
-	  <div class="select is-fullwidth">
-	    <select id="{{ form.category.id_for_label }}" name="{{ form.category.html_name }}">
-	      {% for value, choice in form.category.field.choices %}
-	      <option value={{ value }}>{{ choice }}</option>
-	      {% endfor %}
-	    </select>
-	  </div>
-	</div>
-	<div class="control">
-	  <a class="button is-info" href="{% url 'feeds:category-list' %}">
-	    <span class="icon-text">
-	      <span class="icon">
-		<i class="fas fa-plus"></i>
-	      </span>
-	      <span>Add Category</span>
-	    </span>
-	  </a>
-	</div>
-      </div>
-    </div>
-
-
-    <div class="field is-grouped">
-      <div class="control">
-	<button id="submit-button" class="button is-success" type="submit">
-	    <span class="icon-text">
-	      <span class="icon">
-		<i class="fas fa-check"></i>
-	      </span>
-	      <span>Submit</span>
-	    </span>
-	</button>
-      </div>
-      <div class="control">
-      <a class="button is-normal is-warning is-light" href="{% url 'feeds:opml-import' %}">
-	<span class="icon-text">
-	  <span class="icon is-small">
-	    <i class="fas fa-upload"></i>
-	  </span>
-	  <span>Import</span>
-	</span>
-      </a>
-      </div>
-    </div>
+  {{ form.as_p }}
+  <button id="submit-button" class="btn btn-success" type="submit">
+    <span class="icon-text">
+      <span class="icon">
+	<i class="fas fa-check"></i>
+      </span>
+      <span>Submit</span>
+    </span>
+  </button>
 
 
 </form>

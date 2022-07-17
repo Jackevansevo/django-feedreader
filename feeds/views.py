@@ -14,7 +14,7 @@ from django.views.generic.edit import CreateView, DeleteView
 
 import feeds.tasks as tasks
 
-from .forms import CategoryForm, SignUpForm, SubscriptionCreateForm
+from .forms import CategoryForm, OPMLUploadForm, SignUpForm, SubscriptionCreateForm
 from .models import Category, Entry, Feed, Subscription
 
 # TODO Mechanism to all the subtasks status from a parent tasks
@@ -33,20 +33,24 @@ def task_status(_: HttpRequest, task_id) -> JsonResponse:
 
 def import_opml_feeds(request: HttpRequest) -> HttpResponse:
     if request.method == "POST":
-        f = request.FILES["file"]
-        contents = f.read()
-        parsed = listparser.parse(contents)
+        form = OPMLUploadForm(request.POST, request.FILES)
+        if form.is_valid():
+            f = request.FILES["file"]
+            contents = f.read()
+            parsed = listparser.parse(contents)
 
-        async_tasks = []
-        for feed in parsed.feeds:
-            feed_category = feed.categories[0][0]
-            category = feed_category if feed_category != "" else None
-            task = tasks.add_subscription.delay(feed.url, category, request.user.id)
-            async_tasks.append({"id": task.id, "url": feed.url})
+            async_tasks = []
+            for feed in parsed.feeds:
+                feed_category = feed.categories[0][0]
+                category = feed_category if feed_category != "" else None
+                task = tasks.add_subscription.delay(feed.url, category, request.user.id)
+                async_tasks.append({"id": task.id, "url": feed.url})
 
-        return JsonResponse({"tasks": async_tasks})
+            return JsonResponse({"tasks": async_tasks})
+    else:
+        form = OPMLUploadForm()
 
-    return render(request, "feeds/import_feeds.html")
+    return render(request, "feeds/import_feeds.html", {"form": form})
 
 
 def export_opml_feeds(request: HttpRequest) -> HttpResponse:
@@ -55,7 +59,7 @@ def export_opml_feeds(request: HttpRequest) -> HttpResponse:
             "feed__url", "feed__link", "category__name", "feed__title", "feed__subtitle"
         )
         .filter(user=request.user)
-        .order_by("feed__category__name")
+        .order_by("category__name")
     )
     return render(
         request,

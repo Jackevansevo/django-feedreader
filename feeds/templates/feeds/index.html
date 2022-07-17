@@ -1,13 +1,14 @@
 {% extends 'feeds/base.html' %}
 {% block content %}
-<nav class="breadcrumb" aria-label="breadcrumbs">
-  <ul>
-    <li class="is-active"><a href="{% url 'feeds:index' %}" aria-current="page">Home</a></li>
-  </ul>
+<nav aria-label="breadcrumbs">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item active"><a href="{% url 'feeds:index' %}" aria-current="page">Home</a></li>
+  </ol>
 </nav>
 {% if page_obj %}
-<div class="table-container">
-  <table class="table is-striped is-narrow is-hoverable is-fullwidth">
+
+<table class="table table-striped table-hover table-responsive">
+  <thead>
     <tr>
       <th>
 	<span class="icon-text">
@@ -17,7 +18,7 @@
 	  <span>Title</span>
 	</span>
       </th>
-      <th class="is-hidden-mobile">
+      <th class="text-nowrap d-none d-lg-table-cell">
 	<span class="icon-text">
 	  <span class="icon">
 	    <i class="fas fa-calendar"></i>
@@ -34,12 +35,14 @@
 	</span>
       </th>
     </tr>
+  </thead>
+  <tbody class="table-group-divider">
     {% for entry in page_obj %}
     <tr>
       <td>
-	<a href="{{ entry.get_absolute_url }}">{{ entry.title }}</a>
+	<a class="text-decoration-none" href="{{ entry.get_absolute_url }}">{{ entry.title }}</a>
       </td>
-      <td class="is-hidden-mobile">
+      <td class="d-none d-lg-table-cell">
 	{% if entry.updated %}
 	{{ entry.updated | date }}
 	{% else %}
@@ -47,64 +50,66 @@
 	{% endif %}
       </td>
       <td>
-	<a href={{ entry.feed.get_absolute_url }}>{{ entry.feed.title }}</a>
-
+	<a class="text-decoration-none" href={{ entry.feed.get_absolute_url }}>{{ entry.feed.title }}</a>
       </td>
     </tr>
     {% endfor %}
-  </table>
-</div>
-<nav class="pagination" role="navigation" aria-label="pagination">
-  {% if page_obj.has_previous %}
-  <a href="?page={{ page_obj.previous_page_number }}" class="pagination-previous">Previous</a>
-  {% else %}
-  <a href="#" class="pagination-previous is-disabled">Previous</a>
-  {% endif %}
-  {% if page_obj.has_next %}
-  <a href="?page={{ page_obj.next_page_number }}" class="pagination-next">Next page</a>
-  {% else %}
-  <a href="#" class="pagination-next is-disabled">Next page</a>
-  {% endif %}
-  <ul class="pagination-list">
+  </tbody>
+</table>
+
+<nav aria-label="Page navigation example">
+  <ul class="pagination">
+
+    {% if page_obj.has_previous %}
+    <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a></li>
+    {% else %}
+    <li class="page-item disabled"><a class="page-link" href="#">Previous</a></li>
+    {% endif %}
+
     {% if page_obj.has_previous and page_obj.previous_page_number != 1 %}
-    <li>
-      <a href="?page=1" class="pagination-link" aria-label="Goto page 1">1</a>
+    <li class="page-item">
+      <a href="?page=1" class="page-link" aria-label="Goto page 1">1</a>
     </li>
-    <li>
+    <li class="page-item">
       <span class="pagination-ellipsis">&hellip;</span>
     </li>
     {% endif %}
-    <li>
+    <li class="page-item">
       {% if page_obj.has_previous %}
-      <a href="?page={{ page_obj.previous_page_number }}" class="pagination-link" aria-label="Goto page {{ page_obj.previous_page_number }}">{{ page_obj.previous_page_number }}</a>
+      <a href="?page={{ page_obj.previous_page_number }}" class="page-link" aria-label="Goto page {{ page_obj.previous_page_number }}">{{ page_obj.previous_page_number }}</a>
       {% endif %}
     </li>
-    <li>
-      <a href="?page={{ page_obj.number }}" class="pagination-link is-current" aria-label="Page {{ page_obj.number }}" aria-current="page">{{ page_obj.number }}</a>
+    <li class="page-item active">
+      <span class="page-link">{{ page_obj.number }}</span>
     </li>
     {% if page_obj.has_next %}
-    <li>
-      <a href="?page={{ page_obj.next_page_number }}" class="pagination-link" aria-label="Goto page {{ page_obj.next_page_number }}">{{ page_obj.next_page_number }}</a>
+    <li class="page-item">
+      <a href="?page={{ page_obj.next_page_number }}" class="page-link" aria-label="Goto page {{ page_obj.next_page_number }}">{{ page_obj.next_page_number }}</a>
     </li>
     {% endif %}
     {% if page_obj.has_next and page_obj.paginator.num_pages != page_obj.next_page_number %}
-    <li>
+    <li class="page-item">
       <span class="pagination-ellipsis">&hellip;</span>
     </li>
-    <li>
-      <a href="?page={{ page_obj.paginator.num_pages }}" class="pagination-link" aria-label="Goto page {{ page_obj.paginator.num_pages }}">{{ page_obj.paginator.num_pages }}</a>
+    <li class="page-item">
+      <a href="?page={{ page_obj.paginator.num_pages }}" class="page-link" aria-label="Goto page {{ page_obj.paginator.num_pages }}">{{ page_obj.paginator.num_pages }}</a>
     </li>
+    {% endif %}
+
+
+    {% if page_obj.has_next %}
+    <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a></li>
+    {% else %}
+    <li class="page-item disabled"><a class="page-link" href="#">Next</a></li>
     {% endif %}
   </ul>
 </nav>
+
 {% else %}
-<article class="message is-warning">
-  <div class="message-body">
-    <span class="icon">
-      <i class="fas fa-exclamation"></i>
-    </span>
-    <span>No articles available <a href="{% url 'feeds:feed-add' %}">Add a feed</a></span>
-  </div>
-</article>
+<div class="alert alert-warning alert-dismissible fade show" role="alert">
+  <i class="fa-solid fa-triangle-exclamation"></i>&nbsp;
+  <span>No articles available <a class="alert-link" href="{% url 'feeds:feed-add' %}">Add a feed</a></span>
+  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
 {% endif %}
 {% endblock %}

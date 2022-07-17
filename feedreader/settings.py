@@ -18,9 +18,6 @@ import sentry_sdk
 from django.urls import reverse_lazy
 from sentry_sdk.integrations.django import DjangoIntegration
 
-# import dj_database_url
-
-
 env = environ.Env(
     # set casting, default value
     DEBUG=(bool, False),
@@ -106,6 +103,8 @@ if DEBUG:
     INTERNAL_IPS += [ip[:-1] + "1"]
 
 ROOT_URLCONF = "feedreader.urls"
+
+FORM_RENDERER = "django.forms.renderers.TemplatesSetting"
 
 TEMPLATES = [
     {

@@ -3,7 +3,12 @@
 <form method="post">{% csrf_token %}
     <p>Are you sure you want to unsubscribe from feed "{{ object.feed }}"?</p>
     {{ form }}
-    <br>
-    <button type="submit" class="button is-danger">Confirm</button>
+    <button type="submit" class="btn btn-danger">
+      <span class="icon-text">
+	<span class="icon is-small">
+	  <i class="fas fa-trash"></i>
+	</span>
+	<span>Confirm</span>
+    </button>
 </form>
 {% endblock %}

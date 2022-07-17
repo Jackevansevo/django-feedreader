@@ -1,87 +1,9 @@
 {% extends 'feeds/base.html' %}
 {% block content %}
 <form method="post">
-    {% csrf_token %}
-
-    {% if form.non_field_errors %}
-    {% for error in form.non_field_errors %}
-    <article class="message is-danger">
-      <div class="message-body">
-	<span class="icon">
-	  <i class="fas fa-exclamation"></i>
-	</span>
-	</span>
-	{{ error }}
-      </div>
-    </article>
-    {% endfor %}
-    {% endif %}
-
-    <div class="field">
-      <label for="{{ form.username.id_for_label }}" class="label">{{ form.username.label }}</label>
-      <div class="control has-icons-left has-icons-right">
-	<input autofocus class="input {% if form.username.errors %}is-danger{% endif %}" type="{{ form.username.field.widget.input_type }}" name="{{ form.username.html_name }}" id="{{ form.username.id_for_label }}" placeholder="username" value="{{ form.username.value|default:"" }}">
-	<span class="icon is-small is-left">
-	  <i class="fas fa-user"></i>
-	</span>
-      </div>
-    </div>
-    {% if form.username.errors %}
-      {% for error in form.username.errors %}
-	 <p class="help is-danger">{{ error }}</p>
-       {% endfor %}
-    {% endif %}
-
-    <div class="field">
-      <label for="{{ form.email.id_for_label }}" class="label">{{ form.email.label }}</label>
-      <div class="control has-icons-left has-icons-right">
-	<input autofocus class="input {% if form.email.errors %}is-danger{% endif %}" type="{{ form.email.field.widget.input_type }}" name="{{ form.email.html_name }}" id="{{ form.email.id_for_label }}" placeholder="email" value="{{ form.email.value|default:"" }}">
-	<span class="icon is-small is-left">
-	  <i class="fas fa-envelope"></i>
-	</span>
-      </div>
-    </div>
-    {% if form.email.errors %}
-      {% for error in form.email.errors %}
-	 <p class="help is-danger">{{ error }}</p>
-       {% endfor %}
-    {% endif %}
-
-    <div class="field">
-      <label for="{{ form.password1.id_for_label }}" class="label">{{ form.password1.label }}</label>
-      <div class="control has-icons-left has-icons-right">
-	<input autofocus class="input {% if form.password1.errors %}is-danger{% endif %}" type="{{ form.password1.field.widget.input_type }}" name="{{ form.password1.html_name }}" id="{{ form.password1.id_for_label }}" placeholder="password1" value="{{ form.password1.value|default:"" }}" autocomplete="new-password">
-	<span class="icon is-small is-left">
-	  <i class="fas fa-lock"></i>
-	</span>
-      </div>
-    </div>
-    {% if form.password1.errors %}
-      {% for error in form.password1.errors %}
-	 <p class="help is-danger">{{ error }}</p>
-       {% endfor %}
-    {% endif %}
-    <div class="field">
-      <label for="{{ form.password2.id_for_label }}" class="label">{{ form.password2.label }}</label>
-      <div class="control has-icons-left has-icons-right">
-	<input autofocus class="input {% if form.password2.errors %}is-danger{% endif %}" type="{{ form.password2.field.widget.input_type }}" name="{{ form.password2.html_name }}" id="{{ form.password2.id_for_label }}" placeholder="password2" value="{{ form.password2.value|default:"" }}" autocomplete="new-password">
-	<span class="icon is-small is-left">
-	  <i class="fas fa-lock"></i>
-	</span>
-      </div>
-    </div>
-    {% if form.password2.errors %}
-      {% for error in form.password2.errors %}
-	 <p class="help is-danger">{{ error }}</p>
-       {% endfor %}
-    {% endif %}
-
-    <br>
-    <div class="field">
-      <p class="control">
-      <button class="button is-primary" type="submit">Sign Up</button>
-      </p>
-    </div>
+  {% csrf_token %}
+  {{ form }}
+  <input class="mt-3 btn btn-success" type="submit" value="Submit">
 </form>
 <br>
 Already have an account? <a href="{% url 'login' %}">Login</a>

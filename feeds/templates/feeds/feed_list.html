@@ -4,49 +4,51 @@
 
 {% block title %} - Subscriptions{% endblock %}
 {% block content %}
-<nav class="breadcrumb" aria-label="breadcrumbs">
-  <ul>
-    <li><a href="{% url 'feeds:index' %}">Home</a></li>
-    <li class="is-active"><a href="{% url 'feeds:feed-list' %}" aria-current="page">Feeds</a></li>
-  </ul>
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="{% url 'feeds:index' %}">Home</a></li>
+    <li class="breadcrumb-item active">Feeds</li>
+  </ol>
 </nav>
 {% if subscriptions %}
-<div class="field is-grouped">
-  <p class="control">
-  <a class="button is-normal is-success is-light" href="{% url 'feeds:feed-add' %}">
-    <span class="icon-text">
-      <span class="icon is-small">
-	<i class="fas fa-plus"></i>
-      </span>
-      <span>Add</span>
+
+
+<a class="btn btn-success" href="{% url 'feeds:feed-add' %}">
+  <span class="icon-text">
+    <span class="icon is-small">
+      <i class="fas fa-plus"></i>
     </span>
-  </a>
-  </p>
-  <p class="control">
-  <a class="button is-normal is-warning is-light" href="{% url 'feeds:opml-import' %}">
-    <span class="icon-text">
-      <span class="icon is-small">
-	<i class="fas fa-upload"></i>
-      </span>
-      <span>Import</span>
+    <span>Add</span>
+  </span>
+</a>
+
+
+<a class="btn btn-warning" href="{% url 'feeds:opml-import' %}">
+  <span class="icon-text">
+    <span class="icon is-small">
+      <i class="fas fa-upload"></i>
     </span>
-  </a>
-  </p>
-  <p class="control">
-  <a class="button is-normal is-danger is-light" href="{% url 'feeds:opml-export' %}" download>
-    <span class="icon-text">
-      <span class="icon is-small">
-	<i class="fas fa-download"></i>
-      </span>
-      <span>Export</span>
+    <span>Import</span>
+  </span>
+</a>
+
+
+<a class="btn btn-danger" href="{% url 'feeds:opml-export' %}" download>
+  <span class="icon-text">
+    <span class="icon is-small">
+      <i class="fas fa-download"></i>
     </span>
-  </a>
-  </p>
-</div>
+    <span>Export</span>
+  </span>
+</a>
+
+<br>
+<br>
+
+
 {% endif %}
 {% if subscriptions %}
-<div class="table-container">
-  <table class="table is-striped is-hoverable is-fullwidth">
+  <table class="table table-striped table-hoverable">
     <tr>
       <th>
 	<span class="icon-text">
@@ -56,7 +58,7 @@
 	  <span>Feed</span>
 	</span>
       </th>
-      <th class="is-hidden-mobile">
+      <th class="text-nowrap d-none d-lg-table-cell">
 	<span class="icon-text">
 	  <span class="icon">
 	    <i class="fas fa-clock"></i>
@@ -76,9 +78,9 @@
     {% for subscription in subscriptions %}
     <tr>
       <td>
-	<a href="{{ subscription.get_absolute_url }}">{{ subscription.feed.title }}</a>
+	<a class="text-decoration-none" href="{{ subscription.get_absolute_url }}">{{ subscription.feed.title }}</a>
       </td>
-      <td class="is-hidden-mobile">
+      <td class="text-nowrap d-none d-lg-table-cell">
 	{{ subscription.feed.created_at|naturaltime }}
       </td>
       <td>
@@ -87,15 +89,12 @@
     </tr>
     {% endfor %}
   </table>
-</div>
+
 {% else %}
-<article class="message is-warning">
-  <div class="message-body">
-    <span class="icon">
-      <i class="fas fa-exclamation"></i>
-    </span>
-    <span>No feeds available <a href="{% url 'feeds:feed-add' %}">Add a feed</a></span>
-  </div>
-</article>
+<div class="alert alert-warning alert-dismissible fade show" role="alert">
+  <i class="fa-solid fa-triangle-exclamation"></i>&nbsp;
+  <span>No feeds available <a class="alert-link" href="{% url 'feeds:feed-add' %}">Add a feed</a></span>
+  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
 {% endif %}
 {% endblock %}

@@ -5,6 +5,10 @@ from django.contrib.auth.models import User
 from feeds.models import Category, Subscription
 
 
+class OPMLUploadForm(forms.Form):
+    file = forms.FileField()
+
+
 class CategoryForm(forms.ModelForm):
     class Meta:
         model = Category

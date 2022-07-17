@@ -36,6 +36,7 @@ psycopg2-binary = "*"
 dj-database-url = "*"
 django-environ = "*"
 eventlet = "*"
+beautifulsoup4 = "*"
 
 [pipenv]
 allow_prereleases = true

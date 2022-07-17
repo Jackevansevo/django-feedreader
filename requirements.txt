@@ -3,6 +3,7 @@ amqp==5.1.1
 anyio==3.6.1
 asgiref==3.5.2
 async-timeout==4.0.2
+beautifulsoup4==4.11.1
 billiard==4.0.0
 celery[redis]==5.3.0a1
 certifi==2022.6.15
@@ -40,11 +41,12 @@ python-dateutil==2.8.2
 pytz==2022.1
 redis==4.3.4
 rfc3986[idna2008]==1.5.0
-sentry-sdk==1.7.1
+sentry-sdk==1.7.2
 setuptools==63.2.0
 sgmllib3k==1.0.0
 six==1.16.0
 sniffio==1.2.0
+soupsieve==2.3.2.post1
 sqlparse==0.4.2
 tornado==6.2
 tzdata==2022.1

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from urllib.parse import urljoin, urlparse
 
+from bs4 import BeautifulSoup
 from dateutil import parser
 from django.conf import settings
 from django.db import IntegrityError, models, transaction
@@ -112,9 +113,12 @@ class Feed(models.Model):
             # Attempt in a separate transaction
             with transaction.atomic():
                 Entry.objects.bulk_create(new_entries)
-        except IntegrityError:
-            for entry in new_entries:
-                generate_unique_slug(entry)
+        except IntegrityError as error:
+            if "feeds_entry_feed_id_slug" in str(error):
+                for entry in new_entries:
+                    generate_unique_slug(entry)
+            else:
+                raise
 
         return new_entries
 
@@ -154,7 +158,7 @@ class Subscription(models.Model):
 
 class Entry(models.Model):
     title = models.CharField(max_length=300)
-    link = models.URLField(unique=True, max_length=300)
+    link = models.URLField(max_length=300)
     feed = models.ForeignKey(Feed, on_delete=models.CASCADE, related_name="entries")
     published = models.DateTimeField(null=True)
     updated = models.DateTimeField(null=True)
@@ -163,6 +167,7 @@ class Entry(models.Model):
     summary = models.TextField(blank=True, null=True)
     guid = models.CharField(max_length=400, blank=True, null=True, unique=True)
     author = models.CharField(max_length=400, blank=True, null=True)
+    thumbnail = models.URLField(blank=True, null=True, max_length=500)
 
     @classmethod
     def from_feed_entry(cls, feed, entry):
@@ -170,6 +175,28 @@ class Entry(models.Model):
         content = entry.get("content")
         if content is not None:
             content = content[0]["value"]
+
+        summary = entry.get("summary")
+
+        if summary is not None:
+            # Strip out any continue reading links
+            soup = BeautifulSoup(summary, features="html.parser")
+            for a_tag in soup.findAll("a"):
+                if "continue reading" in a_tag.text.lower():
+                    a_tag.extract()
+            summary = str(soup)
+
+        if content is None and summary is not None:
+            content = summary
+            summary = None
+
+        soup = BeautifulSoup(content, features="html.parser")
+        image = soup.find("img")
+        thumbnail = None
+        if image is not None:
+            src = image.get("src")
+            if src is not None and len(src) < 500:
+                thumbnail = src
 
         published = entry.get("published")
         if published is not None:
@@ -193,6 +220,7 @@ class Entry(models.Model):
 
         return Entry(
             feed=feed,
+            thumbnail=thumbnail,
             title=entry["title"],
             slug=slugify(unidecode(title)),
             link=entry["link"],
@@ -200,7 +228,7 @@ class Entry(models.Model):
             updated=updated,
             content=content,
             author=entry.get("author"),
-            summary=entry.get("summary"),
+            summary=summary,
             guid=entry.get("guid"),
         )
 
