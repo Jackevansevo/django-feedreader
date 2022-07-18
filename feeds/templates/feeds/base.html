@@ -46,9 +46,10 @@ h1, h2, h3, h4, h5, h6 {
       <div class="container">
 	{% if messages %}
 	{% for message in messages %}
-	<div class="notification is-primary">
-	  <button class="delete"></button>
+	<div class="alert alert-success alert-dismissible fade show" role="alert">
+	  <i class="fa-solid fa-triangle-exclamation"></i>&nbsp;
 	  {{ message }}
+	  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
 	</div>
 	{% endfor %}
 	{% endif %}

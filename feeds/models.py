@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from urllib.parse import urljoin, urlparse
 
-import bleach
 from bs4 import BeautifulSoup
 from dateutil import parser
 from django.conf import settings
@@ -234,9 +233,9 @@ class Entry(models.Model):
             link=entry["link"],
             published=published,
             updated=updated,
-            content=bleach.clean(content),
+            content=content,
             author=entry.get("author"),
-            summary=bleach.clean(summary),
+            summary=summary,
             guid=entry.get("guid"),
         )
 
