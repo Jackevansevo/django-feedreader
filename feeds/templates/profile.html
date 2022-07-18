@@ -1,13 +1,28 @@
 {% extends 'feeds/base.html' %}
 {% block content %}
-<div class="content">
-  <ul>
-    <li>username: {{ user.username }}</li>
-    <li>email: {{ user.email }}</li>
-    <li>last login {{ user.last_login }}</li>
-  </ul>
-</div>
+<div class="card">
+  <div class="card-header">
+    <span class="icon is-small">
+      <i class="fa fa-user"></i>
+    </span>
+    <span>&nbsp;Profile</span>
+  </div>
+  <div class="card-body">
+    <div class="content">
+      <ul class="list-group list-group-flush">
+	<li class="list-group-item">username: {{ user.username }}</li>
+	<li class="list-group-item">email: {{ user.email }}</li>
+	<li class="list-group-item">last login {{ user.last_login }}</li>
+      </ul>
+    </div>
 
-  <br>
-  <a class="button is-link is-danger is-light" href="{% url 'password_change' %}">Password Change</a>
+    <br>
+    <a class="btn btn-danger" href="{% url 'password_change' %}">
+    <span class="icon is-small">
+      <i class="fa fa-key"></i>
+    </span>
+    <span>&nbsp;Change Password</span>
+    </a>
+  </div>
+</div>
 {% endblock %}

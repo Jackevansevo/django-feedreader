@@ -40,7 +40,7 @@
     {% for entry in page_obj %}
     <tr>
       <td>
-	<a class="text-decoration-none" href="{{ entry.get_absolute_url }}">{{ entry.title }}</a>
+	<a class="text-decoration-none" href="{{ entry.get_absolute_url }}">{{ entry.title|truncatewords:10 }}</a>
       </td>
       <td class="d-none d-lg-table-cell">
 	{% if entry.updated %}
