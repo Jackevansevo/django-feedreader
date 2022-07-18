@@ -18,7 +18,7 @@
 
 <div class="row pt-3">
   <div clas="col">
-    <a class="btn btn-primary" href="{{ subscription.feed.link }}">
+    <a class="btn btn-outline-primary btn-sm" href="{{ subscription.feed.link }}">
       <span class="icon-text">
 	<span class="icon is-small">
 	  <i class="fa-solid fa-arrow-up-right-from-square"></i>
@@ -26,7 +26,7 @@
 	<span>View site</span>
       </span>
     </a>
-    <a class="btn btn-warning" href="{{ subscription.feed.url }}">
+    <a class="btn btn-outline-warning btn-sm" href="{{ subscription.feed.url }}">
       <span class="icon-text">
 	<span class="icon is-small">
 	  <i class="fas fa-rss"></i>
@@ -34,7 +34,7 @@
 	<span>Feed</span>
       </span>
     </a>
-    <a class="btn btn-danger"
+    <a class="btn btn-outline-danger btn-sm"
        href="{% url 'feeds:subscription-delete' subscription.pk %}">
       <span class="icon-text">
 	<span class="icon is-small">
@@ -52,7 +52,9 @@
     <h3 class="mb-0">{{ entry.title }}</h3>
     <div class="mb-1 text-muted">{{ entry.published | date }}</div>
     {% if entry.summary %}
-    {{ entry.summary|safe|truncatewords:50 }}
+    {{ entry.summary|safe|striptags|truncatewords:50 }}
+    {% else %}
+    {{ entry.content|safe|striptags|truncatewords:50 }}
     {% endif %}
     <a href="{{ entry.get_absolute_url }}" class="stretched-link">Continue reading</a>
   </div>

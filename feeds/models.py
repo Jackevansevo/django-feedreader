@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from urllib.parse import urljoin, urlparse
 
+import bleach
 from bs4 import BeautifulSoup
 from dateutil import parser
 from django.conf import settings
@@ -178,8 +179,13 @@ class Entry(models.Model):
 
         summary = entry.get("summary")
 
-        if summary is not None:
+        if content is None and summary is not None:
+            content = summary
+            summary = None
+        elif summary == content:
+            summary = None
 
+        if summary is not None:
             # Strip out any images
             soup = BeautifulSoup(summary, features="html.parser")
             for img in soup.findAll("img"):
@@ -191,10 +197,6 @@ class Entry(models.Model):
                     a_tag.extract()
 
             summary = str(soup)
-
-        if content is None and summary is not None:
-            content = summary
-            summary = None
 
         soup = BeautifulSoup(content, features="html.parser")
         image = soup.find("img")
@@ -232,9 +234,9 @@ class Entry(models.Model):
             link=entry["link"],
             published=published,
             updated=updated,
-            content=content,
+            content=bleach.clean(content),
             author=entry.get("author"),
-            summary=summary,
+            summary=bleach.clean(summary),
             guid=entry.get("guid"),
         )
 

@@ -2,9 +2,15 @@
 {% block style %}
 <style>
 img, video {
-  max-width: 100%;
-  height: auto;
+  max-width: 40vw;
+  margin: 2rem auto;
   display: block;
+}
+pre {
+  background: #fdf6e3;
+  color: #002b36;
+  padding: 1rem;
+  border-radius: 0.4rem;
 }
 </style>
 {% endblock %}
@@ -22,9 +28,12 @@ img, video {
 <article class="blog-post">
   <h2 class="blog-post-title mb-1text-break">{{ entry.title }}</h2>
   <p class="blog-post-meta">{{ entry.published | date }}{% if entry.author %} by <a href="#">{{ entry.author }}</a>{% endif %}</p>
-  {% if entry.summary %}
-  {{ entry.summary|safe }}
-  {% endif %}
+  <a class="btn btn-sm btn-outline-primary" href="{{ entry.link }}">
+    <span class="icon is-small">
+      <i class="fa-solid fa-arrow-up-right-from-square"></i>
+    </span>
+    <span>View</span>
+  </a>
   <hr>
   {% if entry.content %}
   {{ entry.content|safe }}
