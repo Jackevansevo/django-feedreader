@@ -197,13 +197,23 @@ class Entry(models.Model):
 
             summary = str(soup)
 
-        soup = BeautifulSoup(content, features="html.parser")
-        image = soup.find("img")
-        thumbnail = None
-        if image is not None:
-            src = image.get("src")
-            if src is not None and len(src) < 500:
-                thumbnail = src
+        if content is not None:
+            soup = BeautifulSoup(content, features="html.parser")
+
+            thumbnail = None
+
+            for img in soup.findAll("img"):
+                # TODO use the biggest image as the thumbnail
+                if thumbnail is None:
+                    src = img.get("src")
+                    if src is not None and len(src) < 500:
+                        thumbnail = src
+                del img["width"]
+                del img["height"]
+                del img["class"]
+                img["class"] = "rounded mx-auto d-block"
+
+            content = str(soup)
 
         published = entry.get("published")
         if published is not None:
