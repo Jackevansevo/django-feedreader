@@ -197,21 +197,34 @@ class Entry(models.Model):
 
             summary = str(soup)
 
+        feed_parsed = urlparse(feed.link)
+
         if content is not None:
             soup = BeautifulSoup(content, features="html.parser")
 
             thumbnail = None
 
             for img in soup.findAll("img"):
+                del img["width"]
+                del img["height"]
+                del img["class"]
+
+                src = img.get("src")
+                parsed_src = urlparse(src)
+
+                # Some feeds still use relative URLs, we can attempt to fix this
+                if parsed_src.netloc == "":
+                    img["src"] = parsed_src._replace(
+                        netloc=feed_parsed.netloc, scheme=feed_parsed.scheme
+                    ).geturl()
+
+                img["class"] = "rounded mx-auto d-block"
+
                 # TODO use the biggest image as the thumbnail
                 if thumbnail is None:
                     src = img.get("src")
                     if src is not None and len(src) < 500:
                         thumbnail = src
-                del img["width"]
-                del img["height"]
-                del img["class"]
-                img["class"] = "rounded mx-auto d-block"
 
             content = str(soup)
 
