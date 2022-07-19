@@ -23,7 +23,12 @@
 
 <ul class="list-group list-group-flush">
   {% for category in categories %}
-  <a class="list-group-item list-group-item-action" href="{{ category.get_absolute_url }}">{{ category }}</a>
+  <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-start" href="{{ category.get_absolute_url }}">
+    <div class="ms-2 me-auto">
+      {{ category }}
+    </div>
+    <span class="badge bg-primary rounded-pill">{{ category.subscriptions__count }}</span>
+  </a>
   {% endfor %}
 </ul>
 

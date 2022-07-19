@@ -4,6 +4,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.models import User
 from django.core.paginator import Paginator
+from django.db.models import Count
 from django.db.utils import IntegrityError
 from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, render
@@ -103,7 +104,9 @@ class CategoryDeleteView(DeleteView):
 
 
 def category_list(request: HttpRequest) -> HttpResponse:
-    categories = Category.objects.filter(user=request.user)
+    categories = Category.objects.filter(user=request.user).annotate(
+        Count("subscriptions")
+    )
     if request.method == "POST":
         form = CategoryForm(request.POST)
         if form.is_valid():
