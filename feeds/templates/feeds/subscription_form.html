@@ -14,14 +14,17 @@
     <form id='add-subscription-form' method="post">
       {% csrf_token %}
       {{ form.as_p }}
-      <button id="submit-button" class="btn btn-success" type="submit">
-	<span class="icon-text">
-	  <span class="icon">
-	    <i class="fas fa-check"></i>
+      <div class="d-flex flex-row justify-content-between align-items-baseline">
+	<button id="submit-button" class="btn btn-success" type="submit">
+	  <span class="icon-text">
+	    <span class="icon">
+	      <i class="fas fa-check"></i>
+	    </span>
+	    <span>Submit</span>
 	  </span>
-	  <span>Submit</span>
-	</span>
-      </button>
+	</button>
+	<a href="{% url 'feeds:opml-import' %}">Import feeds from OPML</a>
+      </div>
     </form>
   </div>
 </div>
