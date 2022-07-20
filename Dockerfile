@@ -11,7 +11,7 @@ WORKDIR /app
 # Build dev image
 FROM base as dev
 
-RUN apt-get update && apt-get upgrade -y && apt install -y watchman build-essential procps libpq-dev
+RUN apt-get update && apt-get upgrade -y && apt install -y build-essential procps libpq-dev
 
 COPY requirements.txt dev-requirements.txt .
 RUN --mount=type=cache,target=~/.cache pip install -U pip && pip install -r dev-requirements.txt && pip install -r requirements.txt
