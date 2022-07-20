@@ -1,1 +1,1 @@
-docker-compose exec app ./manage.py shell
+docker compose exec app ./manage.py shell
