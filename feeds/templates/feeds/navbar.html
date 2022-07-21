@@ -1,4 +1,4 @@
-<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+<nav class="navbar navbar-expand-lg {% if debug %}navbar-light bg-warning{% else %}navbar-dark bg-primary{% endif %}">
   <div class="container-fluid">
     <a class="navbar-brand" href="{% url 'feeds:index' %}">
       <span class="icon-text">
@@ -14,8 +14,10 @@
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
       <ul class="navbar-nav me-auto mb-2 mb-lg-0">
 	{% if request.user.is_authenticated %}
+	{% url 'feeds:feed-list' as link %}
+	{% if link %}
 	<li class="nav-item">
-	  <a class="nav-link" href="{% url 'feeds:feed-list' %}">
+	  <a class="nav-link {% if request.path == link %}active{% endif %}" href="{{ link }}">
 	    <span class="icon-text">
 	      <span class="icon">
 		<i class="fas fa-list"></i>
@@ -24,8 +26,11 @@
 	    </span>
 	  </a>
 	</li>
+	{% endif %}
+	{% url 'feeds:category-list' as link %}
+	{% if link %}
 	<li class="nav-item">
-	  <a class="nav-link" href="{% url 'feeds:category-list' %}">
+	  <a class="nav-link {% if request.path == link %}active{% endif %}" href="{{ link }}">
 	    <span class="icon-text">
 	      <span class="icon">
 		<i class="fas fa-tags"></i>
@@ -34,8 +39,12 @@
 	    </span>
 	  </a>
 	</li>
+	{% endif %}
+
+	{% url 'feeds:feed-add' as link %}
+	{% if link %}
 	<li class="nav-item">
-	  <a class="nav-link" href="{% url 'feeds:feed-add' %}">
+	  <a class="nav-link {% if request.path == link %}active{% endif %}" href="{{ link }}">
 	    <span class="icon-text">
 	      <span class="icon">
 		<i class="fas fa-plus"></i>
@@ -44,6 +53,7 @@
 	    </span>
 	  </a>
 	</li>
+	{% endif %}
 	{% endif %}
       </ul>
       <ul class="navbar-nav">
@@ -58,8 +68,10 @@
 	    </span>
 	  </a>
 	</li>
+	{% url 'profile' as link %}
+	{% if link %}
 	<li class="nav-item">
-	  <a class="nav-link" href="{% url 'profile' %}">
+	  <a class="nav-link {% if request.path == link %}active{% endif %}" href="{{ link }}">
 	    <span class="icon-text">
 	      <span class="icon">
 		<i class="fas fa-user"></i>
@@ -68,9 +80,12 @@
 	    </span>
 	  </a>
 	</li>
+	{% endif %}
 	{% else %}
+	{% url 'login' as link %}
+	{% if link %}
 	<li class="nav-item">
-	  <a class="nav-link" href="{% url 'login' %}">
+		<a class="nav-link {% if request.path == link %}active{% endif %}" href="{{ link }}">
 	    <span class="icon-text">
 	      <span class="icon">
 		<i class="fa-solid fa-unlock"></i>
@@ -79,8 +94,11 @@
 	    </span>
 	  </a>
 	</li>
+	{% endif %}
+	{% url 'sign_up' as link %}
+	{% if link %}
 	<li class="nav-item">
-	  <a class="nav-link" href="{% url 'sign_up' %}">
+	  <a class="nav-link {% if request.path == link %}active{% endif %}" href="{{ link }}">
 	    <span class="icon-text">
 	      <span class="icon">
 		<i class="fa-solid fa-user-plus"></i>
@@ -89,6 +107,7 @@
 	    </span>
 	  </a>
 	</li>
+	{% endif %}
 	{% endif %}
       </ul>
       <form class="d-flex" role="search">
