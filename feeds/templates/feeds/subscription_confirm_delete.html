@@ -1,14 +1,24 @@
 {% extends 'feeds/base.html' %}
 {% block content %}
-<form method="post">{% csrf_token %}
-    <p>Are you sure you want to unsubscribe from feed "{{ object.feed }}"?</p>
-    {{ form }}
-    <button type="submit" class="btn btn-danger">
-      <span class="icon-text">
-	<span class="icon is-small">
-	  <i class="fas fa-trash"></i>
-	</span>
-	<span>Confirm</span>
-    </button>
-</form>
+<div class="card">
+  <div class="card-header">
+    <span class="icon is-small">
+      <i class="fa fa-trash"></i>
+    </span>
+    <span>&nbsp;Delete</span>
+  </div>
+  <div class="card-body">
+    <form method="post">{% csrf_token %}
+      <p>Are you sure you want to unsubscribe from feed "{{ object.feed }}"?</p>
+      {{ form }}
+      <button type="submit" class="btn btn-danger">
+	<span class="icon-text">
+	  <span class="icon is-small">
+	    <i class="fas fa-trash"></i>
+	  </span>
+	  <span>Confirm</span>
+      </button>
+    </form>
+  </div>
+</div>
 {% endblock %}
