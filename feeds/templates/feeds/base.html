@@ -44,6 +44,7 @@ h1, h2, h3, h4, h5, h6 {
     </header>
   </main>
 
+  <div class="container">
   {% if messages %}
   {% for message in messages %}
   <div class="alert alert-success alert-dismissible fade show" role="alert">
@@ -53,6 +54,7 @@ h1, h2, h3, h4, h5, h6 {
   </div>
   {% endfor %}
   {% endif %}
+  </div>
   {% block content %}
   {% endblock %}
 
