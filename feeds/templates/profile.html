@@ -1,28 +1,36 @@
 {% extends 'feeds/base.html' %}
 {% block content %}
-<div class="card">
-  <div class="card-header">
-    <span class="icon is-small">
-      <i class="fa fa-user"></i>
-    </span>
-    <span>&nbsp;Profile</span>
-  </div>
-  <div class="card-body">
-    <div class="content">
-      <ul class="list-group list-group-flush">
-	<li class="list-group-item">username: {{ user.username }}</li>
-	<li class="list-group-item">email: {{ user.email }}</li>
-	<li class="list-group-item">last login {{ user.last_login }}</li>
-      </ul>
+<div class="container">
+  <div class="card">
+    <div class="card-header">
+      <span class="icon is-small">
+	<i class="fa fa-user"></i>
+      </span>
+      <span>&nbsp;Profile</span>
     </div>
+    <div class="card-body">
+      <div class="content">
+	<ul class="list-group list-group-flush">
+	  <li class="list-group-item">username: {{ user.username }}</li>
+	  <li class="list-group-item">email: {{ user.email }}</li>
+	  <li class="list-group-item">last login {{ user.last_login }}</li>
+	</ul>
+      </div>
 
-    <br>
-    <a class="btn btn-danger" href="{% url 'password_change' %}">
-    <span class="icon is-small">
-      <i class="fa fa-key"></i>
-    </span>
-    <span>&nbsp;Change Password</span>
-    </a>
+      <br>
+      <a class="btn btn-danger" href="{% url 'password_change' %}">
+	<span class="icon is-small">
+	  <i class="fa fa-key"></i>
+	</span>
+	<span>&nbsp;Change Password</span>
+      </a>
+      <a class="btn btn-warning" href="{% url 'feeds:opml-export' %}">
+	<span class="icon is-small">
+	  <i class="fa fa-download"></i>
+	</span>
+	<span>&nbsp;Export Feeds</span>
+      </a>
+    </div>
   </div>
 </div>
 {% endblock %}

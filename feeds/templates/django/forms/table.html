@@ -10,7 +10,6 @@
 {% endif %}
 {% for field, errors in fields %}
   <tr{% with classes=field.css_classes %}{% if classes %} class="{{ classes }}"{% endif %}{% endwith %}>
-    <div class="form-group">
     <th>{% if field.label %}{{ field.label_tag }}{% endif %}</th>
     <td>
       {{ errors }}
@@ -22,7 +21,6 @@
         {% for field in hidden_fields %}{{ field }}{% endfor %}
       {% endif %}
     </td>
-    </div>
   </tr>
 {% endfor %}
 {% if not fields and not errors %}
