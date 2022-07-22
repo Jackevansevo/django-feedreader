@@ -115,7 +115,6 @@ def category_list(request: HttpRequest) -> HttpResponse:
                 form.save()
             except IntegrityError:
                 form.add_error("name", "Category already exists")
-                return render(request, "feeds/category_form.html", {"form": form})
     else:
         form = CategoryForm()
 
