@@ -1,39 +1,41 @@
 {% extends 'feeds/base.html' %}
 {% block content %}
-<h1 class="title">{{ category.name }}</h1>
-<a class="btn btn-outline-danger" href="{% url 'feeds:category-delete' category.pk %}">
-  <span class="icon-text">
-    <span class="icon">
-      <i class="fas fa-trash"></i>
-    </span>
-    <span>Delete</span>
-</a>
-</br>
-</br>
-{% if category.subscriptions.all %}
+<div class="container">
+  <h1 class="title">{{ category.name }}</h1>
+  <a class="btn btn-outline-danger pt-2" href="{% url 'feeds:category-delete' category.pk %}">
+    <span class="icon-text">
+      <span class="icon">
+	<i class="fas fa-trash"></i>
+      </span>
+      <span>Delete</span>
+  </a>
+  </br>
+  </br>
+  {% if category.subscriptions.all %}
 
-<table class="table table-striped table-hover table-responsive">
-  <thead>
-    <tr>
-      <th>Title</th>
-      <th>Category</th>
-    </tr>
-  </thead>
-  <tbody class="table-group-divider">
-    {% for subscription in category.subscriptions.all %}
-    <tr>
-      <td>
-	<a class="text-decoration-none" href="{{ subscription.get_absolute_url }}">{{ subscription.feed.title }}</a>
-      </td>
-      <td>
-	{{ subscription.category|default:"-"}}
-      </td>
-    </tr>
-    {% endfor %}
-  </tbody>
-</table>
+  <table class="table table-striped table-hover table-responsive">
+    <thead>
+      <tr>
+	<th>Title</th>
+	<th>Category</th>
+      </tr>
+    </thead>
+    <tbody class="table-group-divider">
+      {% for subscription in category.subscriptions.all %}
+      <tr>
+	<td>
+	  <a class="text-decoration-none" href="{{ subscription.get_absolute_url }}">{{ subscription.feed.title }}</a>
+	</td>
+	<td>
+	  {{ subscription.category|default:"-"}}
+	</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
 
-{% else %}
-<div class="alert alert-warning">No subscriptions are available. <a class="alert-link" href="{% url 'feeds:feed-add' %}">Add Feed</a></div>
-{% endif %}
+  {% else %}
+  <div class="alert alert-warning">No subscriptions are available. <a class="alert-link" href="{% url 'feeds:feed-add' %}">Add Feed</a></div>
+  {% endif %}
+</div>
 {% endblock %}

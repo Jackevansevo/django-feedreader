@@ -2,69 +2,71 @@
 {% load humanize %}
 {% block title %} - {{ feed.title }}{% endblock %}
 {% block content %}
-<nav aria-label="breadcrumb">
-  <ol class="breadcrumb">
-    <li class="breadcrumb-item"><a href="{% url 'feeds:index' %}">Home</a></li>
-    <li class="breadcrumb-item"><a href="{% url 'feeds:feed-list' %}">Feeds</a></li>
-    <li class="breadcrumb-item active">{{ feed.title }}</li>
-  </ol>
-</nav>
+<div class="container">
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{% url 'feeds:index' %}">Home</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'feeds:feed-list' %}">Feeds</a></li>
+      <li class="breadcrumb-item active">{{ feed.title }}</li>
+    </ol>
+  </nav>
 
-<div class="row">
-  <h1>{{ feed.title }}</h5>
-  {% if subscription.category %}<h2 class="mb-2 text-muted">{{ subscription.category }}</h6>{% endif %}
-  <h6>Last checked {{ subscription.feed.last_checked | naturaltime }}</h6>
-</div>
-
-<div class="row pt-3">
-  <div clas="col">
-    <a class="btn btn-outline-primary btn-sm" href="{{ subscription.feed.link }}">
-      <span class="icon-text">
-	<span class="icon is-small">
-	  <i class="fa-solid fa-arrow-up-right-from-square"></i>
-	</span>
-	<span>View site</span>
-      </span>
-    </a>
-    <a class="btn btn-outline-warning btn-sm" href="{{ subscription.feed.url }}">
-      <span class="icon-text">
-	<span class="icon is-small">
-	  <i class="fas fa-rss"></i>
-	</span>
-	<span>Feed</span>
-      </span>
-    </a>
-    <a class="btn btn-outline-danger btn-sm"
-       href="{% url 'feeds:subscription-delete' subscription.pk %}">
-      <span class="icon-text">
-	<span class="icon is-small">
-	  <i class="fas fa-trash"></i>
-	</span>
-	<span>Delete</span>
-    </a>
+  <div class="row">
+    <h1>{{ feed.title }}</h5>
+    {% if subscription.category %}<h2 class="mb-2 text-muted">{{ subscription.category }}</h6>{% endif %}
+    <h6>Last checked {{ subscription.feed.last_checked | naturaltime }}</h6>
   </div>
-</div>
-<br>
 
-{% for entry in feed.entries.all %}
-<div class="row g-0 border rounded overflow-hidden flex-md-row mb-4 shadow-sm h-md-250 position-relative">
-  <div class="col p-4 d-flex flex-column position-static">
-    <h3 class="mb-0">{{ entry.title }}</h3>
-    <div class="mb-1 text-muted">{{ entry.published | date }}</div>
-    {% if entry.summary %}
-    {{ entry.summary|safe|striptags|truncatewords:50 }}
-    {% else %}
-    {{ entry.content|safe|striptags|truncatewords:50 }}
+  <div class="row pt-3">
+    <div clas="col">
+      <a class="btn btn-outline-primary btn-sm" href="{{ subscription.feed.link }}">
+	<span class="icon-text">
+	  <span class="icon is-small">
+	    <i class="fa-solid fa-arrow-up-right-from-square"></i>
+	  </span>
+	  <span>View site</span>
+	</span>
+      </a>
+      <a class="btn btn-outline-warning btn-sm" href="{{ subscription.feed.url }}">
+	<span class="icon-text">
+	  <span class="icon is-small">
+	    <i class="fas fa-rss"></i>
+	  </span>
+	  <span>Feed</span>
+	</span>
+      </a>
+      <a class="btn btn-outline-danger btn-sm"
+	 href="{% url 'feeds:subscription-delete' subscription.pk %}">
+	<span class="icon-text">
+	  <span class="icon is-small">
+	    <i class="fas fa-trash"></i>
+	  </span>
+	  <span>Delete</span>
+      </a>
+    </div>
+  </div>
+  <br>
+
+  {% for entry in feed.entries.all %}
+  <div class="row g-0 border rounded overflow-hidden flex-md-row mb-4 shadow-sm h-md-250 position-relative">
+    <div class="col p-4 d-flex flex-column position-static">
+      <h3 class="mb-0">{{ entry.title }}</h3>
+      <div class="mb-1 text-muted">{{ entry.published | date }}</div>
+      {% if entry.summary %}
+      {{ entry.summary|safe|striptags|truncatewords:50 }}
+      {% else %}
+      {{ entry.content|safe|striptags|truncatewords:50 }}
+      {% endif %}
+      <a href="{{ entry.get_absolute_url }}" class="stretched-link">Continue reading</a>
+    </div>
+    {% if entry.thumbnail %}
+    <div class="col-auto d-none d-lg-block">
+      <img style="max-height: 200px;" src="{{ entry.thumbnail }}" class="rounded-start" alt="...">
+    </div>
     {% endif %}
-    <a href="{{ entry.get_absolute_url }}" class="stretched-link">Continue reading</a>
   </div>
-  {% if entry.thumbnail %}
-  <div class="col-auto d-none d-lg-block">
-    <img style="max-height: 200px;" src="{{ entry.thumbnail }}" class="rounded-start" alt="...">
-  </div>
-  {% endif %}
-</div>
-{% endfor %}
+  {% endfor %}
 
+</div>
 
 {% endblock %}

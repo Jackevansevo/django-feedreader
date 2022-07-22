@@ -43,19 +43,19 @@ h1, h2, h3, h4, h5, h6 {
     {% include 'feeds/navbar.html' %}
     </header>
   </main>
-      <div class="container">
-	{% if messages %}
-	{% for message in messages %}
-	<div class="alert alert-success alert-dismissible fade show" role="alert">
-	  <i class="fa-solid fa-triangle-exclamation"></i>&nbsp;
-	  {{ message }}
-	  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-	</div>
-	{% endfor %}
-	{% endif %}
-	{% block content %}
-	{% endblock %}
-      </div>
+
+  {% if messages %}
+  {% for message in messages %}
+  <div class="alert alert-success alert-dismissible fade show" role="alert">
+    <i class="fa-solid fa-triangle-exclamation"></i>&nbsp;
+    {{ message }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+  </div>
+  {% endfor %}
+  {% endif %}
+  {% block content %}
+  {% endblock %}
+
     </main>
   </body>
   {% block scripts %}

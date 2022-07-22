@@ -1,35 +1,37 @@
 {% extends 'feeds/base.html' %}
 {% block content %}
-<div class="card">
-  <div class="card-header">
-    <span class="icon is-small">
-      <i class="fa fa-tags"></i>
-    </span>
-    <span class="icon is-small">
-      <i class="fa fa-plus"></i>
-    </span>
-    <span>&nbsp;Add Category</span>
-  </div>
-  <div class="card-body">
-    <form method="post">
-      {% csrf_token %}
-      {{ form.non_field_errors }}
-      {{ form.as_p }}
-      <button class="btn btn-success" type="submit">Create</button>
-    </form>
-  </div>
-</div>
-<br>
-
-<ul class="list-group list-group-flush">
-  {% for category in categories %}
-  <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-start" href="{{ category.get_absolute_url }}">
-    <div class="ms-2 me-auto">
-      {{ category }}
+<div class="container">
+  <div class="card">
+    <div class="card-header">
+      <span class="icon is-small">
+	<i class="fa fa-tags"></i>
+      </span>
+      <span class="icon is-small">
+	<i class="fa fa-plus"></i>
+      </span>
+      <span>&nbsp;Add Category</span>
     </div>
-    <span class="badge bg-primary rounded-pill">{{ category.subscriptions__count }}</span>
-  </a>
-  {% endfor %}
-</ul>
+    <div class="card-body">
+      <form method="post">
+	{% csrf_token %}
+	{{ form.non_field_errors }}
+	{{ form.as_p }}
+	<button class="btn btn-success" type="submit">Create</button>
+      </form>
+    </div>
+  </div>
+  <br>
+
+  <ul class="list-group list-group-flush">
+    {% for category in categories %}
+    <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-start" href="{{ category.get_absolute_url }}">
+      <div class="ms-2 me-auto">
+	{{ category }}
+      </div>
+      <span class="badge bg-primary rounded-pill">{{ category.subscriptions__count }}</span>
+    </a>
+    {% endfor %}
+  </ul>
+</div>
 
 {% endblock %}

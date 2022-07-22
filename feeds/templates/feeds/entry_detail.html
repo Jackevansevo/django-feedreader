@@ -16,28 +16,30 @@ pre {
 {% endblock %}
 
 {% block content %}
-<nav aria-label="breadcrumb">
-  <ol class="breadcrumb">
-    <li class="breadcrumb-item"><a href="{% url 'feeds:index' %}">Home</a></li>
-    <li class="breadcrumb-item"><a href="{% url 'feeds:feed-list' %}">Feeds</a></li>
-    <li class="breadcrumb-item"><a href="{{ entry.feed.get_absolute_url }}">{{ entry.feed.title }}</a></li>
-    <li class="breadcrumb-item active text-truncate">{{ entry.title }}</li>
-  </ol>
-</nav>
+<div class="container">
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{% url 'feeds:index' %}">Home</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'feeds:feed-list' %}">Feeds</a></li>
+      <li class="breadcrumb-item"><a href="{{ entry.feed.get_absolute_url }}">{{ entry.feed.title }}</a></li>
+      <li class="breadcrumb-item active text-truncate">{{ entry.title }}</li>
+    </ol>
+  </nav>
 
-<article class="blog-post">
-  <h2 class="blog-post-title mb-1text-break">{{ entry.title }}</h2>
-  <p class="blog-post-meta">{{ entry.published | date }}{% if entry.author %} by <a href="#">{{ entry.author }}</a>{% endif %}</p>
-  <a class="btn btn-sm btn-outline-primary" href="{{ entry.link }}">
-    <span class="icon is-small">
-      <i class="fa-solid fa-arrow-up-right-from-square"></i>
-    </span>
-    <span>View</span>
-  </a>
-  <hr>
-  {% if entry.content %}
-  {{ entry.content|safe }}
-  {% endif %}
-  <a href="{{ entry.link }}">Continue reading...</a>
-</article>
+  <article class="blog-post">
+    <h2 class="blog-post-title mb-1text-break">{{ entry.title }}</h2>
+    <p class="blog-post-meta">{{ entry.published | date }}{% if entry.author %} by <a href="#">{{ entry.author }}</a>{% endif %}</p>
+    <a class="btn btn-sm btn-outline-primary" href="{{ entry.link }}">
+      <span class="icon is-small">
+	<i class="fa-solid fa-arrow-up-right-from-square"></i>
+      </span>
+      <span>View</span>
+    </a>
+    <hr>
+    {% if entry.content %}
+    {{ entry.content|safe }}
+    {% endif %}
+    <a href="{{ entry.link }}">Continue reading...</a>
+  </article>
+</div>
 {% endblock %}

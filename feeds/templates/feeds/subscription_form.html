@@ -1,31 +1,33 @@
 {% extends 'feeds/base.html' %}
 {% block content %}
-<div class="card">
-  <div class="card-header">
-    <span class="icon is-small">
-      <i class="fa fa-rss"></i>
-    </span>
-    <span class="icon is-small">
-      <i class="fa fa-plus"></i>
-    </span>
-    <span>&nbsp;Add feed</span>
-  </div>
-  <div class="card-body">
-    <form id='add-subscription-form' method="post">
-      {% csrf_token %}
-      {{ form.as_p }}
-      <div class="d-flex flex-row justify-content-between align-items-baseline">
-	<button id="submit-button" class="btn btn-success" type="submit">
-	  <span class="icon-text">
-	    <span class="icon">
-	      <i class="fas fa-check"></i>
+<div class="container">
+  <div class="card">
+    <div class="card-header">
+      <span class="icon is-small">
+	<i class="fa fa-rss"></i>
+      </span>
+      <span class="icon is-small">
+	<i class="fa fa-plus"></i>
+      </span>
+      <span>&nbsp;Add feed</span>
+    </div>
+    <div class="card-body">
+      <form id='add-subscription-form' method="post">
+	{% csrf_token %}
+	{{ form.as_p }}
+	<div class="d-flex flex-row justify-content-between align-items-baseline">
+	  <button id="submit-button" class="btn btn-success" type="submit">
+	    <span class="icon-text">
+	      <span class="icon">
+		<i class="fas fa-check"></i>
+	      </span>
+	      <span>Submit</span>
 	    </span>
-	    <span>Submit</span>
-	  </span>
-	</button>
-	<a href="{% url 'feeds:opml-import' %}">Import feeds from OPML</a>
-      </div>
-    </form>
+	  </button>
+	  <a href="{% url 'feeds:opml-import' %}">Import feeds from OPML</a>
+	</div>
+      </form>
+    </div>
   </div>
 </div>
 {% endblock %}
