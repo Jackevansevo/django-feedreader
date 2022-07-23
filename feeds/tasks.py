@@ -56,14 +56,14 @@ def _refresh_or_create_feed(url, last_modified=None, etag=None):
 
     update_fields = {"last_checked": timezone.now()}
 
+    if parsed.feed.link == "":
+        parsed.feed.link = url
+
     update_fields["link"] = parsed.feed.link
 
     if parsed.feed.title != "":
         update_fields["title"] = parsed.feed.title
     else:
-        # Some feeds don't set the link
-        if parsed.feed.link == "":
-            parsed.feed.link = url
         update_fields["title"] = urlparse(parsed.feed.link).netloc.lstrip("www.")
 
     # Temporary redirect
