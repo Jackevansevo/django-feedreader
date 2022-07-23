@@ -1,13 +1,13 @@
 from urllib.parse import urlparse
 
 import feedparser
-import httpx
 from celery import group, shared_task
 from dateutil import parser
 from django.db import transaction
 from django.db.models import Count
 from django.utils import timezone
 from django.utils.http import http_date
+from eventlet.green.urllib.request import Request, urlopen
 
 from feeds.models import Category, Feed, Subscription
 
@@ -43,9 +43,10 @@ def _refresh_or_create_feed(url, last_modified=None, etag=None):
     if last_modified is not None:
         headers["If-Modified-Since"] = http_date(last_modified.timestamp())
 
-    resp = httpx.get(url, headers=headers, follow_redirects=True)
+    request = Request(url, headers=headers)
+    resp = urlopen(request)
 
-    if resp.status_code == 304:
+    if resp.status == 304:
         return url, False, False
 
     parsed = feedparser.parse(resp)
@@ -60,10 +61,13 @@ def _refresh_or_create_feed(url, last_modified=None, etag=None):
     if parsed.feed.title != "":
         update_fields["title"] = parsed.feed.title
     else:
+        # Some feeds don't set the link
+        if parsed.feed.link == "":
+            parsed.feed.link = url
         update_fields["title"] = urlparse(parsed.feed.link).netloc.lstrip("www.")
 
     # Temporary redirect
-    if resp.history:
+    if url != resp.url:
         update_fields["url"] = resp.url
 
     # https://feedparser.readthedocs.io/en/latest/http-etag.html
@@ -73,6 +77,8 @@ def _refresh_or_create_feed(url, last_modified=None, etag=None):
     if resp.headers.get("last-modified"):
         update_fields["last_modified"] = parser.parse(resp.headers["last-modified"])
 
+    # TODO perform this work in a separate thread which is responsilbe for
+    # writing to the DB
     feed, created = Feed.objects.update_or_create(url=url, defaults=update_fields)
 
     if parsed.entries:

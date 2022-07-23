@@ -1,6 +1,5 @@
 import listparser
-from celery import group
-from celery.result import AsyncResult
+from celery import group, result
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -9,7 +8,7 @@ from django.contrib.auth.models import User
 from django.core.paginator import Paginator
 from django.db.models import Count
 from django.db.utils import IntegrityError
-from django.http import HttpRequest, HttpResponse, JsonResponse
+from django.http import HttpRequest, HttpResponse, HttpResponseNotFound, JsonResponse
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse_lazy
 from django.utils import timezone
@@ -26,18 +25,37 @@ from .models import Category, Entry, Feed, Subscription
 
 
 def task_status(request: HttpRequest, task_id) -> JsonResponse:
-    breakpoint()
-    task_result = AsyncResult(task_id)
-    result = {
+    task_result = result.AsyncResult(task_id)
+    data = {
         "id": task_id,
         "status": task_result.status,
         "result": task_result.result,
     }
-    return JsonResponse(result)
+    return JsonResponse(data)
+
+
+def serialize_child(child):
+    # TODO Error 'results' are serializable, not sure if there's a better way TODO this
+    if child.status == "FAILURE":
+        return {"id": child.id, "status": child.status, "error": str(child.result)}
+    return {"id": child.id, "status": child.status, "result": child.result}
+
+
+def task_group_status(_: HttpRequest, task_id) -> HttpResponse:
+    group_result = result.GroupResult.restore(task_id)
+    if group_result is None:
+        return HttpResponseNotFound(f"GroupResult('{task_id}') not found")
+    data = {
+        "id": task_id,
+        "children": [serialize_child(child) for child in group_result.children],
+        "completed_count": group_result.completed_count(),
+    }
+    return JsonResponse(data)
 
 
 @login_required
 def import_opml_feeds(request: HttpRequest) -> HttpResponse:
+    # TODO, check if the user has a recent in progress task?
     if request.method == "POST":
         form = OPMLUploadForm(request.POST, request.FILES)
         if form.is_valid():
@@ -53,11 +71,21 @@ def import_opml_feeds(request: HttpRequest) -> HttpResponse:
                     tasks.add_subscription.s(feed.url, category, request.user.id)
                 )
 
-            breakpoint()
             res = group(jobs)()
+            res.save()
 
             return JsonResponse(
-                {"tasks": [child.id for child in res.children], "group": res.id}
+                {
+                    "id": res.id,
+                    "children": [
+                        {
+                            "id": child.id,
+                            "url": feed.url,
+                            "category": feed.categories[0][0],
+                        }
+                        for (child, feed) in zip(res.children, parsed.feeds)
+                    ],
+                }
             )
     else:
         form = OPMLUploadForm()

@@ -199,10 +199,10 @@ class Entry(models.Model):
 
         feed_parsed = urlparse(feed.link)
 
+        thumbnail = None
+
         if content is not None:
             soup = BeautifulSoup(content, features="html.parser")
-
-            thumbnail = None
 
             for img in soup.findAll("img"):
                 del img["width"]

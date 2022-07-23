@@ -42,4 +42,9 @@ urlpatterns = [
         views.task_status,
         name="task-status",
     ),
+    path(
+        "task/group/<str:task_id>",
+        views.task_group_status,
+        name="task-group-status",
+    ),
 ]

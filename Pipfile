@@ -24,7 +24,6 @@ python_version = "3.10"
 whitenoise = "*"
 gunicorn = "*"
 sentry-sdk = "*"
-httpx = "*"
 django = "*"
 unidecode = "*"
 listparser = "*"
@@ -38,6 +37,7 @@ django-environ = "*"
 eventlet = "*"
 beautifulsoup4 = "*"
 bleach = "*"
+django-celery-results = "*"
 
 [pipenv]
 allow_prereleases = true
