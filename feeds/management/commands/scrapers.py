@@ -13,7 +13,9 @@ def restart_celery():
 
     subprocess.call(shlex.split(cmd))
     subprocess.call(
-        shlex.split("celery -A feedreader worker -l info -n worker@%h")  # noqa
+        shlex.split(
+            "celery -A feedreader worker -l info -n scraper@%h --pool=eventlet --concurrency=500 -Q feeds"
+        )  # noqa
     )
 
 

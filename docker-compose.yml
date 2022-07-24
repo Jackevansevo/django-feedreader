@@ -17,8 +17,8 @@ services:
     restart: always
     volumes:
       - .:/app
-      - ~/.config/pgcli/history:/root/.config/pgcli/history
-      - ipython_data_local:/root/.ipython/profile_default
+      - pgcli_data:/root/.config/pgcli
+      - ipython_data:/root/.ipython/profile_default
     build:
       context: .
       target: dev
@@ -70,6 +70,23 @@ services:
     depends_on:
       - db
       - redis
+  scraper:
+    restart: always
+    volumes:
+      - .:/app
+    build:
+      context: .
+      target: dev
+    command: python manage.py scrapers
+    environment:
+      - DB_HOST=db
+      - POSTGRES_NAME=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - DEBUG
+    depends_on:
+      - db
+      - redis
   flower:
     build:
       context: .
@@ -87,4 +104,5 @@ services:
       - db
 
 volumes:
-    ipython_data_local: {}
+    ipython_data: {}
+    pgcli_data: {}

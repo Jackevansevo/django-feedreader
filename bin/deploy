@@ -1,2 +1,3 @@
 fly deploy --build-target=prod --strategy immediate
+fly deploy --build-target=prod --strategy immediate --config fly-scrapers.toml
 fly deploy --build-target=prod --strategy immediate --config fly-celery.toml

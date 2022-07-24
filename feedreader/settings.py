@@ -79,7 +79,6 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "django.contrib.humanize",
     "django_celery_beat",
-    "django_celery_results",
 ]
 
 MIDDLEWARE = [
@@ -187,5 +186,7 @@ if not DEBUG:
     }
 
 CELERY_BROKER_URL = os.environ.get("REDIS_URL", "redis://redis:6379/0")
-CELERY_RESULT_BACKEND = "django-db"
+CELERY_RESULT_BACKEND = os.environ.get("REDIS_URL", "redis://redis:6379/0")
 CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
+
+CELERY_TASK_ROUTES = {"feeds.tasks.fetch_feed": {"queue": "feeds"}}

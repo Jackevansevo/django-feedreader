@@ -99,15 +99,9 @@ class Feed(models.Model):
             return (entry.link, entry.guid) not in feed_entries
 
         # Attempt to figure out if entries have already been parsed
-        new_entries = list(
-            filter(
-                not_exists,
-                filter(
-                    None,
-                    [Entry.from_feed_entry(self, dict(entry)) for entry in entries],
-                ),
-            )
-        )
+        new_entries = list(filter(not_exists, filter(None, entries)))
+
+        # TODO Use guids for routing then slugs don't have to be unique :)
 
         try:
             # Attempt in a separate transaction

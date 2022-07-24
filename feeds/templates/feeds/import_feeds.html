@@ -95,7 +95,7 @@ form.addEventListener("submit", function(event) {
 	}).then((resp) => {
 		const feeds = new Map();
 		results.style.display = '';
-		for (task of resp.children.reverse()) {
+		for (task of resp.children) {
 			feeds.set(task.id, {url: task.url, category: task.category}) ;
 			let html = `
 				<tr id="${task.id}">

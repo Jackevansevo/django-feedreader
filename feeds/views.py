@@ -65,10 +65,16 @@ def import_opml_feeds(request: HttpRequest) -> HttpResponse:
 
             jobs = []
             for feed in parsed.feeds:
+                # TODO here be smart about feeds that already exist? Query the
+                # DB ahead of time to work out which feeds need to be parsed,
+                # bulk create subscriptions for pre-existing feeds here
+
+                # Right now we're potentially re-scraping all feeds in the import list
+                # If we're doing this then we probably want to pass the etag through?
                 feed_category = feed.categories[0][0]
                 category = feed_category if feed_category != "" else None
                 jobs.append(
-                    tasks.add_subscription.s(feed.url, category, request.user.id)
+                    tasks.create_subscription(feed.url, category, request.user.id)
                 )
 
             res = group(jobs)()
@@ -84,7 +90,7 @@ def import_opml_feeds(request: HttpRequest) -> HttpResponse:
                             "category": feed.categories[0][0],
                         }
                         for (child, feed) in zip(res.children, parsed.feeds)
-                    ],
+                    ][::-1],
                 }
             )
     else:
@@ -228,9 +234,9 @@ def feed_create_view(request: HttpRequest) -> HttpResponse:
             except Subscription.DoesNotExist:
                 # Go and create the feed
                 category = form.cleaned_data["category"]
-                task = tasks.add_subscription.delay(
+                task = tasks.create_subscription(
                     url, getattr(category, "name", None), request.user.id
-                )
+                )()
                 return JsonResponse({"id": task.id})
             else:
                 form.add_error("url", "Already subscribed to this feed")
