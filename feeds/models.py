@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import uuid
 from urllib.parse import urljoin, urlparse
 
 from bs4 import BeautifulSoup
@@ -151,6 +152,7 @@ class Subscription(models.Model):
 
 
 class Entry(models.Model):
+    uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     title = models.CharField(max_length=300)
     link = models.URLField(max_length=300)
     feed = models.ForeignKey(Feed, on_delete=models.CASCADE, related_name="entries")
