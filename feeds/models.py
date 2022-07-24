@@ -263,6 +263,7 @@ class Entry(models.Model):
             "feeds:entry-detail",
             kwargs={
                 "entry_slug": self.slug,
+                "uuid": self.uuid,
                 "feed_slug": self.feed.slug,
             },
         )

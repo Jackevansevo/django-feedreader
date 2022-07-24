@@ -33,7 +33,7 @@ urlpatterns = [
         name="feed-detail",
     ),
     path(
-        "feed/<slug:feed_slug>/<slug:entry_slug>",
+        "feed/<slug:feed_slug>/<str:uuid>/<slug:entry_slug>",
         views.entry_detail,
         name="entry-detail",
     ),

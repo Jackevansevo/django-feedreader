@@ -1,3 +1,4 @@
+import uuid
 import listparser
 from celery import group, result
 from django.conf import settings
@@ -210,7 +211,9 @@ def feed_detail(request: HttpRequest, feed_slug: str) -> HttpResponse:
 
 
 @login_required
-def entry_detail(request: HttpRequest, feed_slug: str, entry_slug: str) -> HttpResponse:
+def entry_detail(
+    request: HttpRequest, feed_slug: str, uuid: uuid.UUID, entry_slug: str
+) -> HttpResponse:
     entry = get_object_or_404(
         Entry,
         feed__subscriptions__user=request.user,
