@@ -49,7 +49,7 @@ def task_group_status(_: HttpRequest, task_id) -> HttpResponse:
     data = {
         "id": task_id,
         "children": [serialize_child(child) for child in group_result.children],
-        "completed_count": group_result.completed_count(),
+        "completedCount": group_result.completed_count(),
     }
     return JsonResponse(data)
 
@@ -57,6 +57,8 @@ def task_group_status(_: HttpRequest, task_id) -> HttpResponse:
 @login_required
 def import_opml_feeds(request: HttpRequest) -> HttpResponse:
     # TODO, check if the user has a recent in progress task?
+    # Maybe redirect to a new page for the group task UUID in the route so the
+    # import can be tracked even after closing the page.
     if request.method == "POST":
         form = OPMLUploadForm(request.POST, request.FILES)
         if form.is_valid():
