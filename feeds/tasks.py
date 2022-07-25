@@ -1,14 +1,15 @@
 from urllib.parse import urlparse
 
 import feedparser
-from celery import group, shared_task, chain
+from celery import chain, group, shared_task
 from dateutil import parser
 from django.db import transaction
 from django.db.models import Count
 from django.utils import timezone
 from django.utils.http import http_date
 from eventlet.green.urllib.request import Request, urlopen
-from feeds.models import Category, Feed, Subscription, Entry
+
+from feeds.models import Category, Entry, Feed, Subscription
 
 USER_AGENT = "feedreader/1 +https://github.com/Jackevansevo/feedreader/"
 
@@ -120,7 +121,7 @@ def refresh_feeds():
         .values_list("url", "last_modified", "etag")
     )
     return group(
-        chain(fetch_feed.s(url), parse_response.s())
+        chain(fetch_feed.s(url, last_modified, etag), parse_response.s())
         for (url, last_modified, etag) in feeds
     ).apply_async()
 
