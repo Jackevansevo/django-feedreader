@@ -12,4 +12,4 @@ processes = []
 [experimental]
   allowed_public_ports = []
   auto_rollback = true
-  cmd = ["celery", "-A", "feedreader", "worker", "--purge", "-l", "info", "-n", "scraper@%h", "--pool=eventlet", "--concurrency=50", "-Q", "feeds"]
+  cmd = ["celery", "-A", "feedreader", "worker", "--purge", "--without-gossip", "--without-mingle", "-l", "info", "-n", "scraper@%h", "--pool=eventlet", "--concurrency=50", "-Q", "feeds"]
