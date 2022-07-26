@@ -60,11 +60,11 @@ def task_group_status(_: HttpRequest, task_id) -> HttpResponse:
 @login_required
 def import_feed_detail(request: HttpRequest, task_id) -> HttpResponse:
     task_meta_data = cache.get(task_id)
+    if task_meta_data is None:
+        raise Http404
     if task_meta_data["user_id"] != request.user.id:
         raise Http404
-    return render(
-        request, "feeds/import_feeds_detail.html", {"data": json.dumps(task_meta_data)}
-    )
+    return render(request, "feeds/import_feeds_detail.html", {"data": task_meta_data})
 
 
 @login_required
@@ -124,7 +124,7 @@ def import_opml_feeds(request: HttpRequest) -> HttpResponse:
                         "category": feed.categories[0][0],
                     }
                     for (child, feed) in zip(task.children, parsed.feeds)
-                ][::-1],
+                ],
             }
 
             cache.set_many(
