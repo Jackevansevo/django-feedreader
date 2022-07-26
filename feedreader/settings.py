@@ -180,7 +180,7 @@ CSRF_TRUSTED_ORIGINS = [f"https://{HOSTNAME}"]
 if not DEBUG:
     CACHES = {
         "default": {
-            "BACKEND": "django.core.cache.backends.RedisCache",
+            "BACKEND": "django.core.cache.backends.redis.RedisCache",
             "LOCATION": os.environ.get("REDIS_URL", "redis://redis:6379/0"),
         }
     }
