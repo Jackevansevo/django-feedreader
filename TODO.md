@@ -1,0 +1,5 @@
+- [ ] Email for password reset
+- [ ] Google login / authentication
+- [ ] Healthchecks for celery workers so they're restart automatically of OOM
+- [ ] Search fuctionality
+- [ ] Limit uploads?
