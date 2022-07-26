@@ -180,13 +180,14 @@ CSRF_TRUSTED_ORIGINS = [f"https://{HOSTNAME}"]
 if not DEBUG:
     CACHES = {
         "default": {
-            "BACKEND": "django.core.cache.backends.filebased.FileBasedCache",
-            "LOCATION": "/tmp/feedreader_cache",
+            "BACKEND": "django.core.cache.backends.RedisCache",
+            "LOCATION": os.environ.get("REDIS_URL", "redis://redis:6379/0"),
         }
     }
 
 CELERY_BROKER_URL = os.environ.get("REDIS_URL", "redis://redis:6379/0")
 CELERY_RESULT_BACKEND = os.environ.get("REDIS_URL", "redis://redis:6379/0")
 CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
+CELERY_RESULT_EXTENDED = True
 
 CELERY_TASK_ROUTES = {"feeds.tasks.fetch_feed": {"queue": "feeds"}}

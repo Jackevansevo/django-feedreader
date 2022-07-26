@@ -1,1 +1,1 @@
-docker attach --detach-keys="ctrl-d" feedreader_app_1
+docker attach --detach-keys="ctrl-d" feedreader-app-1
