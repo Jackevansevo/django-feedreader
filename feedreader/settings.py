@@ -191,3 +191,5 @@ CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
 CELERY_RESULT_EXTENDED = True
 
 CELERY_TASK_ROUTES = {"feeds.tasks.fetch_feed": {"queue": "feeds"}}
+
+CELERY_WORKER_CANCEL_LONG_RUNNING_TASKS_ON_CONNECTION_LOSS = True

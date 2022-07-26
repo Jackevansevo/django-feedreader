@@ -38,6 +38,7 @@ eventlet = "*"
 beautifulsoup4 = "*"
 bleach = "*"
 django-celery-results = "*"
+httpx = "*"
 
 [pipenv]
 allow_prereleases = true

@@ -1,5 +1,6 @@
 from urllib.parse import urlparse
 
+import httpx
 import feedparser
 from celery import chain, group, shared_task
 from dateutil import parser
@@ -7,17 +8,18 @@ from django.db import transaction
 from django.db.models import Count
 from django.utils import timezone
 from django.utils.http import http_date
-from eventlet.green.urllib.request import Request, urlopen
+from celery.utils.log import get_task_logger
 
 from feeds.models import Category, Entry, Feed, Subscription
 
 USER_AGENT = "feedreader/1 +https://github.com/Jackevansevo/feedreader/"
 
+logger = get_task_logger(__name__)
 
 # TODO Make the retry policy error specific
 
 
-@shared_task(autoretry_for=(Exception,), retry_backoff=True)
+@shared_task(autoretry_for=(httpx.RequestError,), retry_backoff=True)
 def fetch_feed(url, last_modified=None, etag=None):
     headers = {"User-Agent": USER_AGENT}
 
@@ -26,16 +28,21 @@ def fetch_feed(url, last_modified=None, etag=None):
     if last_modified is not None:
         headers["If-Modified-Since"] = http_date(last_modified.timestamp())
 
-    request = Request(url, headers=headers)
-    resp = urlopen(request, timeout=5)
+    response = httpx.get(url, headers=headers, follow_redirects=True)
+    try:
+        response.raise_for_status()
+    except httpx.HTTPStatusError as exc:
+        print(
+            f"Error response {exc.response.status_code} while requesting {exc.request.url!r}."
+        )
 
     return {
-        "status": resp.status,
-        "url": resp.url,
-        "body": resp.read(),
+        "status": response.status_code,
+        "url": str(response.url),
+        "body": response.read(),
         "headers": {
-            "etag": resp.headers.get("etag"),
-            "last-modified": resp.headers.get("last-modified"),
+            "etag": response.headers.get("etag"),
+            "last-modified": response.headers.get("last-modified"),
         },
     }
 
