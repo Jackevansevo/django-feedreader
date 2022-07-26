@@ -13,7 +13,7 @@ from django.core.paginator import Paginator
 from django.db.models import Count
 from django.db.utils import IntegrityError
 from django.http import HttpRequest, HttpResponse, HttpResponseNotFound, JsonResponse
-from django.shortcuts import get_object_or_404, render, redirect, reverse
+from django.shortcuts import get_object_or_404, render, redirect
 from django.urls import reverse_lazy
 from django.utils import timezone
 from django.views.generic.detail import DetailView
