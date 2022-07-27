@@ -93,14 +93,17 @@ class Feed(models.Model):
     def get_absolute_url(self):
         return reverse("feeds:feed-detail", kwargs={"feed_slug": self.slug})
 
-    def add_new_entries(self, entries):
-        feed_entries = set(self.entries.values_list("link", "guid"))
+    def add_new_entries(self, entries, creating=False):
+        if creating:
+            new_entries = entries
+        else:
+            feed_entries = set(self.entries.values_list("link", "guid"))
 
-        def not_exists(entry):
-            return (entry.link, entry.guid) not in feed_entries
+            def not_exists(entry):
+                return (entry.link, entry.guid) not in feed_entries
 
-        # Attempt to figure out if entries have already been parsed
-        new_entries = list(filter(not_exists, filter(None, entries)))
+            # Attempt to figure out if entries have already been parsed
+            new_entries = list(filter(not_exists, filter(None, entries)))
 
         # TODO Use guids for routing then slugs don't have to be unique :)
 
@@ -168,6 +171,7 @@ class Entry(models.Model):
     @classmethod
     def from_feed_entry(cls, feed, entry):
 
+        # TODO move this code into some parsing logic
         content = entry.get("content")
         if content is not None:
             content = content[0]["value"]

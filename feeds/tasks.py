@@ -47,73 +47,74 @@ def fetch_feed(url, last_modified=None, etag=None):
     }
 
 
-@shared_task
-def parse_response(resp):
+def parse_feed(resp):
 
-    # TODO would it be better to split this up into a parser task + additional
-    # DB worker task
+    # TODO we probably want to move some of this logic into a separate parser
+    # file and consolidate with Feed.from_feed_entry
+
+    # TODO would it be possible just to build an in memory version of Feed / Entry and return it from this function
+    # Then any data integrity issues would be solved when calling .save() ?
+
+    # We also want updates to be efficient as well???
 
     if resp["status"] == 304:
         # Nothing to update
-        return
+        return None, None
 
     parsed = feedparser.parse(resp["body"])
 
-    update_fields = {"last_checked": timezone.now()}
+    feed = {"last_checked": timezone.now(), "url": resp["url"]}
 
     if parsed.feed.link == "":
         parsed.feed.link = resp["url"]
 
-    update_fields["link"] = parsed.feed.link
+    feed["link"] = parsed.feed.link
 
     if parsed.feed.title != "":
-        update_fields["title"] = parsed.feed.title
+        feed["title"] = parsed.feed.title
     else:
-        update_fields["title"] = urlparse(parsed.feed.link).netloc.lstrip("www.")
+        feed["title"] = urlparse(parsed.feed.link).netloc.lstrip("www.")
 
     # https://feedparser.readthedocs.io/en/latest/http-etag.html
 
     headers = resp["headers"]
 
     if headers.get("etag"):
-        update_fields["etag"] = headers["etag"]
+        feed["etag"] = headers["etag"]
     if headers.get("last-modified"):
-        update_fields["last_modified"] = parser.parse(headers["last-modified"])
+        feed["last_modified"] = parser.parse(headers["last-modified"])
 
-    feed, created = Feed.objects.update_or_create(
-        url=resp["url"], defaults=update_fields
-    )
-
-    if parsed.entries:
-        parsed_entries = (
-            Entry.from_feed_entry(feed, dict(entry)) for entry in parsed.entries
-        )
-        updated = feed.add_new_entries(parsed_entries)
-        return feed.url, created, bool(updated)
-    else:
-        return feed.url, created, False
+    return feed, parsed.entries
 
 
 def create_subscription(url, category_name, user_id):
-    # TODO there is a subtle bug here if the feed URL changes, so we'd be
-    # better off saving the feed ID from step 2 (parse_response) and then handling
     return chain(
         fetch_feed.s(url),
-        parse_response.s(),
-        add_subscription.si(url, category_name, user_id),
+        add_subscription.s(category_name, user_id),
     )
 
 
 @shared_task
-def add_subscription(url, category_name, user_id):
+def add_subscription(resp, category_name, user_id):
+
+    parsed, entries = parse_feed(resp)
+
     with transaction.atomic():
+
+        feed = Feed.objects.create(**parsed)
+
+        if entries:
+            parsed_entries = (
+                Entry.from_feed_entry(feed, dict(entry)) for entry in entries
+            )
+            feed.add_new_entries(parsed_entries, creating=True)
+
         if category_name is not None:
             category, _ = Category.objects.get_or_create(
                 name=category_name, user_id=user_id
             )
         else:
             category = None
-        feed = Feed.objects.get(url=url)
         Subscription.objects.get_or_create(
             feed=feed, user_id=user_id, category=category
         )
@@ -121,15 +122,34 @@ def add_subscription(url, category_name, user_id):
 
 
 @shared_task
+def update_feed(resp, feed_id):
+    parsed, entries = parse_feed(resp)
+    if parsed is None:
+        return
+    feed, created = Feed.objects.update_or_create(id=feed_id, defaults=parsed)
+    if parsed.entries:
+        parsed_entries = (
+            Entry.from_feed_entry(feed, dict(entry)) for entry in parsed.entries
+        )
+        updated = feed.add_new_entries(parsed_entries)
+    else:
+        updated = False
+    return {"url": feed.url, "updated": updated}
+
+
+@shared_task
 def refresh_feeds():
     feeds = (
         Feed.objects.annotate(subscribers=Count("subscriptions"))
         .filter(subscribers__gt=0)
-        .values_list("url", "last_modified", "etag")
+        .values("id", "url", "last_modified", "etag")
     )
     return group(
-        chain(fetch_feed.s(url, last_modified, etag), parse_response.s())
-        for (url, last_modified, etag) in feeds
+        chain(
+            fetch_feed.s(f["url"], f["last_modified"], f["etag"]),
+            update_feed.s(f["id"]),
+        )
+        for f in feeds
     ).apply_async()
 
 
