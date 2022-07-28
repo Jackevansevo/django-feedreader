@@ -1,0 +1,1 @@
+docker compose exec celery rlwrap telnet 127.0.0.1 6907
