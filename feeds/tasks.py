@@ -1,17 +1,14 @@
-from urllib.parse import urlparse
-
 import httpx
-import feedparser
-from celery import chain, group, shared_task
+from django.db import IntegrityError, models, transaction
 from dateutil import parser
-from django.db import transaction
+from celery import chain, group, shared_task
 from django.db.models import Count
 from django.utils import timezone
 from django.utils.http import http_date
-from django.db import IntegrityError
 from celery.utils.log import get_task_logger
-
 from feeds.models import Category, Entry, Feed, Subscription
+
+from .parser import parse_feed, parse_feed_entry
 
 USER_AGENT = "feedreader/1 +https://github.com/Jackevansevo/feedreader/"
 
@@ -48,46 +45,6 @@ def fetch_feed(url, last_modified=None, etag=None):
     }
 
 
-def parse_feed(resp):
-
-    # TODO we probably want to move some of this logic into a separate parser
-    # file and consolidate with Feed.from_feed_entry
-
-    # TODO would it be possible just to build an in memory version of Feed / Entry and return it from this function
-    # Then any data integrity issues would be solved when calling .save() ?
-
-    # We also want updates to be efficient as well???
-
-    if resp["status"] == 304:
-        # Nothing to update
-        return None, None
-
-    parsed = feedparser.parse(resp["body"])
-
-    feed = {"last_checked": timezone.now(), "url": resp["url"]}
-
-    if parsed.feed.link == "":
-        parsed.feed.link = resp["url"]
-
-    feed["link"] = parsed.feed.link
-
-    if parsed.feed.title != "":
-        feed["title"] = parsed.feed.title
-    else:
-        feed["title"] = urlparse(parsed.feed.link).netloc.lstrip("www.")
-
-    # https://feedparser.readthedocs.io/en/latest/http-etag.html
-
-    headers = resp["headers"]
-
-    if headers.get("etag"):
-        feed["etag"] = headers["etag"]
-    if headers.get("last-modified"):
-        feed["last_modified"] = parser.parse(headers["last-modified"])
-
-    return feed, parsed.entries
-
-
 def create_subscription(url, category_name, user_id):
     return chain(
         fetch_feed.s(url),
@@ -105,9 +62,7 @@ def add_subscription(resp, category_name, user_id):
         feed = Feed.objects.create(**parsed)
 
         if entries:
-            parsed_entries = (
-                Entry.from_feed_entry(feed, dict(entry)) for entry in entries
-            )
+            parsed_entries = (parse_feed_entry(dict(entry), feed) for entry in entries)
             with transaction.atomic():
                 Entry.objects.bulk_create(parsed_entries)
 
@@ -129,7 +84,9 @@ def update_feed(resp, feed_id, url):
     parsed, entries = parse_feed(resp)
     if parsed is None:
         logger.info(f"{url} Nothing to update")
-        Feed.objects.update_or_create(id=feed_id, last_checked=timezone.now())
+        Feed.objects.update_or_create(
+            id=feed_id, defaults={"last_checked": timezone.now()}
+        )
         return {"url": url, "updated": False}
 
     feed, created = Feed.objects.update_or_create(id=feed_id, defaults=parsed)
@@ -137,7 +94,7 @@ def update_feed(resp, feed_id, url):
         # TODO when upserting, we probaby don't need to bulk create? Can
         # probably just loop over the items and call add because there's only
         # likely to be one or two items
-        parsed_entries = (Entry.from_feed_entry(feed, dict(entry)) for entry in entries)
+        parsed_entries = (parse_feed_entry(dict(entry), feed) for entry in entries)
         for entry in parsed_entries:
             try:
                 feed.entries.add(entry)
@@ -147,6 +104,7 @@ def update_feed(resp, feed_id, url):
         feed.save()
     else:
         updated = False
+
     return {"url": feed.url, "updated": updated}
 
 

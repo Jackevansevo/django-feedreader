@@ -3,10 +3,8 @@ from __future__ import annotations
 import uuid
 from urllib.parse import urljoin, urlparse
 
-from bs4 import BeautifulSoup
-from dateutil import parser
 from django.conf import settings
-from django.db import IntegrityError, models, transaction
+from django.db import IntegrityError, models
 from django.urls import reverse
 from django.utils.text import slugify
 from unidecode import unidecode
@@ -122,100 +120,6 @@ class Entry(models.Model):
     guid = models.CharField(max_length=400, blank=True, null=True, unique=True)
     author = models.CharField(max_length=400, blank=True, null=True)
     thumbnail = models.URLField(blank=True, null=True, max_length=500)
-
-    @classmethod
-    def from_feed_entry(cls, feed, entry):
-
-        # TODO move this code into some parsing logic
-        content = entry.get("content")
-        if content is not None:
-            content = content[0]["value"]
-
-        summary = entry.get("summary")
-
-        if content is None and summary is not None:
-            content = summary
-            summary = None
-        elif summary == content:
-            summary = None
-
-        if summary is not None:
-            # Strip out any images
-            soup = BeautifulSoup(summary, features="html.parser")
-            for img in soup.findAll("img"):
-                img.extract()
-
-            # Strip out any continue reading links
-            for a_tag in soup.findAll("a"):
-                if "continue reading" in a_tag.text.lower():
-                    a_tag.extract()
-
-            summary = str(soup)
-
-        feed_parsed = urlparse(feed.link)
-
-        thumbnail = None
-
-        if content is not None:
-            soup = BeautifulSoup(content, features="html.parser")
-
-            for img in soup.findAll("img"):
-                del img["width"]
-                del img["height"]
-                del img["class"]
-
-                src = img.get("src")
-                parsed_src = urlparse(src)
-
-                # Some feeds still use relative URLs, we can attempt to fix this
-                if parsed_src.netloc == "":
-                    img["src"] = parsed_src._replace(
-                        netloc=feed_parsed.netloc, scheme=feed_parsed.scheme
-                    ).geturl()
-
-                img["class"] = "rounded mx-auto d-block"
-
-                # TODO use the biggest image as the thumbnail
-                if thumbnail is None:
-                    src = img.get("src")
-                    if src is not None and len(src) < 500:
-                        thumbnail = src
-
-            content = str(soup)
-
-        published = entry.get("published")
-        if published is not None:
-            try:
-                published = parser.parse(published)
-            except ValueError:
-                return None
-
-        updated = entry.get("updated")
-        if updated is not None:
-            try:
-                updated = parser.parse(updated)
-            except ValueError:
-                return None
-
-        if published is None and updated is not None:
-            # Just for sorting
-            published = updated
-
-        title = entry["title"]
-
-        return Entry(
-            feed=feed,
-            thumbnail=thumbnail,
-            title=entry["title"],
-            slug=slugify(unidecode(title)),
-            link=entry["link"],
-            published=published,
-            updated=updated,
-            content=content,
-            author=entry.get("author"),
-            summary=summary,
-            guid=entry.get("guid"),
-        )
 
     def get_absolute_url(self):
         return reverse(
