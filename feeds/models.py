@@ -57,7 +57,7 @@ class Category(models.Model):
 class Feed(models.Model):
     title = models.CharField(max_length=200)
     subtitle = models.CharField(max_length=200)
-    slug = models.SlugField(unique=True, max_length=200)
+    slug = models.SlugField(max_length=200)
     link = models.URLField()
     url = models.URLField(unique=True)
     etag = models.CharField(max_length=200, blank=True, null=True)
@@ -104,8 +104,6 @@ class Feed(models.Model):
 
             # Attempt to figure out if entries have already been parsed
             new_entries = list(filter(not_exists, filter(None, entries)))
-
-        # TODO Use guids for routing then slugs don't have to be unique :)
 
         try:
             # Attempt in a separate transaction
