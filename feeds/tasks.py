@@ -122,15 +122,18 @@ def add_subscription(resp, category_name, user_id):
 
 
 @shared_task
-def update_feed(resp, feed_id):
+def update_feed(resp, feed_id, url):
     parsed, entries = parse_feed(resp)
     if parsed is None:
+        logger.info(f"{url} Nothing to update")
+        Feed.objects.update_or_create(id=feed_id, last_checked=timezone.now())
         return
     feed, created = Feed.objects.update_or_create(id=feed_id, defaults=parsed)
-    if parsed.entries:
-        parsed_entries = (
-            Entry.from_feed_entry(feed, dict(entry)) for entry in parsed.entries
-        )
+    if entries:
+        # TODO when upserting, we probaby don't need to bulk create? Can
+        # probably just loop over the items and call add because there's only
+        # likely to be one or two items
+        parsed_entries = (Entry.from_feed_entry(feed, dict(entry)) for entry in entries)
         updated = feed.add_new_entries(parsed_entries)
     else:
         updated = False
@@ -147,7 +150,7 @@ def refresh_feeds():
     return group(
         chain(
             fetch_feed.s(f["url"], f["last_modified"], f["etag"]),
-            update_feed.s(f["id"]),
+            update_feed.s(f["id"], f["url"]),
         )
         for f in feeds
     ).apply_async()
