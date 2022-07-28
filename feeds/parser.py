@@ -51,11 +51,12 @@ def parse_feed(resp):
 def parse_feed_entry(entry, feed):
 
     # TODO move this code into some parsing logic
-    content = entry.get("content")
-    if content is not None:
-        content = content[0]["value"]
+    if hasattr(entry, "content"):
+        content = entry.content[0]["value"]
+    else:
+        content = None
 
-    summary = entry.get("summary")
+    summary = entry.summary
 
     if content is None and summary is not None:
         content = summary
@@ -107,17 +108,17 @@ def parse_feed_entry(entry, feed):
 
         content = str(soup)
 
-    published = entry.get("published")
-    if published is not None:
+    published = None
+    if hasattr(entry, "published"):
         try:
-            published = parser.parse(published)
+            published = parser.parse(entry.published)
         except ValueError:
             return None
 
-    updated = entry.get("updated")
-    if updated is not None:
+    updated = None
+    if hasattr(entry, "updated"):
         try:
-            updated = parser.parse(updated)
+            updated = parser.parse(entry.updated)
         except ValueError:
             return None
 
@@ -125,18 +126,23 @@ def parse_feed_entry(entry, feed):
         # Just for sorting
         published = updated
 
-    title = entry["title"]
+    title = entry.title
+
+    guid = None
+    if hasattr(entry, "guid"):
+        if not (hasattr(entry, "guidislink") and entry.guidislink):
+            guid = entry.guid
 
     return Entry(
         feed=feed,
         thumbnail=thumbnail,
-        title=entry["title"],
+        title=title,
         slug=slugify(unidecode(title)),
-        link=entry["link"],
+        link=entry.link,
         published=published,
         updated=updated,
         content=content,
-        author=entry.get("author"),
+        author=entry.author if hasattr(entry, "author") else None,
         summary=summary,
-        guid=entry.get("guid"),
+        guid=guid,
     )

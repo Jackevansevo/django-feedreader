@@ -60,9 +60,10 @@ def add_subscription(resp, category_name, user_id):
     with transaction.atomic():
 
         feed = Feed.objects.create(**parsed)
+        logger.info(f"feed {feed.id} {feed}")
 
         if entries:
-            parsed_entries = (parse_feed_entry(dict(entry), feed) for entry in entries)
+            parsed_entries = (parse_feed_entry(entry, feed) for entry in entries)
             with transaction.atomic():
                 Entry.objects.bulk_create(parsed_entries)
 
@@ -89,23 +90,45 @@ def update_feed(resp, feed_id, url):
         )
         return {"url": url, "updated": False}
 
-    feed, created = Feed.objects.update_or_create(id=feed_id, defaults=parsed)
+    feed = Feed.objects.prefetch_related("entries").get(id=feed_id)
+
     if entries:
-        # TODO when upserting, we probaby don't need to bulk create? Can
-        # probably just loop over the items and call add because there's only
-        # likely to be one or two items
-        parsed_entries = (parse_feed_entry(dict(entry), feed) for entry in entries)
+        existing_entries = feed.entries.values("link", "guid").order_by("published")
+
+        guids = {entry["guid"] for entry in existing_entries}
+        links = {entry["link"] for entry in existing_entries}
+
+        new_entries = []
+
+        for entry in entries:
+            if getattr(entry, "guidislink", False):
+                if entry.link not in links:
+                    new_entries.append(entry)
+            else:
+                if entry.guid not in guids:
+                    new_entries.append(entry)
+
+        logger.debug(f"new_entries: {new_entries}")
+
+        updated = False
+        parsed_entries = (parse_feed_entry(entry, feed) for entry in new_entries)
         for entry in parsed_entries:
             try:
-                feed.entries.add(entry)
+                feed.entries.add(entry, bulk=False)
             except IntegrityError as err:
                 logger.warn(f"IntegrityError: {err}")
-                pass
-        feed.save()
-    else:
-        updated = False
+            else:
+                updated = True
 
-    return {"url": feed.url, "updated": updated}
+        for attr, value in parsed.items():
+            setattr(feed, attr, value)
+
+        feed.save()
+
+        return {"id": feed.id, "url": feed.url, "updated": updated}
+
+    else:
+        return {"id": feed.id, "url": feed.url, "updated": False}
 
 
 @shared_task
