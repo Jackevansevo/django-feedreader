@@ -8,6 +8,7 @@ from django.db import transaction
 from django.db.models import Count
 from django.utils import timezone
 from django.utils.http import http_date
+from django.db import IntegrityError
 from celery.utils.log import get_task_logger
 
 from feeds.models import Category, Entry, Feed, Subscription
@@ -107,7 +108,8 @@ def add_subscription(resp, category_name, user_id):
             parsed_entries = (
                 Entry.from_feed_entry(feed, dict(entry)) for entry in entries
             )
-            feed.add_new_entries(parsed_entries, creating=True)
+            with transaction.atomic():
+                Entry.objects.bulk_create(parsed_entries)
 
         if category_name is not None:
             category, _ = Category.objects.get_or_create(
@@ -123,18 +125,26 @@ def add_subscription(resp, category_name, user_id):
 
 @shared_task
 def update_feed(resp, feed_id, url):
+
     parsed, entries = parse_feed(resp)
     if parsed is None:
         logger.info(f"{url} Nothing to update")
         Feed.objects.update_or_create(id=feed_id, last_checked=timezone.now())
-        return
+        return {"url": url, "updated": False}
+
     feed, created = Feed.objects.update_or_create(id=feed_id, defaults=parsed)
     if entries:
         # TODO when upserting, we probaby don't need to bulk create? Can
         # probably just loop over the items and call add because there's only
         # likely to be one or two items
         parsed_entries = (Entry.from_feed_entry(feed, dict(entry)) for entry in entries)
-        updated = feed.add_new_entries(parsed_entries)
+        for entry in parsed_entries:
+            try:
+                feed.entries.add(entry)
+            except IntegrityError as err:
+                logger.warn(f"IntegrityError: {err}")
+                pass
+        feed.save()
     else:
         updated = False
     return {"url": feed.url, "updated": updated}

@@ -14,24 +14,6 @@ from unidecode import unidecode
 # TODO Cleanup
 
 
-def generate_unique_slug(obj):
-    # If slug is not unique
-    attempt = 0
-    slug = obj.slug
-    while True:
-        if attempt > 0:
-            obj.slug = slug + str(attempt)
-            print(f"trying slug: {obj.slug}")
-        try:
-            with transaction.atomic():
-                obj.save()
-                return
-        except IntegrityError:
-            print(f"slug integrity conflict: {obj.slug}")
-            attempt = attempt + 1
-            continue
-
-
 class Category(models.Model):
     name = models.CharField(max_length=200)
     slug = models.SlugField()
@@ -92,31 +74,6 @@ class Feed(models.Model):
 
     def get_absolute_url(self):
         return reverse("feeds:feed-detail", kwargs={"feed_slug": self.slug})
-
-    def add_new_entries(self, entries, creating=False):
-        if creating:
-            new_entries = entries
-        else:
-            feed_entries = set(self.entries.values_list("link", "guid"))
-
-            def not_exists(entry):
-                return (entry.link, entry.guid) not in feed_entries
-
-            # Attempt to figure out if entries have already been parsed
-            new_entries = list(filter(not_exists, filter(None, entries)))
-
-        try:
-            # Attempt in a separate transaction
-            with transaction.atomic():
-                Entry.objects.bulk_create(new_entries)
-        except IntegrityError as error:
-            if "feeds_entry_feed_id_slug" in str(error):
-                for entry in new_entries:
-                    generate_unique_slug(entry)
-            else:
-                raise
-
-        return new_entries
 
     def save(self, *args, **kwargs):
         self.slug = slugify(unidecode(self.title))
