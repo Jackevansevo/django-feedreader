@@ -274,7 +274,10 @@ class Entry(models.Model):
         return self.title
 
     class Meta:
-        unique_together = ("feed", "slug")
+        constraints = [
+            models.UniqueConstraint(fields=["feed", "guid"], name="duplicate guid"),
+            models.UniqueConstraint(fields=["feed", "link"], name="duplicate link"),
+        ]
         verbose_name_plural = "entries"
         ordering = ["-published", "title"]
         indexes = [
