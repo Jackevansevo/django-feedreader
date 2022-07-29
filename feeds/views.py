@@ -269,6 +269,7 @@ def entry_detail(
         Entry,
         feed__subscriptions__user=request.user,
         slug=entry_slug,
+        uuid=uuid,
         feed__slug=feed_slug,
     )
     return render(request, "feeds/entry_detail.html", {"entry": entry})
