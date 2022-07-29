@@ -1,7 +1,5 @@
-import json
 import uuid
-from django.http import Http404
-from django.core.cache import cache
+
 import listparser
 from celery import group, result
 from django.conf import settings
@@ -9,17 +7,25 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User
+from django.core.cache import cache
 from django.core.paginator import Paginator
 from django.db.models import Count
 from django.db.utils import IntegrityError
-from django.http import HttpRequest, HttpResponse, HttpResponseNotFound, JsonResponse
-from django.shortcuts import get_object_or_404, render, redirect
+from django.http import (
+    Http404,
+    HttpRequest,
+    HttpResponse,
+    HttpResponseNotFound,
+    JsonResponse,
+)
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
 from django.utils import timezone
 from django.views.generic.detail import DetailView
 from django.views.generic.edit import CreateView, DeleteView
 
 import feeds.tasks as tasks
+from feeds.parser import parse_feed, parse_feed_entry
 
 from .forms import CategoryForm, OPMLUploadForm, SignUpForm, SubscriptionCreateForm
 from .models import Category, Entry, Feed, Subscription
@@ -283,16 +289,28 @@ def feed_create_view(request: HttpRequest) -> HttpResponse:
         # check whether it's valid:
         if form.is_valid():
             url = Feed.find_feed_from_url(form.cleaned_data["url"])
+            category = form.cleaned_data["category"]
             # Check if the feed exists
             try:
                 Subscription.objects.get(feed__url=url, user=request.user)
             except Subscription.DoesNotExist:
-                # Go and create the feed
-                category = form.cleaned_data["category"]
-                task = tasks.create_subscription(
-                    url, getattr(category, "name", None), request.user.id
-                )()
-                return JsonResponse({"id": task.id})
+                try:
+                    feed = Feed.objects.get(url=url)
+                except Feed.DoesNotExist:
+                    # Go and fetch the feed
+                    task = tasks.fetch_feed.delay(url)
+                    resp = task.get()
+                    parsed, entries = parse_feed(resp)
+                    feed = Feed.objects.create(**parsed)
+                    parsed_entries = (
+                        parse_feed_entry(entry, feed) for entry in entries
+                    )
+                    Entry.objects.bulk_create(parsed_entries)
+
+                Subscription.objects.create(
+                    feed=feed, user_id=request.user.id, category=category
+                )
+                return redirect(feed)
             else:
                 form.add_error("url", "Already subscribed to this feed")
                 return render(request, "feeds/subscription_form.html", {"form": form})

@@ -12,11 +12,11 @@
       <span>&nbsp;Add feed</span>
     </div>
     <div class="card-body">
-      <form id='add-subscription-form' method="post">
+      <form method="post" onSubmit="this.disabled=true,this.form.submit();">
 	{% csrf_token %}
 	{{ form.as_p }}
 	<div class="d-flex flex-row justify-content-between align-items-baseline">
-	  <button id="submit-button" class="btn btn-success" type="submit">
+	  <button id="submit-button" class="btn btn-success" type="submit" onclick="this.disabled=true,this.form.submit();">
 	    <span class="icon-text">
 	      <span class="icon">
 		<i class="fas fa-check"></i>
@@ -30,59 +30,4 @@
     </div>
   </div>
 </div>
-{% endblock %}
-{% block scripts %}
-<script>
-const addSubscriptionForm = document.getElementById("add-subscription-form");
-const submitButton = document.getElementById("submit-button");
-const icon = submitButton.querySelector('i');
-
-
-function getStatus(task) {
-  fetch(`/task/${task.id}`, {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-  })
-  .then(response => response.json())
-  .then(resp => {
-		if (resp.status === 'SUCCESS') {
-			window.location.replace(resp.result.url);
-		} else if (resp.status == 'FAILURE') {
-			alert('failed to fetch feed')
-			return false
-		}
-    setTimeout(function() {
-      getStatus(task);
-    }, 1000);
-  })
-  .catch(err => console.log(err));
-}
-
-addSubscriptionForm.addEventListener("submit", function(event) {
-	event.preventDefault();
-	submitButton.disabled = true;
-	icon.classList.add('fa-pulse');
-	icon.classList.remove('fa-check');
-	icon.classList.add('fa-arrows-rotate')
-	fetch(event.target.action, {
-		method: 'POST',
-		body: new URLSearchParams(new FormData(event.target))
-	}).then((resp) => {
-		const contentType = resp.headers.get('content-type');
-
-		if (!contentType || !contentType.includes('application/json')) {
-			throw new TypeError("Oops, we haven't got JSON!");
-		}
-
-		event.preventDefault();
-		return resp.json();
-	}).then((task) => {
-		getStatus(task);
-	}).catch((error) => {
-		addSubscriptionForm.submit();
-	});
-}, true);
-</script>
 {% endblock %}
