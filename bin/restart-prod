@@ -1,0 +1,11 @@
+fly scale count 0 --config fly-scrapers.toml
+fly scale count 0 --config fly-celery.toml
+fly scale count 0 --config fly-celery-beat.toml
+fly scale count 0 --config fly-flower.toml
+
+sleep 5
+
+fly scale count 1 --config fly-scrapers.toml
+fly scale count 1 --config fly-celery.toml
+fly scale count 1 --config fly-celery-beat.toml
+fly scale count 1 --config fly-flower.toml
