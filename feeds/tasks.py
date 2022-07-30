@@ -1,11 +1,11 @@
 import httpx
-from django.db import IntegrityError, models, transaction
-from dateutil import parser
 from celery import chain, group, shared_task
+from celery.utils.log import get_task_logger
+from django.db import IntegrityError, transaction
 from django.db.models import Count
 from django.utils import timezone
 from django.utils.http import http_date
-from celery.utils.log import get_task_logger
+
 from feeds.models import Category, Entry, Feed, Subscription
 
 from .parser import parse_feed, parse_feed_entry
@@ -31,7 +31,7 @@ def fetch_feed(url, last_modified=None, etag=None):
         response.raise_for_status()
     except httpx.HTTPStatusError as exc:
         print(
-            f"Error response {exc.response.status_code} while requesting {exc.request.url!r}."
+            f"Error response {exc.response.status_code} while requesting {exc.request.url!r}."  # noqa
         )
 
     return {
@@ -62,10 +62,20 @@ def add_subscription(resp, category_name, user_id):
         feed = Feed.objects.create(**parsed)
         logger.info(f"feed {feed.id} {feed}")
 
-        if entries:
-            parsed_entries = (parse_feed_entry(entry, feed) for entry in entries)
-            with transaction.atomic():
-                Entry.objects.bulk_create(parsed_entries)
+        # Impossible to use a set because entries aren't hashable
+        unique_entries = dict()
+        for entry in entries:
+            # When adding a new feed for entries with the
+            # same link, we only want to take the most
+            # recent
+            if entry.link not in unique_entries:
+                unique_entries[entry.link] = entry
+
+        parsed_entries = (
+            parse_feed_entry(entry, feed) for entry in unique_entries.values()
+        )
+
+        Entry.objects.bulk_create(parsed_entries)
 
         if category_name is not None:
             category, _ = Category.objects.get_or_create(
