@@ -6,7 +6,7 @@ from .models import Category, Entry, Feed, Subscription
 
 @admin.register(Feed)
 class FeedAdmin(admin.ModelAdmin):
-    list_display = ("title", "url", "etag", "last_modified", "subscribers")
+    list_display = ("title", "subtitle", "url", "etag", "last_modified", "subscribers")
     fields = (
         "url",
         "title",
@@ -28,7 +28,7 @@ class FeedAdmin(admin.ModelAdmin):
         "subscribers",
         "last_checked",
     )
-    search_fields = ["title", "subtitle", "url", "link", "slug"]
+    search_fields = ["title", "url", "link", "slug"]
 
     def get_queryset(self, request):
         queryset = super(FeedAdmin, self).get_queryset(request)
@@ -52,4 +52,4 @@ class EntryAdmin(admin.ModelAdmin):
 @admin.register(Subscription)
 class SubscriptionAdmin(admin.ModelAdmin):
     list_display = ("feed", "user", "category")
-    search_fields = ["feed", "user", "category"]
+    search_fields = ["feed__title", "user__username", "user__email"]
