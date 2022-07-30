@@ -30,6 +30,10 @@ def parse_feed(resp):
     else:
         feed["title"] = urlparse(parsed.feed.link).netloc.lstrip("www.")
 
+    if subtitle := parsed.feed.get("subtitle"):
+        if subtitle != "":
+            feed["subtitle"] = subtitle
+
     # https://feedparser.readthedocs.io/en/latest/http-etag.html
 
     headers = resp["headers"]

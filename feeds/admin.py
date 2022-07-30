@@ -10,6 +10,7 @@ class FeedAdmin(admin.ModelAdmin):
     fields = (
         "url",
         "title",
+        "subtitle",
         "slug",
         "link",
         "etag",
@@ -19,6 +20,7 @@ class FeedAdmin(admin.ModelAdmin):
     )
     readonly_fields = (
         "title",
+        "subtitle",
         "link",
         "slug",
         "etag",
@@ -26,7 +28,7 @@ class FeedAdmin(admin.ModelAdmin):
         "subscribers",
         "last_checked",
     )
-    search_fields = ["title", "url", "link", "slug"]
+    search_fields = ["title", "subtitle", "url", "link", "slug"]
 
     def get_queryset(self, request):
         queryset = super(FeedAdmin, self).get_queryset(request)
