@@ -113,13 +113,13 @@ class Subscription(models.Model):
 class Entry(models.Model):
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     title = models.CharField(
-        max_length=300, blank=False, validators=[MinLengthValidator(1)]
+        max_length=400, blank=False, validators=[MinLengthValidator(1)]
     )
     link = models.URLField(max_length=300)
     feed = models.ForeignKey(Feed, on_delete=models.CASCADE, related_name="entries")
     published = models.DateTimeField(null=True)
     updated = models.DateTimeField(null=True)
-    slug = models.SlugField(max_length=300)
+    slug = models.SlugField(max_length=400)
     content = models.TextField(blank=True, null=True)
     summary = models.TextField(blank=True, null=True)
     guid = models.CharField(max_length=400, blank=True, null=True, unique=True)
