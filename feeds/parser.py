@@ -54,7 +54,7 @@ def parse_feed_entry(entry, feed):
     else:
         content = None
 
-    summary = entry.summary
+    summary = entry.get("summary")
 
     if content is None and summary is not None:
         content = summary

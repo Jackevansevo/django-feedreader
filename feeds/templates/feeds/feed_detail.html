@@ -54,7 +54,8 @@
       <div class="mb-1 text-muted">{{ entry.published | date }}</div>
       {% if entry.summary %}
       {{ entry.summary|safe|striptags|truncatewords:50 }}
-      {% else %}
+      <a href="{{ entry.get_absolute_url }}" class="stretched-link">Continue reading</a>
+      {% elif entry.content %}
       {{ entry.content|safe|striptags|truncatewords:50 }}
       {% endif %}
       <a href="{{ entry.get_absolute_url }}" class="stretched-link">Continue reading</a>
