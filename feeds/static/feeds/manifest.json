@@ -1,0 +1,9 @@
+{
+  "$schema": "https://json.schemastore.org/web-manifest-combined.json",
+  "name": "Feedreader",
+  "short_name": "Feedreader",
+  "start_url": "../../",
+  "display": "standalone",
+  "background_color": "#fff",
+  "description": "RSS feed reader"
+}

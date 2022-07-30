@@ -8,9 +8,9 @@
     <meta name="description" content="RSS Feedreader">
     <meta name="keywords" content="RSS,Django,Python,Blogs,Atom,Feed">
     <meta name="author" content="Jack Evans">
+    <link rel="manifest" href="{% static 'feeds/manifest.json' %}">
     <title>Feedreader{% block title %}{% endblock %}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-0evHe/X+R7YkIZDRvuzKMRqM+OrBnVFBL6DOitfPri4tjfHxaWutUpFmBp4vmVor" crossorigin="anonymous">
-    {% comment %} <link rel="stylesheet" type="text/css" href="{% static 'feeds/bulma.min.css' %}"> {% endcomment %}
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/js/bootstrap.bundle.min.js" integrity="sha384-pprn3073KE6tl6bjs2QrFaJGz5/SUsLqktiwsUTF55Jfv3qYSDhgCecCxMW52nD2" crossorigin="anonymous"></script>
     <link rel="shortcut icon" href="{% static 'feeds/favicon.ico' %}" type="image/x-icon" >
     <script async src="https://kit.fontawesome.com/44c15f8fd8.js" crossorigin="anonymous"></script>
