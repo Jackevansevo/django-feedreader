@@ -1,0 +1,7 @@
+fly scale count 0 --config fly-scrapers.toml
+fly scale count 0 --config fly-celery.toml
+fly scale count 0 --config fly-celerybeat.toml
+fly scale count 0 --config fly-flower.toml
+fly scale count 0 -a feedreader-redis
+fly scale count 0 -a feedreader-pg
+fly scale count 0
