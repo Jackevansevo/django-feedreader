@@ -31,13 +31,12 @@ celery = {extras = ["redis"], version = "*"}
 django-celery-beat = "*"
 flower = "*"
 feedparser = "*"
-psycopg2-binary = "*"
+psycopg2 = "*"
 dj-database-url = "*"
 django-environ = "*"
 eventlet = "*"
 beautifulsoup4 = "*"
 bleach = "*"
-django-celery-results = "*"
 httpx = "*"
 
 [pipenv]

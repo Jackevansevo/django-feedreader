@@ -1,4 +1,4 @@
-ARG PYTHON_VERSION=3.10
+ARG PYTHON_VERSION=3.11-rc
 
 FROM python:${PYTHON_VERSION}-slim as base
 
@@ -11,7 +11,7 @@ WORKDIR /app
 # Build dev image
 FROM base as dev
 
-RUN apt-get update && apt-get upgrade -y && apt install -y build-essential procps libpq-dev telnet rlwrap
+RUN apt-get update && apt-get upgrade -y && apt install -y gcc g++ procps libpq-dev telnet rlwrap
 
 COPY requirements.txt dev-requirements.txt .
 RUN --mount=type=cache,target=~/.cache pip install -U pip && pip install -r dev-requirements.txt && pip install -r requirements.txt
@@ -27,7 +27,7 @@ FROM base as prod
 
 ENV DEBUG=False
 
-RUN apt update
+RUN apt-get update && apt-get upgrade -y && apt install -y gcc g++ libpq-dev
 
 COPY requirements.txt .
 RUN --mount=type=cache,target=~/.cache pip install -U pip && pip install -r requirements.txt
