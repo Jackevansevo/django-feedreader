@@ -9,8 +9,8 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User
 from django.core.cache import cache
 from django.core.paginator import Paginator
+from django.db import DataError, IntegrityError, transaction
 from django.db.models import Count
-from django.db.utils import IntegrityError
 from django.http import (
     Http404,
     HttpRequest,
@@ -297,15 +297,22 @@ def feed_create_view(request: HttpRequest) -> HttpResponse:
                 try:
                     feed = Feed.objects.get(url=url)
                 except Feed.DoesNotExist:
-                    # Go and fetch the feed
                     task = tasks.fetch_feed.delay(url)
                     resp = task.get()
                     parsed, entries = parse_feed(resp)
-                    feed = Feed.objects.create(**parsed)
-                    parsed_entries = (
-                        parse_feed_entry(entry, feed) for entry in entries
-                    )
-                    Entry.objects.bulk_create(parsed_entries)
+                    try:
+                        with transaction.atomic():
+                            # Go and fetch the feed
+                            feed = Feed.objects.create(**parsed)
+                            parsed_entries = (
+                                parse_feed_entry(entry, feed) for entry in entries
+                            )
+                            Entry.objects.bulk_create(parsed_entries)
+                    except (DataError, IntegrityError) as error:
+                        form.add_error("url", f"Failed to parse feed: {error}")
+                        return render(
+                            request, "feeds/subscription_form.html", {"form": form}
+                        )
 
                 Subscription.objects.create(
                     feed=feed, user_id=request.user.id, category=category
