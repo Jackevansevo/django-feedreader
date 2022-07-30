@@ -39,7 +39,7 @@ class Feed(models.Model):
     title = models.CharField(
         max_length=300, blank=False, validators=[MinLengthValidator(1)]
     )
-    subtitle = models.CharField(max_length=200)
+    subtitle = models.TextField(blank=True, null=True)
     slug = models.SlugField(max_length=200)
     link = models.URLField()
     url = models.URLField(unique=True)
