@@ -1,23 +1,17 @@
+from urllib.parse import urlparse
+
+import feedparser
 from bs4 import BeautifulSoup
 from dateutil import parser
 from django.utils import timezone
+from django.utils.html import strip_tags
 from django.utils.text import slugify
 from unidecode import unidecode
-from urllib.parse import urlparse
-import feedparser
+
 from feeds.models import Entry
 
 
 def parse_feed(resp):
-
-    # TODO we probably want to move some of this logic into a separate parser
-    # file and consolidate with Feed.from_feed_entry
-
-    # TODO would it be possible just to build an in memory version of Feed / Entry and return it from this function
-    # Then any data integrity issues would be solved when calling .save() ?
-
-    # We also want updates to be efficient as well???
-
     if resp["status"] == 304:
         # Nothing to update
         return None, None
@@ -77,6 +71,11 @@ def parse_feed_entry(entry, feed):
 
         summary = str(soup)
 
+    title = entry.title
+    if title == "":
+        # TODO Script any html from this
+        title = strip_tags(content[:300])
+
     feed_parsed = urlparse(feed.url)
 
     thumbnail = None
@@ -125,8 +124,6 @@ def parse_feed_entry(entry, feed):
     if published is None and updated is not None:
         # Just for sorting
         published = updated
-
-    title = entry.title
 
     guid = None
     if hasattr(entry, "guid"):
