@@ -304,9 +304,21 @@ def feed_create_view(request: HttpRequest) -> HttpResponse:
                         with transaction.atomic():
                             # Go and fetch the feed
                             feed = Feed.objects.create(**parsed)
+
+                            # Impossible to use a set because entries aren't hashable
+                            unique_entries = dict()
+                            for entry in entries:
+                                # When adding a new feed for entries with the
+                                # same link, we only want to take the most
+                                # recent
+                                if entry.link not in unique_entries:
+                                    unique_entries[entry.link] = entry
+
                             parsed_entries = (
-                                parse_feed_entry(entry, feed) for entry in entries
+                                parse_feed_entry(entry, feed)
+                                for entry in unique_entries.values()
                             )
+
                             Entry.objects.bulk_create(parsed_entries)
                     except (DataError, IntegrityError) as error:
                         form.add_error("url", f"Failed to parse feed: {error}")
