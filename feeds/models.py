@@ -4,7 +4,8 @@ import uuid
 from urllib.parse import urljoin, urlparse
 
 from django.conf import settings
-from django.db import IntegrityError, models
+from django.core.validators import MinLengthValidator
+from django.db import models
 from django.urls import reverse
 from django.utils.text import slugify
 from unidecode import unidecode
@@ -35,7 +36,9 @@ class Category(models.Model):
 
 
 class Feed(models.Model):
-    title = models.CharField(max_length=200)
+    title = models.CharField(
+        max_length=300, blank=False, validators=[MinLengthValidator(1)]
+    )
     subtitle = models.CharField(max_length=200)
     slug = models.SlugField(max_length=200)
     link = models.URLField()
@@ -109,7 +112,9 @@ class Subscription(models.Model):
 
 class Entry(models.Model):
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
-    title = models.CharField(max_length=300)
+    title = models.CharField(
+        max_length=300, blank=False, validators=[MinLengthValidator(1)]
+    )
     link = models.URLField(max_length=300)
     feed = models.ForeignKey(Feed, on_delete=models.CASCADE, related_name="entries")
     published = models.DateTimeField(null=True)

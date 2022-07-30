@@ -6,20 +6,24 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('feeds', '0013_alter_feed_slug'),
+        ("feeds", "0013_alter_feed_slug"),
     ]
 
     operations = [
         migrations.AlterUniqueTogether(
-            name='entry',
+            name="entry",
             unique_together=set(),
         ),
         migrations.AddConstraint(
-            model_name='entry',
-            constraint=models.UniqueConstraint(fields=('feed', 'guid'), name='duplicate guid'),
+            model_name="entry",
+            constraint=models.UniqueConstraint(
+                fields=("feed", "guid"), name="duplicate guid"
+            ),
         ),
         migrations.AddConstraint(
-            model_name='entry',
-            constraint=models.UniqueConstraint(fields=('feed', 'link'), name='duplicate link'),
+            model_name="entry",
+            constraint=models.UniqueConstraint(
+                fields=("feed", "link"), name="duplicate link"
+            ),
         ),
     ]
