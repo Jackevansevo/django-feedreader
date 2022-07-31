@@ -20,6 +20,7 @@ BLEACH_ALLOWED_TAGS = [
     "blockquote",
     "center",
     "code",
+    "pre",
     "div",
     "em",
     "i",
