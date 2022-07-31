@@ -44,7 +44,7 @@ services:
     build:
       context: .
       target: dev
-    command: celery -A feedreader beat -l info
+    command: celery -q -A feedreader beat -l info
     environment:
       - DB_HOST=db
       - POSTGRES_NAME=postgres
@@ -91,8 +91,8 @@ services:
   flower:
     build:
       context: .
-      target: prod
-    command: celery -A feedreader flower --purge_offline_workers=60
+      target: dev
+    command: celery -q -A feedreader flower --purge_offline_workers=60
     ports:
       - "5555:5555"
     environment:
