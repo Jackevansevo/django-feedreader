@@ -5,6 +5,10 @@ FROM python:${PYTHON_VERSION}-slim as base
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
+ENV VIRTUAL_ENV=/opt/venv
+RUN python3 -m venv $VIRTUAL_ENV
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+
 RUN mkdir -p /app
 WORKDIR /app
 
@@ -19,6 +23,9 @@ RUN --mount=type=cache,target=~/.cache pip install -U pip && pip install -r dev-
 COPY . .
 
 EXPOSE 8000
+
+RUN groupadd -r app && useradd --no-log-init -r -g app app
+USER app
 
 CMD  ["python", "manage.py", "runserver", "0.0.0.0:8000"]
 
@@ -37,5 +44,8 @@ COPY . .
 RUN python manage.py collectstatic --noinput
 
 EXPOSE 8000
+
+RUN groupadd -r app && useradd --no-log-init -r -g app app
+USER app
 
 CMD ["gunicorn", "-b", "0.0.0.0:8000", "--workers", "2", "feedreader.wsgi"]
