@@ -1,7 +1,8 @@
+- [ ] Bleach the content to strip styling from entry
 - [ ] Email for password reset
 - [ ] Google login / authentication
 - [ ] Healthchecks for celery workers so they're restart automatically of OOM
 - [ ] Search fuctionality
 - [ ] Limit uploads?
-- [ ] Refresh feeds button in admin?
+- [x] Refresh feeds button in admin?
 - [ ] Admin mechanism to cancel tasks?
