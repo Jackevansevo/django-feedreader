@@ -1,5 +1,6 @@
 from urllib.parse import urlparse
 
+import bleach
 import feedparser
 from bs4 import BeautifulSoup
 from dateutil import parser
@@ -9,6 +10,26 @@ from django.utils.text import slugify
 from unidecode import unidecode
 
 from feeds.models import Entry
+
+BLEACH_ALLOWED_TAGS = [
+    "a",
+    "abbr",
+    "acronym",
+    "article",
+    "b",
+    "blockquote",
+    "center",
+    "code",
+    "div",
+    "em",
+    "i",
+    "img",
+    "li",
+    "ol",
+    "p",
+    "strong",
+    "ul",
+]
 
 
 def parse_feed(resp):
@@ -81,6 +102,12 @@ def parse_feed_entry(entry, feed):
     thumbnail = None
 
     if content is not None:
+        content = bleach.clean(
+            content,
+            attributes=["href", "title", "src"],
+            tags=BLEACH_ALLOWED_TAGS,
+            strip=True,
+        )
         soup = BeautifulSoup(content, features="html.parser")
 
         for img in soup.findAll("img"):
