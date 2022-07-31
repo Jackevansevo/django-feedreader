@@ -92,15 +92,15 @@ def add_subscription(resp, category_name, user_id):
 @shared_task
 def update_feed(resp, feed_id, url):
 
-    parsed, entries = parse_feed(resp)
-    if parsed is None:
-        logger.info(f"{url} Nothing to update")
-        Feed.objects.update_or_create(
-            id=feed_id, defaults={"last_checked": timezone.now()}
-        )
-        return {"url": url, "updated": False}
-
     feed = Feed.objects.prefetch_related("entries").get(id=feed_id)
+    feed.last_checked = timezone.now()
+
+    if resp["status"] == 304:
+        logger.info(f"{url} Nothing to update")
+        feed.save(update_fields=["last_checked"])
+        return {"id": feed.id, "url": url, "updated": False}
+
+    parsed, entries = parse_feed(resp)
 
     if entries:
         existing_entries = feed.entries.values("link", "guid").order_by("published")
@@ -111,11 +111,11 @@ def update_feed(resp, feed_id, url):
         new_entries = []
 
         for entry in entries:
-            if getattr(entry, "guidislink", False):
-                if entry.link not in links:
+            if hasattr(entry, "guid") and not getattr(entry, "guidislink", True):
+                if entry.guid not in guids:
                     new_entries.append(entry)
             else:
-                if entry.guid not in guids:
+                if entry.link not in links:
                     new_entries.append(entry)
 
         logger.debug(f"new_entries: {new_entries}")

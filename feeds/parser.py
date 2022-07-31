@@ -12,10 +12,6 @@ from feeds.models import Entry
 
 
 def parse_feed(resp):
-    if resp["status"] == 304:
-        # Nothing to update
-        return None, None
-
     parsed = feedparser.parse(resp["body"])
 
     feed = {"last_checked": timezone.now(), "url": resp["url"]}
