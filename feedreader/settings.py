@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 """
 import os
 import socket
+from datetime import timedelta
 from pathlib import Path
 
 import environ
@@ -188,7 +189,7 @@ if not DEBUG:
 CELERY_BROKER_URL = os.environ.get("REDIS_URL", "redis://redis:6379/0")
 CELERY_RESULT_BACKEND = os.environ.get("REDIS_URL", "redis://redis:6379/0")
 CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
-CELERY_RESULT_EXTENDED = True
+RESULT_EXPIRES = timedelta(hours=4)
 
 CELERY_TASK_ROUTES = {"feeds.tasks.fetch_feed": {"queue": "feeds"}}
 
