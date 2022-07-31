@@ -9,9 +9,6 @@ ENV VIRTUAL_ENV=/opt/venv
 RUN python3 -m venv $VIRTUAL_ENV
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
-RUN mkdir -p /app
-WORKDIR /app
-
 # Build dev image
 FROM base as dev
 
@@ -20,12 +17,17 @@ RUN apt-get update && apt-get upgrade -y && apt install -y gcc g++ procps libpq-
 COPY requirements.txt dev-requirements.txt .
 RUN --mount=type=cache,target=~/.cache pip install -U pip && pip install -r dev-requirements.txt && pip install -r requirements.txt
 
+RUN groupadd -r app && useradd -m --no-log-init -r -g app app
+USER app
+
+WORKDIR /home/app
+
 COPY . .
+
+RUN python manage.py collectstatic --noinput
 
 EXPOSE 8000
 
-RUN groupadd -r app && useradd --no-log-init -r -g app app
-USER app
 
 CMD  ["python", "manage.py", "runserver", "0.0.0.0:8000"]
 
@@ -39,13 +41,15 @@ RUN apt-get update && apt-get upgrade -y && apt install -y gcc g++ libpq-dev
 COPY requirements.txt .
 RUN --mount=type=cache,target=~/.cache pip install -U pip && pip install -r requirements.txt
 
+RUN groupadd -r app && useradd -m --no-log-init -r -g app app
+USER app
+
+WORKDIR /home/app
+
 COPY . .
 
 RUN python manage.py collectstatic --noinput
 
 EXPOSE 8000
-
-RUN groupadd -r app && useradd --no-log-init -r -g app app
-USER app
 
 CMD ["gunicorn", "-b", "0.0.0.0:8000", "--workers", "2", "feedreader.wsgi"]
