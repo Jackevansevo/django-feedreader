@@ -2,7 +2,7 @@
 {% block style %}
 <style>
 img, video {
-  max-width: 90%;
+  max-width: 40%;
   margin-top: 2rem;
   margin-bottom: 2rem;
 }
@@ -12,6 +12,20 @@ pre {
   padding: 1rem;
   border-radius: 0.4rem;
 }
+
+@media (max-width: 1199.98px) {
+  img, video {
+    max-width: 60%;
+  }
+}
+
+@media (max-width: 767.98px) {
+  img, video {
+    max-width: 90%;
+  }
+}
+
+
 </style>
 {% endblock %}
 
