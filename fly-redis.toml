@@ -5,6 +5,9 @@ kill_signal = "SIGINT"
 kill_timeout = 5
 processes = []
 
+[env]
+  MAXMEMORY_POLICY="volatile-ttl"
+
 [build]
   image = "flyio/redis:6.2.6"
 
