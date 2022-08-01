@@ -9,7 +9,7 @@
   {% for category in subscriptions_by_category %}
   <outline {% if category.grouper %}title="{{ category.grouper }}"{% endif %}>
     {% for subscription in category.list %}
-	  <outline xmlUrl="{{ subscription.feed__url }}" htmlUrl="{{ subscription.feed__link }}" title="{{ subscription.feed__title }}" {% if subscription.feed__subtitle  %}subtitle="{{ subscription.feed__subtitle }}"{% endif %}/>
+	  <outline xmlUrl="{{ subscription.feed__url }}" htmlUrl="{{ subscription.feed__link }}" title="{{ subscription.feed__title }}" {% if subscription.feed__subtitle  %}subtitle="{{ subscription.feed__subtitle|addslashes }}"{% endif %}/>
     {% endfor %}
   </outline>
   {% endfor %}
