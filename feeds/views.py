@@ -157,6 +157,21 @@ def import_opml_feeds(request: HttpRequest) -> HttpResponse:
     return render(request, "feeds/import_feeds.html", data)
 
 
+def search(request: HttpRequest):
+    search_term = request.GET.get("q")
+    entries = Entry.objects.prefetch_related("feed__subscriptions").filter(
+        title__icontains=search_term, feed__subscriptions__user=request.user
+    )
+    subscriptions = Subscription.objects.select_related("feed").filter(
+        feed__title__icontains=search_term, user=request.user
+    )
+    return render(
+        request,
+        "feeds/search.html",
+        {"entries": entries, "subscriptions": subscriptions},
+    )
+
+
 @login_required
 def export_opml_feeds(request: HttpRequest) -> HttpResponse:
     subscriptions = (

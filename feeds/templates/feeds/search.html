@@ -1,0 +1,83 @@
+{% extends 'feeds/base.html' %}
+{% load feeds_tags %}
+{% load humanize %}
+
+
+{% block title %} - Subscriptions{% endblock %}
+{% block content %}
+
+
+<div class="container pt-2">
+  {% if entries %}
+  <h1 class="pb-2">Entries</h1>
+  <table class="table table-striped table-hoverable"> 
+    <tr>
+      <th>
+	<span class="icon-text">
+	  <span class="icon">
+	    <i class="fas fa-list"></i>
+	  </span>
+	  <span>Title</span>
+	</span>
+      </th>
+      <th>
+	<span class="icon-text">
+	  <span class="icon">
+	    <i class="fas fa-rss"></i>
+	  </span>
+	  <span>Feed</span>
+	</span>
+      </th>
+    </tr>
+    {% for entry in entries %}
+    <tr>
+      <td>
+        <a class="text-decoration-none" href={{ entry.get_absolute_url}}>{{ entry }}</a>
+      </td>
+      <td class="text-nowrap">
+        <a class="text-decoration-none" href={{ entry.feed.get_absolute_url}}>{{ entry.feed }}</a>
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% endif %}
+
+  {% if subscriptions %}
+  <h1 class="py-2">Subscriptions</h1>
+  <table class="table table-striped table-hoverable"> 
+    <tr>
+      <th>
+	<span class="icon-text">
+	  <span class="icon">
+	    <i class="fas fa-rss"></i>
+	  </span>
+	  <span>Feed</span>
+	</span>
+      </th>
+      <th class="text-nowrap d-none d-lg-table-cell">
+	<span class="icon-text">
+	  <span class="icon">
+	    <i class="fas fa-clock"></i>
+	  </span>
+	  <span>Category</span>
+	</span>
+      </th>
+    </tr>
+    {% for subscription in subscriptions %}
+    <tr>
+      <td class="text-nowrap">
+        <a class="text-decoration-none" href={{ subscription.feed.get_absolute_url}}>{{ subscription.feed.title }} </a>
+      </td>
+      <td>
+        {{ subscription.category.name }}
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+
+
+  {% endif %}
+</div>
+
+
+{% endblock %}

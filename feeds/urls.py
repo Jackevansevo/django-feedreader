@@ -5,6 +5,7 @@ from . import views
 app_name = "feeds"
 urlpatterns = [
     path("", views.index, name="index"),
+    path("search", views.search, name="search"),
     path("feeds/", views.feed_list, name="feed-list"),
     path("feeds/import/opml", views.import_opml_feeds, name="opml-import"),
     path(
