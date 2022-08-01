@@ -80,6 +80,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "django.contrib.humanize",
     "django_celery_beat",
+    "django.contrib.postgres",
 ]
 
 MIDDLEWARE = [
