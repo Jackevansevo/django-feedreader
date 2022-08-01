@@ -164,7 +164,7 @@ def export_opml_feeds(request: HttpRequest) -> HttpResponse:
             "feed__url", "feed__link", "category__name", "feed__title", "feed__subtitle"
         )
         .filter(user=request.user)
-        .order_by("category__name")
+        .order_by("category__name", "feed__link")
     )
     return render(
         request,
