@@ -14,6 +14,8 @@ from feeds.models import Entry
 BLEACH_ALLOWED_TAGS = [
     "a",
     "abbr",
+    "br",
+    "hr",
     "acronym",
     "article",
     "b",
