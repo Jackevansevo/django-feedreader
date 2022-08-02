@@ -12,9 +12,12 @@ Then visit localhost:8000
 
 - [x] Bleach the content to strip styling from entry
 - [ ] Email for password reset
+  - [ ] Find a solution for production
+  - [ ] Local can probably use terminal/file email backend
 - [ ] Google login / authentication
-- [ ] Healthchecks for celery workers so they're restart automatically of OOM
+- [ ] Healthchecks for celery workers/app so they restart automatically when OOM
 - [x] Search fuctionality
-- [ ] Limit uploads?
+- [ ] Chunk / Limit uploads?
 - [x] Refresh feeds button in admin?
 - [ ] Admin mechanism to cancel tasks?
+- [ ] Solve redis connection loss issue on redis node OOM
