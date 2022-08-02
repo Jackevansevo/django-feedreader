@@ -111,7 +111,7 @@
 	{% endif %}
       </ul>
       <form class="d-flex" role="search" method="GET" action="{% url 'feeds:search' %}">
-	<input class="form-control me-2" type="search" placeholder="Search" aria-label="Search" name="q" autocomplete="off" value="{{ request.GET.q }}"}>
+	<input class="form-control me-2" type="search" placeholder="Search" aria-label="Search" name="q" autocomplete="off" value="{{ request.GET.q }}"} required>
 	<button class="btn btn-info" type="submit">Search</button>
       </form>
     </div>
