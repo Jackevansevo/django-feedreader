@@ -38,6 +38,7 @@ eventlet = "*"
 beautifulsoup4 = "*"
 bleach = "*"
 httpx = "*"
+django-allauth = "*"
 
 [pipenv]
 allow_prereleases = true

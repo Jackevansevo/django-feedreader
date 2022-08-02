@@ -42,7 +42,7 @@ DEBUG = env("DEBUG")
 SECRET_KEY = env("SECRET_KEY")
 
 LOGIN_REDIRECT_URL = reverse_lazy("feeds:index")
-LOGOUT_REDIRECT_URL = reverse_lazy("login")
+LOGOUT_REDIRECT_URL = reverse_lazy("account_login")
 
 HOSTNAME = os.environ.get("HOSTNAME", "localhost")
 
@@ -70,6 +70,21 @@ if not DEBUG:
 
 # Application definition
 
+SITE_ID = 1
+
+SOCIALACCOUNT_PROVIDERS = {
+    "google": {
+        "SCOPE": [
+            "profile",
+            "email",
+        ],
+        "AUTH_PARAMS": {
+            "access_type": "online",
+        },
+    }
+}
+
+
 INSTALLED_APPS = [
     "feeds.apps.FeedsConfig",
     "django.contrib.admin",
@@ -77,10 +92,15 @@ INSTALLED_APPS = [
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
+    "django.contrib.sites",
     "django.contrib.staticfiles",
     "django.contrib.humanize",
     "django_celery_beat",
     "django.contrib.postgres",
+    "allauth",
+    "allauth.account",
+    "allauth.socialaccount",
+    "allauth.socialaccount.providers.google",
 ]
 
 MIDDLEWARE = [
@@ -122,6 +142,15 @@ TEMPLATES = [
         },
     },
 ]
+
+
+AUTHENTICATION_BACKENDS = [
+    # Needed to login by username in Django admin, regardless of `allauth`
+    "django.contrib.auth.backends.ModelBackend",
+    # `allauth` specific authentication methods, such as login by e-mail
+    "allauth.account.auth_backends.AuthenticationBackend",
+]
+
 
 WSGI_APPLICATION = "feedreader.wsgi.application"
 
