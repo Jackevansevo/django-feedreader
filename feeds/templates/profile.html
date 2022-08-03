@@ -1,4 +1,5 @@
 {% extends 'feeds/base.html' %}
+{% load account %}
 {% block content %}
 <div class="container">
   {% if request.user.is_authenticated %}
@@ -12,18 +13,30 @@
     <div class="card-body">
       <div class="content">
 	<ul class="list-group list-group-flush">
-	  <li class="list-group-item">username: {{ user.username }}</li>
+	  <li class="list-group-item">username: {% user_display user %}</li>
 	  <li class="list-group-item">email: {{ user.email }}</li>
 	  <li class="list-group-item">last login {{ user.last_login }}</li>
 	</ul>
       </div>
 
       <br>
-      <a class="btn btn-danger" href="{% url 'password_change' %}">
+      <a class="btn btn-danger" href="{% url 'account_change_password' %}">
 	<span class="icon is-small">
 	  <i class="fa fa-key"></i>
 	</span>
 	<span>&nbsp;Change Password</span>
+      </a>
+      <a class="btn btn-primary" href="{% url 'account_email' %}">
+	<span class="icon is-small">
+	  <i class="fa fa-envelope"></i>
+	</span>
+	<span>&nbsp;Email</span>
+      </a>
+      <a class="btn btn-success" href="{% url 'socialaccount_connections' %}">
+	<span class="icon is-small">
+	  <i class="fa fa-users"></i>
+	</span>
+	<span>&nbsp;Social Accounts</span>
       </a>
       <a class="btn btn-warning" href="{% url 'feeds:opml-export' %}" download>
 	<span class="icon is-small">
