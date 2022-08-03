@@ -123,6 +123,9 @@ if DEBUG:
     ip = socket.gethostbyname(socket.gethostname())
     INTERNAL_IPS += [ip[:-1] + "1"]
 
+    EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+
+
 ROOT_URLCONF = "feedreader.urls"
 
 FORM_RENDERER = "django.forms.renderers.TemplatesSetting"

@@ -1,0 +1,46 @@
+{% extends 'feeds/base.html' %}
+
+{% load i18n %}
+{% load account socialaccount %}
+
+{% block content %}
+<div class="container">
+  <div class="card">
+    <div class="card-header">
+      <span class="icon is-small">
+	<i class="fa fa-unlock"></i>
+      </span>
+      <span>&nbsp;Login</span>
+    </div>
+    <div class="card-body">
+
+{% get_providers as socialaccount_providers %}
+
+{% if socialaccount_providers %}
+
+<div class="socialaccount_ballot">
+
+  <ul class="socialaccount_providers">
+    {% include "socialaccount/snippets/provider_list.html" with process="login" %}
+  </ul>
+
+</div>
+
+{% endif %}
+
+
+
+      <form class="login" method="POST" action="{% url 'account_login' %}">
+	{% csrf_token %}
+	{{ form }}
+	{% if redirect_field_value %}
+	<input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
+	{% endif %}
+	<button class="btn btn-success my-3" type="submit">{% trans "Sign In" %}</button>
+      </form>
+      <a href="{{ signup_url }}">{% trans "Sign Up" %}</a>
+      <a href="{% url 'account_reset_password' %}">{% trans "Forgot Password?" %}</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

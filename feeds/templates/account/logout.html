@@ -1,0 +1,26 @@
+{% extends 'feeds/base.html' %}
+
+{% load i18n %}
+
+{% block content %}
+<div class="container">
+  <div class="card">
+    <div class="card-header">
+      <span class="icon is-small">
+	<i class="fa fa-arrow-right-from-bracket"></i>
+      </span>
+      <span>&nbsp;{% trans 'Sign Out' %}</span>
+    </div>
+    <div class="card-body">
+      <p>{% trans 'Are you sure you want to sign out?' %}</p>
+      <form method="post" action="{% url 'account_logout' %}">
+	{% csrf_token %}
+	{% if redirect_field_value %}
+	<input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}"/>
+	{% endif %}
+	<button class="btn btn-danger" type="submit">{% trans 'Sign Out' %}</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

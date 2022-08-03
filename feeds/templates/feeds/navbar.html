@@ -1,3 +1,4 @@
+{% load i18n %}
 <nav class="navbar navbar-expand-lg {% if debug %}navbar-light bg-warning{% else %}navbar-dark bg-primary{% endif %}">
   <div class="container-fluid">
     <a class="navbar-brand" href="{% url 'feeds:index' %}">
@@ -64,7 +65,7 @@
 	      <span class="icon">
 		<i class="fas fa-arrow-right-from-bracket"></i>
 	      </span>
-	      <span>&nbsp;Logout</span>
+	      <span>&nbsp;{% trans 'Sign Out' %}</span>
 	    </span>
 	  </a>
 	</li>
