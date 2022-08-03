@@ -23,6 +23,7 @@ urlpatterns = [
         views.CategoryDeleteView.as_view(),
         name="category-delete",
     ),
+    path("account/profile/", views.profile, name="profile"),
     path(
         "subscriptions/delete/<int:pk>",
         views.SubscriptionDeleteView.as_view(),

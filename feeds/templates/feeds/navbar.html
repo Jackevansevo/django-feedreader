@@ -68,7 +68,7 @@
 	    </span>
 	  </a>
 	</li>
-	{% url 'profile' as link %}
+	{% url 'feeds:profile' as link %}
 	{% if link %}
 	<li class="nav-item">
 	  <a class="nav-link {% if request.path == link %}active{% endif %}" href="{{ link }}">

@@ -34,6 +34,10 @@ from .models import Category, Entry, Feed, Subscription
 # Or task status for multiple tasks
 
 
+def profile(request):
+    return render(request, "profile.html")
+
+
 def task_status(request: HttpRequest, task_id) -> JsonResponse:
     task_result = result.AsyncResult(task_id)
     data = {
