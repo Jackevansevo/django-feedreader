@@ -11,7 +11,7 @@
       <span class="icon is-small">
 	<i class="fa fa-envelope-open"></i>
       </span>
-      <span>&nbsp;{% trans "E-mail Addresses" %}</span>
+      <span>{% trans "E-mail Addresses" %}</span>
     </div>
     <div class="card-body">
       {% if user.emailaddress_set.all %}
@@ -48,9 +48,9 @@
 	  {% endfor %}
 
 	  <div class="pt-2">
-	    <button class="btn btn-success" type="submit" name="action_primary" ><i class="fa-solid fa-star"></i>&nbsp; {% trans 'Make Primary' %}</button>
-	    <button class="btn btn-warning" type="submit" name="action_send" ><i class="fa-solid fa-paper-plane"></i>&nbsp; {% trans 'Re-send Verification' %}</button>
-	    <button class="btn btn-danger" type="submit" name="action_remove" ><i class="fa-solid fa-trash"></i>&nbsp; {% trans 'Remove' %}</button>
+	    <button class="btn btn-sm btn-success" type="submit" name="action_primary" ><i class="fa-solid fa-star"></i>&nbsp; {% trans 'Make Primary' %}</button>
+	    <button class="btn btn-sm btn-warning" type="submit" name="action_send" ><i class="fa-solid fa-paper-plane"></i>&nbsp; {% trans 'Re-send Verification' %}</button>
+	    <button class="btn btn-sm btn-danger" type="submit" name="action_remove" ><i class="fa-solid fa-trash"></i>&nbsp; {% trans 'Remove' %}</button>
 	  </div>
 
 	</fieldset>
