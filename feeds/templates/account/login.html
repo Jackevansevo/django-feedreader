@@ -14,21 +14,26 @@
     </div>
     <div class="card-body">
 
-{% get_providers as socialaccount_providers %}
+      {% get_providers as socialaccount_providers %}
 
-{% if socialaccount_providers %}
+      {% if socialaccount_providers %}
+      <p>Sign in with:</p>
+      <a type="button" class="btn btn-danger" href="{% provider_login_url "google" process="login" %}">
+	<span class="icon is-small">
+	  <i class="fa fa-google"></i>
+	</span>
+	&nbsp;Google
+      </a>
+      <a type="button" class="btn btn-dark" href="{% provider_login_url "google" process="connect" %}">
+	<span class="icon is-small">
+	  <i class="fa fa-github"></i>
+	</span>
+	&nbsp;Github
+      </a>
+      {% endif %}
 
-<div class="socialaccount_ballot">
-
-  <ul class="socialaccount_providers">
-    {% include "socialaccount/snippets/provider_list.html" with process="login" %}
-  </ul>
-
-</div>
-
-{% endif %}
-
-
+      <br>
+      <br>
 
       <form class="login" method="POST" action="{% url 'account_login' %}">
 	{% csrf_token %}

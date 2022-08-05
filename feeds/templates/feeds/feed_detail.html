@@ -1,6 +1,28 @@
 {% extends 'feeds/base.html' %}
 {% load humanize %}
 {% block title %} - {{ feed.title }}{% endblock %}
+{% block style %}
+<style>
+h1, h2, h3, h4, h5, h6 {
+  font-family: "Playfair Display", Georgia, "Times New Roman", serif/*rtl:Amiri, Georgia, "Times New Roman", serif*/;
+}
+.container {
+  max-width: 30%
+}
+
+@media (max-width: 1199.98px) {
+  .container {
+    max-width: 80%
+  }
+}
+
+@media (max-width: 767.98px) {
+  .container {
+    max-width: 100%
+  }
+}
+</style>
+{% endblock %}
 {% block content %}
 <div class="container">
   <nav aria-label="breadcrumb">
