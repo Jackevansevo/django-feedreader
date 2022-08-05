@@ -125,6 +125,10 @@ if DEBUG:
 
     EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
+    from django.contrib.messages import constants as message_constants
+
+    MESSAGE_LEVEL = message_constants.DEBUG
+
 
 ROOT_URLCONF = "feedreader.urls"
 
