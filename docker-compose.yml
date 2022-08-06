@@ -28,6 +28,9 @@ services:
     tty: true
     ports:
       - "8000:8000"
+    env_file:
+      - .env
+      - secrets.env
     environment:
       - DB_HOST=db
       - POSTGRES_NAME=postgres

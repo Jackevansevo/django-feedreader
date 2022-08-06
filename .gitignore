@@ -3,3 +3,4 @@ __pycache__
 .envrc
 /static/
 data/
+secrets.env

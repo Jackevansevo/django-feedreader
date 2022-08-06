@@ -3,8 +3,21 @@
 
     docker compose up -d --build
 
+The application expects a file called `secrets.env` in the project root with the following variables:
+
+    GOOGLE_CLIENT_ID=XYZ
+    GOOGLE_CLIENT_SECRET=XYZ
+
+Mmake/run the migrations:
+
+    docker compose exec ./manage.py makemigrations
+
     docker compose exec ./manage.py migrate
 
+
+Create a superuser/root/administrator account:
+
+    docker compose exec app ./manage.py createsuperuser
 
 Then visit localhost:8000
 
