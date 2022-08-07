@@ -1,5 +1,12 @@
 {% extends 'feeds/base.html' %}
 {% load account %}
+{% block style %}
+<style>
+.btn {
+  margin: .25rem .125rem;
+}
+</style>
+{% endblock %}
 {% block content %}
 <div class="container">
   {% if request.user.is_authenticated %}
