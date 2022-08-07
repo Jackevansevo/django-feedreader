@@ -57,12 +57,15 @@
       </form>
 
       {% else %}
-      <p><strong>{% trans 'Warning:'%}</strong> {% trans "You currently do not have any e-mail address set up. You should really add an e-mail address so you can receive notifications, reset your password, etc." %}</p>
+      <div class="alert alert-warning" role="alert">
+	<i class="fa-solid fa-triangle-exclamation"></i>&nbsp;
+	<span><strong>{% trans 'Warning:'%}</strong> {% trans "You currently do not have any e-mail address set up. You should really add an e-mail address so you can receive notifications, reset your password, etc." %}</span>
+      </div>
 
       {% endif %}
 
       {% if can_add_email %}
-      <h2 class="pt-4">{% trans "Add E-mail Address" %}</h2>
+      <h3 class="pt-4">{% trans "Add E-mail Address" %}</h3>
 
       <form method="post" action="{% url 'account_email' %}" class="add_email">
 	{% csrf_token %}
