@@ -13,21 +13,36 @@ pre {
   border-radius: 0.4rem;
 }
 
-.container {
-  max-width: 30%
-}
-
-@media (max-width: 1199.98px) {
+@media (min-width: 576px) {
   .container {
-    max-width: 80%
+    max-width: 70%;
   }
 }
 
-@media (max-width: 767.98px) {
+@media (min-width: 768px) {
   .container {
-    max-width: 100%
+    max-width: 60%;
   }
 }
+
+@media (min-width: 992px) {
+  .container {
+    max-width: 50%;
+  }
+}
+
+@media (min-width: 1200px) {
+  .container {
+    max-width: 40%;
+  }
+}
+
+@media (min-width: 1400px) {
+  .container {
+    max-width: 30%;
+  }
+}
+
 
 h1, h2, h3, h4, h5, h6 {
   font-family: "Playfair Display", Georgia, "Times New Roman", serif/*rtl:Amiri, Georgia, "Times New Roman", serif*/;
