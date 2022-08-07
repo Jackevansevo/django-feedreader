@@ -354,7 +354,9 @@ def feed_create_view(request: HttpRequest) -> HttpResponse:
                 form.add_error("url", "Already subscribed to this feed")
                 return render(request, "feeds/subscription_form.html", {"form": form})
 
-    form = SubscriptionCreateForm(user=request.user)
+    else:
+        form = SubscriptionCreateForm(user=request.user)
+
     return render(request, "feeds/subscription_form.html", {"form": form})
 
 
