@@ -1,5 +1,7 @@
 {% extends 'feeds/base.html' %}
 
+{% load i18n %}
+
 {% load static %}
 
 {% block content %}
@@ -12,6 +14,22 @@
 			<span>&nbsp;Import</span>
 		</div>
 		<div class="card-body" id="card">
+			{% if data.skipped %}
+				<div class="alert alert-warning" role="alert">
+					<i class="fa-solid fa-warning"></i>&nbsp;
+					{% blocktranslate count counter=data.skipped|length %}
+					Skipping as you're already subscribed:
+					{% plural %}
+					Skipped {{ data.skipped|length }} feeds as you're already subscribed:
+					{% endblocktranslate %}
+					<hr>
+					<ul>
+					{% for skipped in data.skipped %}
+					<li>{{ skipped }}</li>
+					{% endfor %}
+					</ul>
+				</div>
+			{% endif %}
 			<div id="progress" class="progress mt-2 mb-4">
 				<div class="progress-bar bg-success progress-bar-striped progress-bar-animated" role="progressbar" aria-label="import progress" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
 			</div>

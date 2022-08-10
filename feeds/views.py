@@ -103,10 +103,23 @@ def import_opml_feeds(request: HttpRequest) -> HttpResponse:
             parsed = listparser.parse(contents)
 
             jobs = []
+            fetching = []
+            skipped = []
+
+            # Filter out any feeds that the user is already subscribed to
+            existing_subscriptions = set(
+                Subscription.objects.filter(
+                    user=request.user, feed__url__in=[feed.url for feed in parsed.feeds]
+                ).values_list("feed__url", flat=True)
+            )
+
             for feed in parsed.feeds:
-                # TODO here be smart about feeds that already exist? Query the
-                # DB ahead of time to work out which feeds need to be parsed,
-                # bulk create subscriptions for pre-existing feeds here
+
+                if feed.url in existing_subscriptions:
+                    skipped.append(feed.url)
+                    continue
+
+                fetching.append(feed)
 
                 # Right now we're potentially re-scraping all feeds in the import list
                 # If we're doing this then we probably want to pass the etag through?
@@ -127,13 +140,14 @@ def import_opml_feeds(request: HttpRequest) -> HttpResponse:
             task_metadata = {
                 "id": task.id,
                 "user_id": request.user.id,
+                "skipped": skipped,
                 "children": [
                     {
                         "id": child.id,
                         "url": feed.url,
                         "category": feed.categories[0][0],
                     }
-                    for (child, feed) in zip(task.children, parsed.feeds)
+                    for (child, feed) in zip(task.children, fetching)
                 ],
             }
 
