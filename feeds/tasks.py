@@ -5,6 +5,8 @@ from django.db import IntegrityError, transaction
 from django.db.models import Count
 from django.utils import timezone
 from django.utils.http import http_date
+from celery.exceptions import Ignore
+
 
 from feeds.models import Category, Entry, Feed, Subscription
 
@@ -17,7 +19,7 @@ logger = get_task_logger(__name__)
 # TODO Make the retry policy error specific
 
 
-@shared_task(autoretry_for=(httpx.RequestError,), retry_backoff=True)
+@shared_task(autoretry_for=(httpx.TimeoutException,), retry_backoff=True)
 def fetch_feed(url, last_modified=None, etag=None):
     headers = {"User-Agent": USER_AGENT}
 
@@ -26,13 +28,19 @@ def fetch_feed(url, last_modified=None, etag=None):
     if last_modified is not None:
         headers["If-Modified-Since"] = http_date(last_modified.timestamp())
 
-    response = httpx.get(url, headers=headers, follow_redirects=True)
+    try:
+        response = httpx.get(url, headers=headers, follow_redirects=True)
+    except httpx.ConnectionError as e:
+        raise Ignore(str(e))
+
     try:
         response.raise_for_status()
     except httpx.HTTPStatusError as exc:
-        print(
+        logger.error(
             f"Error response {exc.response.status_code} while requesting {exc.request.url!r}."  # noqa
         )
+        if response.status_code >= 400:
+            raise Ignore(str(exc))
 
     return {
         "status": response.status_code,
