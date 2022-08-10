@@ -10,7 +10,7 @@ from django.db import migrations
 
 def create_site(apps, schema_editor):
     if settings.DEBUG:
-        site = Site.objects.create(name="localhost", domain="http://localhost:8000")
+        site = Site.objects.create(name="localhost", domain="localhost:8000")
         social_app = SocialApp.objects.create(
             provider="google",
             name="google",
