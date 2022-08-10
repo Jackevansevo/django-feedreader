@@ -23,6 +23,9 @@ Then visit localhost:8000
 
 # TODO
 
+- [x] Automatically find rss feed for a given URL
+  - Fetch the raw site content, use beautiful soup to find links
+  - Fall back to naively querying /index.xml /rss /feed /rss.xml /feed.xml if this fails
 - [x] Bleach the content to strip styling from entry
 - [ ] Email for password reset
   - [ ] Find a solution for production
