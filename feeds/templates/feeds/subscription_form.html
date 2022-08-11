@@ -12,7 +12,7 @@
       <span>&nbsp;Add feed</span>
     </div>
     <div class="card-body">
-      <form method="post" onSubmit="this.disabled=true,this.form.submit();">
+      <form id="subscriptionCreateForm" method="post" onSubmit="this.disabled=true,this.form.submit();">
 	{% csrf_token %}
 	{{ form.as_p }}
 	<div class="d-flex flex-row justify-content-between align-items-baseline">
@@ -29,5 +29,112 @@
       </form>
     </div>
   </div>
+	<div id="results" class="d-none pt-4"></div>
 </div>
+{% endblock %}
+{% block scripts %}
+<script>
+const form = document.getElementById('subscriptionCreateForm')
+const urlInput = form.elements[1]
+const resultsSection = document.getElementById('results')
+urlInput.addEventListener('blur', (event) => {
+
+  resultsSection.innerHTML = '';
+
+	if (event.target.value === '') {
+		return
+	}
+
+	let x = document.createElement('div')
+	x.classList.add('d-flex', 'justify-content-center')
+
+	let y = document.createElement('div')
+	y.classList.add('spinner-border')
+
+	x.appendChild(y)
+
+	let z = document.createElement('span')
+	z.classList.add('visually-hidden')
+	z.innerHTML = 'Loading...'
+
+	y.appendChild(z);
+
+	resultsSection.appendChild(x)
+
+	resultsSection.classList.remove('d-none')
+
+	// TODO: Show some sort of spinner whilst awaiting a response from search?
+
+	fetch(`/feeds/search?q=${encodeURIComponent(event.target.value)}`, {
+		method: 'GET',
+		headers: {
+			'Content-Type': 'application/json'
+		},
+	})
+		.then(response => response.json())
+		.then(resp => {
+
+			resultsSection.innerHTML = '';
+
+			for (feed of resp) {
+				let resultCard = document.createElement("div");
+				resultCard.classList.add('card')
+
+				let cardBody = document.createElement('div')
+				cardBody.classList.add('card-body')
+
+				resultCard.appendChild(cardBody)
+				
+				let title = document.createElement('h5')
+				title.classList.add('card-title')
+				title.innerHTML = feed.title
+
+				let feedLink = document.createElement('a')
+				feedLink.classList.add('text-decoration-none')
+				feedLink.setAttribute('href', feed.links['internal']) 
+				feedLink.appendChild(title)
+
+				let subtitle = document.createElement('h6')
+				subtitle.classList.add('card-subtitle', 'mb-2', 'text-muted')
+				subtitle.innerHTML = feed.subtitle
+
+				let linkElement = document.createElement('a')
+				linkElement.classList.add('card-link', 'text-decoration-none')
+				linkElement.setAttribute('href', feed.links['external']) 
+				linkElement.innerHTML = feed.links['external'].replace(/(^\w+:|^)\/\//, '')
+
+				let followButton = document.createElement('button')
+				followButton.classList.add('btn', 'btn-outline-success', 'd-block', 'btn-sm', 'mt-3')
+				followButton.innerHTML = 'follow';
+
+				let unorderedList = document.createElement('ul')
+				unorderedList.classList.add('pt-3')
+				
+				for (entry of feed.entries) {
+					let listEntry = document.createElement('li')
+
+					let entryLink = document.createElement('a')
+					entryLink.classList.add('text-decoration-none')
+					entryLink.setAttribute('href', entry.link) 
+					entryLink.innerHTML = entry.title
+
+					listEntry.appendChild(entryLink)
+
+					unorderedList.appendChild(listEntry);
+				}
+
+				cardBody.appendChild(feedLink)
+				cardBody.appendChild(subtitle)
+				cardBody.appendChild(linkElement)
+				cardBody.appendChild(followButton)
+				cardBody.appendChild(unorderedList);
+
+
+				resultsSection.appendChild(resultCard)
+			}
+			console.log(resp)
+		})
+		.catch(err => console.log(err));
+}, true)
+</script>
 {% endblock %}

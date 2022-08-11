@@ -1,12 +1,17 @@
 import uuid
 
+from urllib.parse import urlparse
 import listparser
+from django.core.exceptions import ValidationError
+from django.core.validators import URLValidator
 from celery import group, result
+from django.db.models import Exists, OuterRef
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User
+from django.contrib.postgres.search import SearchVector
 from django.core.cache import cache
 from django.core.paginator import Paginator
 from django.db import DataError, IntegrityError, transaction
@@ -175,6 +180,80 @@ def import_opml_feeds(request: HttpRequest) -> HttpResponse:
     return render(request, "feeds/import_feeds.html", data)
 
 
+def strip_scheme(url):
+    parsed = urlparse(url)
+    scheme = "%s://" % parsed.scheme
+    return parsed.geturl().replace(scheme, "", 1)
+
+
+def feed_search(request: HttpRequest):
+    search_term = request.GET.get("q")
+
+    # If the search term is a URL we need to strip the scheme
+    # I..e if 'http://site/index.xml' is entered instead of 'http://site/index.xml'
+    # We want to match on just 'site/index.xml'
+
+    url_validator = URLValidator()
+    url = ""
+    try:
+        url_validator(search_term)
+    except ValidationError:
+        pass
+    else:
+        is_url = True
+        url = search_term
+        search_term = strip_scheme(search_term)
+
+    # First attempt to lookup pre-existing/similar feeds
+    feeds = (
+        Feed.objects.prefetch_related("entries")
+        .annotate(search=SearchVector("title", "url", "link"))
+        .filter(search=search_term)
+    )
+
+    # If there are no pre-existing results
+    if not feeds and is_url:
+        task = tasks.fetch_feed.delay(url)
+        resp = task.get()
+        parsed, entries = parse_feed(resp)
+        try:
+            feed = Feed.objects.create(**parsed)
+        except IntegrityError:
+            # We got redirect to another feed, so use this one instead
+            if resp["url"] != url:
+                feed = Feed.objects.get(url=resp["url"])
+                feeds = [feed]
+            else:
+                raise
+        else:
+            Entry.objects.bulk_create(
+                parse_feed_entry(entry, feed) for entry in entries
+            )
+            feeds = [feed]
+
+    # TODO If the search term is a URL then try to fetch the page (if we haven't already fetched this feed)
+
+    return JsonResponse(
+        [
+            {
+                "title": feed.title,
+                "subtitle": feed.subtitle,
+                "links": {
+                    "internal": feed.get_absolute_url(),
+                    "external": feed.link,
+                    "rss": feed.url,
+                },
+                "entries": [
+                    {"title": entry.title, "link": entry.get_absolute_url()}
+                    for entry in feed.entries.all()[:3]
+                ],
+            }
+            for feed in feeds
+        ],
+        safe=False,
+    )
+
+
 @login_required
 def search(request: HttpRequest):
     search_term = request.GET.get("q")
@@ -287,16 +366,24 @@ def feed_list(request: HttpRequest) -> HttpResponse:
 
 @login_required
 def feed_detail(request: HttpRequest, feed_slug: str) -> HttpResponse:
-    subscription = get_object_or_404(
-        Subscription, feed__slug=feed_slug, user=request.user
+
+    # TODO Can this be done in a single query?
+
+    feed = (
+        Feed.objects.filter(slug=feed_slug)
+        .annotate(subscribed=Exists(Subscription.objects.filter(feed=OuterRef("pk"))))
+        .first()
     )
+
+    if feed.subscribed:
+        subscription = Subscription.objects.get(feed=feed, user=request.user)
+
     return render(
         request,
         "feeds/feed_detail.html",
         {
-            "subscription": subscription,
-            "subscription": subscription,
-            "feed": subscription.feed,
+            "subscription": subscription if feed.subscribed else None,
+            "feed": feed,
         },
     )
 
@@ -307,7 +394,6 @@ def entry_detail(
 ) -> HttpResponse:
     entry = get_object_or_404(
         Entry,
-        feed__subscriptions__user=request.user,
         slug=entry_slug,
         uuid=uuid,
         feed__slug=feed_slug,

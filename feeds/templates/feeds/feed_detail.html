@@ -25,13 +25,15 @@ h1, h2, h3, h4, h5, h6 {
 
   <div class="row">
     <h1>{{ feed.title }}</h5>
+    {% if feed.subscribed %}
     {% if subscription.category %}<h2 class="mb-2 text-muted">{{ subscription.category }}</h6>{% endif %}
     <h6>Last checked {{ subscription.feed.last_checked | naturaltime }}</h6>
+    {% endif %}
   </div>
 
   <div class="row pt-3">
     <div clas="col">
-      <a class="btn btn-outline-primary btn-sm" href="{{ subscription.feed.link }}">
+      <a class="btn btn-outline-primary btn-sm" href="{{ feed.link }}">
 	<span class="icon-text">
 	  <span class="icon is-small">
 	    <i class="fa-solid fa-arrow-up-right-from-square"></i>
@@ -39,7 +41,7 @@ h1, h2, h3, h4, h5, h6 {
 	  <span>View site</span>
 	</span>
       </a>
-      <a class="btn btn-outline-warning btn-sm" href="{{ subscription.feed.url }}">
+      <a class="btn btn-outline-warning btn-sm" href="{{ feed.url }}">
 	<span class="icon-text">
 	  <span class="icon is-small">
 	    <i class="fas fa-rss"></i>
@@ -47,6 +49,7 @@ h1, h2, h3, h4, h5, h6 {
 	  <span>Feed</span>
 	</span>
       </a>
+      {% if feed.subscribed %}
       <a class="btn btn-outline-danger btn-sm"
 	 href="{% url 'feeds:subscription-delete' subscription.pk %}">
 	<span class="icon-text">
@@ -55,6 +58,16 @@ h1, h2, h3, h4, h5, h6 {
 	  </span>
 	  <span>Delete</span>
       </a>
+      {% else %}
+      <a class="btn btn-outline-success btn-sm"
+	 href="#">
+	<span class="icon-text">
+	  <span class="icon is-small">
+	    <i class="fas fa-plus"></i>
+	  </span>
+	  <span>Follow</span>
+      </a>
+      {% endif %}
     </div>
   </div>
   <br>

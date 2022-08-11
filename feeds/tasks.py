@@ -28,10 +28,7 @@ def fetch_feed(url, last_modified=None, etag=None):
     if last_modified is not None:
         headers["If-Modified-Since"] = http_date(last_modified.timestamp())
 
-    try:
-        response = httpx.get(url, headers=headers, follow_redirects=True)
-    except httpx.ConnectionError as e:
-        raise Ignore(str(e))
+    response = httpx.get(url, headers=headers, follow_redirects=True)
 
     try:
         response.raise_for_status()
@@ -39,6 +36,8 @@ def fetch_feed(url, last_modified=None, etag=None):
         logger.error(
             f"Error response {exc.response.status_code} while requesting {exc.request.url!r}."  # noqa
         )
+        # TODO if the feed fails and we get 404, fan out to looks for the
+        # 'correct' feed
         if response.status_code >= 400:
             raise Ignore(str(exc))
 
