@@ -1,9 +1,11 @@
+import json
 import uuid
 
 from urllib.parse import urlparse
 import listparser
 from django.core.exceptions import ValidationError
 from django.core.validators import URLValidator
+from django.shortcuts import reverse
 from celery import group, result
 from django.db.models import Exists, OuterRef
 from django.conf import settings
@@ -35,6 +37,7 @@ from feeds.parser import parse_feed, parse_feed_entry
 
 from .forms import CategoryForm, OPMLUploadForm, SignUpForm, SubscriptionCreateForm
 from .models import Category, Entry, Feed, Subscription
+import feeds.parser as parser
 
 # TODO Mechanism to all the subtasks status from a parent tasks
 # Or task status for multiple tasks
@@ -215,14 +218,17 @@ def feed_search(request: HttpRequest):
     # First attempt to lookup pre-existing/similar feeds
     feeds = (
         Feed.objects.prefetch_related("entries")
-        .annotate(search=SearchVector("title", "url", "link"))
+        .annotate(
+            search=SearchVector("title", "url", "link"),
+            subscribed=Exists(Subscription.objects.filter(feed=OuterRef("pk"))),
+        )
         .filter(search=strip_scheme(search_term) if is_url else search_term)
     )
 
     # If there are no pre-existing results
     if not feeds and is_url:
         print("getting", search_term)
-        task = tasks.fetch_feed.delay(search_term)
+        task = tasks.fetch_feed.delay(parser.find_feed_from_url(search_term))
         resp = task.get()
         parsed, entries = parse_feed(resp)
         try:
@@ -240,13 +246,17 @@ def feed_search(request: HttpRequest):
             )
             feeds = [feed]
 
-    # TODO If the search term is a URL then try to fetch the page (if we haven't already fetched this feed)
+    # TODO If the search term is a URL then try to fetch the page (if we
+    # haven't already fetched this feed)
+    # TODO If there is a subscription, we need to link the ID in order to be
+    # able to render a link to the unsubscribe page.
 
     return JsonResponse(
         [
             {
                 "title": feed.title,
                 "subtitle": feed.subtitle,
+                "subscribed": getattr(feed, "subscribed", None),
                 "links": {
                     "internal": feed.get_absolute_url(),
                     "external": feed.link,
@@ -412,12 +422,14 @@ def entry_detail(
 
 @login_required
 def feed_create_view(request: HttpRequest) -> HttpResponse:
+    # TODO Replace this with enhanced add feed page follow button
+    categories = Category.objects.filter(user=request.user)
     if request.method == "POST":
         # create a form instance and populate it with data from the request:
         form = SubscriptionCreateForm(request.POST, user=request.user)
         # check whether it's valid:
         if form.is_valid():
-            url = Feed.find_feed_from_url(form.cleaned_data["url"])
+            url = parser.find_feed_from_url(form.cleaned_data["url"])
             category = form.cleaned_data["category"]
             # Check if the feed exists
             try:
@@ -452,7 +464,15 @@ def feed_create_view(request: HttpRequest) -> HttpResponse:
                     except (DataError, IntegrityError) as error:
                         form.add_error("url", f"Failed to parse feed: {error}")
                         return render(
-                            request, "feeds/subscription_form.html", {"form": form}
+                            request,
+                            "feeds/subscription_form.html",
+                            {
+                                "form": form,
+                                "categories": [
+                                    {"name": category.name, "id": category.id}
+                                    for category in categories
+                                ],
+                            },
                         )
 
                 Subscription.objects.create(
@@ -461,12 +481,33 @@ def feed_create_view(request: HttpRequest) -> HttpResponse:
                 return redirect(feed)
             else:
                 form.add_error("url", "Already subscribed to this feed")
-                return render(request, "feeds/subscription_form.html", {"form": form})
+                return render(
+                    request,
+                    "feeds/subscription_form.html",
+                    {
+                        "form": form,
+                        "categories": [
+                            {"name": category.name, "id": category.id}
+                            for category in categories
+                        ],
+                    },
+                )
 
     else:
         form = SubscriptionCreateForm(user=request.user)
 
-    return render(request, "feeds/subscription_form.html", {"form": form})
+    # TODO Eventually we'll probably replace this with a JSON render view
+
+    return render(
+        request,
+        "feeds/subscription_form.html",
+        {
+            "form": form,
+            "categories": [
+                {"name": category.name, "id": category.id} for category in categories
+            ],
+        },
+    )
 
 
 class SubscriptionDeleteView(DeleteView, LoginRequiredMixin):

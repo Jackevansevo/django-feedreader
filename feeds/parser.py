@@ -1,4 +1,4 @@
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urljoin
 
 import bleach
 import feedparser
@@ -61,6 +61,30 @@ BLEACH_ALLOWED_TAGS = [
     "ul",
     "video",
 ]
+
+
+def find_feed_from_url(url):
+    parsed = urlparse(url)
+
+    if parsed.netloc.endswith("wordpress.com") or parsed.netloc.endswith(
+        "bearblog.dev"
+    ):
+        if not parsed.path.endswith("/feed/"):
+            return parsed._replace(path=f"{parsed.path}/feed/").geturl()
+    elif parsed.netloc.endswith("substack.com"):
+        if not parsed.path.endswith("/feed"):
+            return parsed._replace(path=f"{parsed.path}/feed").geturl()
+    elif parsed.netloc.endswith("tumblr.com"):
+        if parsed.path != "/rss":
+            return urljoin(url, "rss")
+    elif parsed.netloc.endswith("medium.com"):
+        if not parsed.path.startswith("/feed"):
+            return parsed._replace(path=f"feed{parsed.path}").geturl()
+    elif parsed.netloc.endswith("blogspot.com"):
+        if parsed.path != "/feeds/posts/default":
+            return urljoin(url, "feeds/posts/default")
+
+    return url
 
 
 def parse_feed(resp):

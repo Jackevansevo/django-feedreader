@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import uuid
-from urllib.parse import urljoin, urlparse
 
 from django.conf import settings
 from django.core.validators import MinLengthValidator
@@ -47,31 +46,6 @@ class Feed(models.Model):
     last_modified = models.DateTimeField(null=True)
     last_checked = models.DateTimeField(auto_now=True)
     created_at = models.DateTimeField(auto_now_add=True)
-
-    @classmethod
-    def find_feed_from_url(cls, url):
-        # TODO Cleanup this mess
-        parsed = urlparse(url)
-
-        if parsed.netloc.endswith("wordpress.com") or parsed.netloc.endswith(
-            "bearblog.dev"
-        ):
-            if not parsed.path.endswith("/feed/"):
-                return parsed._replace(path=f"{parsed.path}/feed/").geturl()
-        elif parsed.netloc.endswith("substack.com"):
-            if not parsed.path.endswith("/feed"):
-                return parsed._replace(path=f"{parsed.path}/feed").geturl()
-        elif parsed.netloc.endswith("tumblr.com"):
-            if parsed.path != "/rss":
-                return urljoin(url, "rss")
-        elif parsed.netloc.endswith("medium.com"):
-            if not parsed.path.startswith("/feed"):
-                return parsed._replace(path=f"feed{parsed.path}").geturl()
-        elif parsed.netloc.endswith("blogspot.com"):
-            if parsed.path != "/feeds/posts/default":
-                return urljoin(url, "feeds/posts/default")
-
-        return url
 
     def get_absolute_url(self):
         return reverse("feeds:feed-detail", kwargs={"feed_slug": self.slug})
