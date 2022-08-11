@@ -21,6 +21,7 @@ from django.http import (
     HttpRequest,
     HttpResponse,
     HttpResponseNotFound,
+    HttpResponseBadRequest,
     JsonResponse,
 )
 from django.shortcuts import get_object_or_404, redirect, render
@@ -186,41 +187,49 @@ def strip_scheme(url):
     return parsed.geturl().replace(scheme, "", 1)
 
 
+def is_valid_url(query: str):
+    url_validator = URLValidator()
+    try:
+        url_validator(query)
+    except ValidationError:
+        return False
+    else:
+        return True
+
+
 def feed_search(request: HttpRequest):
-    search_term = request.GET.get("q")
+
+    try:
+        search_term = request.GET["q"]
+    except KeyError:
+        return HttpResponseBadRequest(
+            f"Missing required search term {request.path}?q=term"
+        )
 
     # If the search term is a URL we need to strip the scheme
     # I..e if 'http://site/index.xml' is entered instead of 'http://site/index.xml'
     # We want to match on just 'site/index.xml'
 
-    url_validator = URLValidator()
-    url = ""
-    try:
-        url_validator(search_term)
-    except ValidationError:
-        pass
-    else:
-        is_url = True
-        url = search_term
-        search_term = strip_scheme(search_term)
+    is_url = is_valid_url(search_term)
 
     # First attempt to lookup pre-existing/similar feeds
     feeds = (
         Feed.objects.prefetch_related("entries")
         .annotate(search=SearchVector("title", "url", "link"))
-        .filter(search=search_term)
+        .filter(search=strip_scheme(search_term) if is_url else search_term)
     )
 
     # If there are no pre-existing results
     if not feeds and is_url:
-        task = tasks.fetch_feed.delay(url)
+        print("getting", search_term)
+        task = tasks.fetch_feed.delay(search_term)
         resp = task.get()
         parsed, entries = parse_feed(resp)
         try:
             feed = Feed.objects.create(**parsed)
         except IntegrityError:
             # We got redirect to another feed, so use this one instead
-            if resp["url"] != url:
+            if resp["url"] != search_term:
                 feed = Feed.objects.get(url=resp["url"])
                 feeds = [feed]
             else:
