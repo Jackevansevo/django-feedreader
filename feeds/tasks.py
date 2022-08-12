@@ -19,7 +19,7 @@ logger = get_task_logger(__name__)
 # TODO Make the retry policy error specific
 
 
-@shared_task(autoretry_for=(httpx.TimeoutException,), retry_backoff=True)
+@shared_task(autoretry_for=(httpx.RequestError,), retry_backoff=True)
 def fetch_feed(url, last_modified=None, etag=None):
     headers = {"User-Agent": USER_AGENT}
 
@@ -29,17 +29,6 @@ def fetch_feed(url, last_modified=None, etag=None):
         headers["If-Modified-Since"] = http_date(last_modified.timestamp())
 
     response = httpx.get(url, headers=headers, follow_redirects=True)
-
-    try:
-        response.raise_for_status()
-    except httpx.HTTPStatusError as exc:
-        logger.error(
-            f"Error response {exc.response.status_code} while requesting {exc.request.url!r}."  # noqa
-        )
-        # TODO if the feed fails and we get 404, fan out to looks for the
-        # 'correct' feed
-        if response.status_code >= 400:
-            raise Ignore(str(exc))
 
     return {
         "status": response.status_code,

@@ -18,22 +18,20 @@
 	      <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
 	    </svg>
 	  </span>
-	  <input type="text" class="form-control" aria-label="query" aria-describedby="inputGroup-sizing-lg" name="q" id="id_query" placeholder="Search by website or RSS Link" autocomplete="off" value="{{ request.GET.q|default:"" }}" required=true>
-	  <span class="input-group-text bg-white">
-	    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-	  </span>
+	  <input type="search" class="form-control" aria-label="query" aria-describedby="inputGroup-sizing-lg" name="q" id="id_query" placeholder="Search by website or RSS Link" autocomplete="off" value="{{ request.GET.q|default:"" }}" required=true>
 	</div>
 	<br>
 	<a class="card-link" href="{% url 'feeds:opml-import' %}">Import feeds</a>
       </form>
     </div>
   </div>
-  <div class="d-flex justify-content-center d-none" id="loading">
+  <div class="d-flex justify-content-center d-none pt-4 mt-4" id="loading">
     <div class="spinner-border" role="status">
       <span class="visually-hidden">Loading...</span>
     </div>
   </div>
   {% if request.GET.q %}
+  <div id="results">
   {% for feed in feeds %}
   <div class="card mb-4">
     <div class="card-body">
@@ -61,7 +59,7 @@
       {% endif %}
       <ul class="pt-3">
       {% for entry in feed.entries.all|slice:":3" %}
-      <li><a class="text-decoration-none" href="{{ entry.link }}">{{ entry.title }}</a></li>
+      <li><a class="text-decoration-none" href="{{ entry.get_absolute_url }}">{{ entry.title }}</a></li>
       {% endfor %}
       </ul>
     </div>
@@ -74,7 +72,7 @@
       </div>
   {% endfor %}
   {% endif %}
-  <div id="results" class="d-none pt-4"></div>
+  </div>
 </div>
 {% endblock %}
 {% block scripts %}

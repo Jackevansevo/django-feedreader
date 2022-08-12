@@ -9,6 +9,7 @@ class SubscriptionForm(forms.ModelForm):
     class Meta:
         model = Subscription
         fields = ["feed", "category"]
+        widgets = {"feed": forms.HiddenInput()}
 
 
 class OPMLUploadForm(forms.Form):

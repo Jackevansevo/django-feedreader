@@ -10,6 +10,7 @@ let searched;
 const waitTime = 250;
 
 const search = (text) => {
+	// TODO actually utilize this
 	fetch(`/feeds/search?q=${encodeURIComponent(text)}`, {
 		method: "GET",
 		headers: {
@@ -24,8 +25,8 @@ const search = (text) => {
 }
 
 form.addEventListener('submit', (event) => {
+	document.getElementById('results').innerHTML = "";
 	document.getElementById('loading').classList.remove('d-none');
-	console.log("page submitted");
 })
 
 searchInput.addEventListener(

@@ -11,6 +11,9 @@
       <span>&nbsp;{% trans "Follow" %}</span>
     </div>
     <div class="card-body">
+      <h5 class="mb-3">
+      Subscribe to: <a href="{{ feed.get_absolute_url }}">{{ feed.title }}</a>
+      </h5>
       <form method="post">{% csrf_token %}
 	{{ form }}
 	<button class="btn btn-success mt-3" type="submit">{% trans "Follow" %}</button>
