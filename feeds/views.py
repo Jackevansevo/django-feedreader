@@ -421,12 +421,12 @@ def entry_detail(
 
 
 @login_required
-def feed_create_view(request: HttpRequest) -> HttpResponse:
+def discover(request: HttpRequest) -> HttpResponse:
     # TODO Replace this with enhanced add feed page follow button
     categories = Category.objects.filter(user=request.user)
     return render(
         request,
-        "feeds/subscription_form.html",
+        "feeds/discover.html",
         {
             "categories": [
                 {"name": category.name, "id": category.id} for category in categories

@@ -31,9 +31,9 @@ urlpatterns = [
         name="subscription-delete",
     ),
     path(
-        "feed/add/",
-        views.feed_create_view,
-        name="feed-add",
+        "feed/discover/",
+        views.discover,
+        name="feed-discover",
     ),
     path(
         "feed/<slug:feed_slug>/",

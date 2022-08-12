@@ -42,7 +42,7 @@
 	</li>
 	{% endif %}
 
-	{% url 'feeds:feed-add' as link %}
+	{% url 'feeds:feed-discover' as link %}
 	{% if link %}
 	<li class="nav-item">
 	  <a class="nav-link {% if request.path == link %}active{% endif %}" href="{{ link }}">
