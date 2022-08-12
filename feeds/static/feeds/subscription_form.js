@@ -2,11 +2,19 @@ const categories = JSON.parse(
   document.getElementById("categories").textContent
 );
 const form = document.getElementById("subscriptionCreateForm");
-const urlInput = form.elements.namedItem('url');
+const urlInput = form.elements.namedItem("url");
 const resultsSection = document.getElementById("results");
+
+let searched = undefined;
+
 urlInput.addEventListener(
   "blur",
   (event) => {
+    if (event.target.value === searched) {
+      console.log("nothing to do here");
+      return;
+    }
+
     resultsSection.innerHTML = "";
 
     if (event.target.value === "") {
@@ -46,6 +54,8 @@ urlInput.addEventListener(
     })
       .then((response) => response.json())
       .then((resp) => {
+        searched = event.target.value;
+
         resultsSection.innerHTML = "";
 
         for (feed of resp) {
@@ -100,7 +110,6 @@ urlInput.addEventListener(
             dropdownButton.classList.add(
               "btn",
               "btn-primary",
-              "btn-sm",
               "dropdown-toggle",
               "mt-2"
             );
@@ -133,7 +142,6 @@ urlInput.addEventListener(
               let categoryItem = document.createElement("li");
               let anchorTag = document.createElement("a");
               anchorTag.classList.add("dropdown-item");
-              console.log(category);
               anchorTag.innerHTML = category.name;
               categoryItem.appendChild(anchorTag);
               dropdownList.appendChild(categoryItem);
@@ -166,7 +174,6 @@ urlInput.addEventListener(
 
           resultsSection.appendChild(resultCard);
         }
-        console.log(resp);
       })
       .catch((err) => console.log(err));
   },

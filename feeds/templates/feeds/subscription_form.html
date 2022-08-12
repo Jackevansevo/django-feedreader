@@ -7,30 +7,29 @@
       <span class="icon is-small">
 	<i class="fa fa-rss"></i>
       </span>
-      <span class="icon is-small">
-	<i class="fa fa-plus"></i>
-      </span>
       <span>&nbsp;Add feed</span>
     </div>
     <div class="card-body">
-      <form id="subscriptionCreateForm" method="post" onSubmit="this.disabled=true,this.form.submit();">
+      <form id="subscriptionCreateForm" method="post">
 	{% csrf_token %}
-	{{ form.as_p }}
-	<div class="d-flex flex-row justify-content-between align-items-baseline">
-	  <button id="submit-button" class="btn btn-success" type="submit" onclick="this.disabled=true,this.form.submit();">
-	    <span class="icon-text">
-	      <span class="icon">
-		<i class="fas fa-check"></i>
-	      </span>
-	      <span>Submit</span>
-	    </span>
-	  </button>
-	  <a href="{% url 'feeds:opml-import' %}">Import feeds</a>
+	<!-- <label for="id_url">Discover Feeds:</label> -->
+	<!-- <input class="form-control" type="text" name="url" autofocus="" required="" id="id_url" placeholder="Search by website or RSS link"> -->
+
+	<h4>Discover Feeds</h4>
+	<div class="input-group input-group-lg">
+	  <span class="input-group-text" id="inputGroup-sizing-lg">
+	    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
+	      <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
+	    </svg>
+	  </span>
+	  <input type="text" class="form-control" aria-label="url" aria-describedby="inputGroup-sizing-lg" name="url" id="id_url" placeholder="Search by website or RSS Link">
 	</div>
+	<br>
+	<a class="card-link" href="{% url 'feeds:opml-import' %}">Import feeds</a>
       </form>
     </div>
   </div>
-	<div id="results" class="d-none pt-4"></div>
+  <div id="results" class="d-none pt-4"></div>
 </div>
 {% endblock %}
 {% block scripts %}

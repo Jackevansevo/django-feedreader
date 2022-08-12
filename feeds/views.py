@@ -424,85 +424,10 @@ def entry_detail(
 def feed_create_view(request: HttpRequest) -> HttpResponse:
     # TODO Replace this with enhanced add feed page follow button
     categories = Category.objects.filter(user=request.user)
-    if request.method == "POST":
-        # create a form instance and populate it with data from the request:
-        form = SubscriptionCreateForm(request.POST, user=request.user)
-        # check whether it's valid:
-        if form.is_valid():
-            url = parser.find_feed_from_url(form.cleaned_data["url"])
-            category = form.cleaned_data["category"]
-            # Check if the feed exists
-            try:
-                Subscription.objects.get(feed__url=url, user=request.user)
-            except Subscription.DoesNotExist:
-                try:
-                    feed = Feed.objects.get(url=url)
-                except Feed.DoesNotExist:
-                    task = tasks.fetch_feed.delay(url)
-                    resp = task.get()
-                    parsed, entries = parse_feed(resp)
-                    try:
-                        with transaction.atomic():
-                            # Go and fetch the feed
-                            feed = Feed.objects.create(**parsed)
-
-                            # Impossible to use a set because entries aren't hashable
-                            unique_entries = dict()
-                            for entry in entries:
-                                # When adding a new feed for entries with the
-                                # same link, we only want to take the most
-                                # recent
-                                if entry.link not in unique_entries:
-                                    unique_entries[entry.link] = entry
-
-                            parsed_entries = (
-                                parse_feed_entry(entry, feed)
-                                for entry in unique_entries.values()
-                            )
-
-                            Entry.objects.bulk_create(parsed_entries)
-                    except (DataError, IntegrityError) as error:
-                        form.add_error("url", f"Failed to parse feed: {error}")
-                        return render(
-                            request,
-                            "feeds/subscription_form.html",
-                            {
-                                "form": form,
-                                "categories": [
-                                    {"name": category.name, "id": category.id}
-                                    for category in categories
-                                ],
-                            },
-                        )
-
-                Subscription.objects.create(
-                    feed=feed, user_id=request.user.id, category=category
-                )
-                return redirect(feed)
-            else:
-                form.add_error("url", "Already subscribed to this feed")
-                return render(
-                    request,
-                    "feeds/subscription_form.html",
-                    {
-                        "form": form,
-                        "categories": [
-                            {"name": category.name, "id": category.id}
-                            for category in categories
-                        ],
-                    },
-                )
-
-    else:
-        form = SubscriptionCreateForm(user=request.user)
-
-    # TODO Eventually we'll probably replace this with a JSON render view
-
     return render(
         request,
         "feeds/subscription_form.html",
         {
-            "form": form,
             "categories": [
                 {"name": category.name, "id": category.id} for category in categories
             ],
