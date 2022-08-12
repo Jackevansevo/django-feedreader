@@ -2,7 +2,7 @@
 {% load static %}
 {% block content %}
 <div class="container">
-  <div class="card">
+  <div class="card mb-4">
     <div class="card-header">
       <span class="icon is-small">
 	<i class="fa fa-rss"></i>
@@ -10,8 +10,7 @@
       <span>&nbsp;Add feed</span>
     </div>
     <div class="card-body">
-      <form id="subscriptionCreateForm" method="post">
-	{% csrf_token %}
+      <form id="discoverForm" role="search" method="GET" action="{% url 'feeds:feed-discover' %}">
 	<h4>Discover Feeds</h4>
 	<div class="input-group input-group-lg">
 	  <span class="input-group-text" id="inputGroup-sizing-lg">
@@ -19,13 +18,62 @@
 	      <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
 	    </svg>
 	  </span>
-	  <input type="text" class="form-control" aria-label="url" aria-describedby="inputGroup-sizing-lg" name="url" id="id_url" placeholder="Search by website or RSS Link">
+	  <input type="text" class="form-control" aria-label="query" aria-describedby="inputGroup-sizing-lg" name="q" id="id_query" placeholder="Search by website or RSS Link" autocomplete="off" value="{{ request.GET.q|default:"" }}" required=true>
+	  <span class="input-group-text bg-white">
+	    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+	  </span>
 	</div>
 	<br>
 	<a class="card-link" href="{% url 'feeds:opml-import' %}">Import feeds</a>
       </form>
     </div>
   </div>
+  <div class="d-flex justify-content-center d-none" id="loading">
+    <div class="spinner-border" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+  </div>
+  {% if request.GET.q %}
+  {% for feed in feeds %}
+  <div class="card mb-4">
+    <div class="card-body">
+      <a class="text-decoration-none" href="{{ feed.get_absolute_url }}">
+	<h5 class="card-title">{{ feed.title }}</h5>
+      </a>
+      {% if feed.subtitle %}
+      <h6 class="card-subtitle mb-2 text-muted">
+	{{ feed.subtitle }}
+      </h6>
+      {% endif %}
+      <a class="card-link text-decoration-none" href="{{ feed.link }}">{{ feed.link }}</a>
+      {% if feed.subscribed %}
+      <div>
+      <a class="btn btn-success btn-sm mt-3">
+	Following
+      </a>
+      </div>
+      {% else %}
+      <div>
+      <a role="button" class="btn btn-outline-success btn-sm mt-3" href="{% url 'feeds:follow' feed.slug %}">
+	Follow
+      </a>
+      </div>
+      {% endif %}
+      <ul class="pt-3">
+      {% for entry in feed.entries.all|slice:":3" %}
+      <li><a class="text-decoration-none" href="{{ entry.link }}">{{ entry.title }}</a></li>
+      {% endfor %}
+      </ul>
+    </div>
+  </div>
+  {% empty %}
+      <div class="alert alert-warning alert-dismissible fade show" role="alert">
+	<i class="fa-solid fa-warning"></i>&nbsp;
+	Nothing found
+	<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+  {% endfor %}
+  {% endif %}
   <div id="results" class="d-none pt-4"></div>
 </div>
 {% endblock %}

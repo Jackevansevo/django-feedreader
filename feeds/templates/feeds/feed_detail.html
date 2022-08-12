@@ -59,8 +59,7 @@ h1, h2, h3, h4, h5, h6 {
 	  <span>Delete</span>
       </a>
       {% else %}
-      <a class="btn btn-outline-success btn-sm"
-	 href="#">
+      <a class="btn btn-outline-success btn-sm" href="{% url 'feeds:follow' feed.slug %}">
 	<span class="icon-text">
 	  <span class="icon is-small">
 	    <i class="fas fa-plus"></i>

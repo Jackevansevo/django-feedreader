@@ -35,7 +35,7 @@ from django.views.generic.edit import CreateView, DeleteView
 import feeds.tasks as tasks
 from feeds.parser import parse_feed, parse_feed_entry
 
-from .forms import CategoryForm, OPMLUploadForm, SignUpForm, SubscriptionCreateForm
+from .forms import CategoryForm, OPMLUploadForm, SignUpForm, SubscriptionForm
 from .models import Category, Entry, Feed, Subscription
 import feeds.parser as parser
 
@@ -201,6 +201,7 @@ def is_valid_url(query: str):
 
 
 def feed_search(request: HttpRequest):
+    """Searches for existing feeds"""
 
     try:
         search_term = request.GET["q"]
@@ -224,32 +225,6 @@ def feed_search(request: HttpRequest):
         )
         .filter(search=strip_scheme(search_term) if is_url else search_term)
     )
-
-    # If there are no pre-existing results
-    if not feeds and is_url:
-        print("getting", search_term)
-        task = tasks.fetch_feed.delay(parser.find_feed_from_url(search_term))
-        resp = task.get()
-        parsed, entries = parse_feed(resp)
-        try:
-            feed = Feed.objects.create(**parsed)
-        except IntegrityError:
-            # We got redirect to another feed, so use this one instead
-            if resp["url"] != search_term:
-                feed = Feed.objects.get(url=resp["url"])
-                feeds = [feed]
-            else:
-                raise
-        else:
-            Entry.objects.bulk_create(
-                parse_feed_entry(entry, feed) for entry in entries
-            )
-            feeds = [feed]
-
-    # TODO If the search term is a URL then try to fetch the page (if we
-    # haven't already fetched this feed)
-    # TODO If there is a subscription, we need to link the ID in order to be
-    # able to render a link to the unsubscribe page.
 
     return JsonResponse(
         [
@@ -422,17 +397,72 @@ def entry_detail(
 
 @login_required
 def discover(request: HttpRequest) -> HttpResponse:
-    # TODO Replace this with enhanced add feed page follow button
-    categories = Category.objects.filter(user=request.user)
-    return render(
-        request,
-        "feeds/discover.html",
-        {
-            "categories": [
-                {"name": category.name, "id": category.id} for category in categories
-            ],
-        },
-    )
+    search_term = request.GET.get("q")
+    if search_term:
+        categories = Category.objects.filter(user=request.user)
+        is_url = is_valid_url(search_term)
+
+        # First attempt to lookup pre-existing/similar feeds
+        feeds = (
+            Feed.objects.prefetch_related("entries")
+            .annotate(
+                search=SearchVector("title", "url", "link"),
+                subscribed=Exists(Subscription.objects.filter(feed=OuterRef("pk"))),
+            )
+            .filter(search=strip_scheme(search_term) if is_url else search_term)
+        )
+
+        # If there are no pre-existing results
+        if not feeds and is_url:
+            print("getting", search_term)
+            task = tasks.fetch_feed.delay(parser.find_feed_from_url(search_term))
+            resp = task.get()
+            parsed, entries = parse_feed(resp)
+            try:
+                feed = Feed.objects.create(**parsed)
+            except IntegrityError:
+                # We got redirect to another feed, so use this one instead
+                if resp["url"] != search_term:
+                    feed = Feed.objects.get(url=resp["url"])
+                    feeds = [feed]
+                else:
+                    raise
+            else:
+                Entry.objects.bulk_create(
+                    parse_feed_entry(entry, feed) for entry in entries
+                )
+                feeds = [feed]
+
+        return render(
+            request,
+            "feeds/discover.html",
+            {
+                "categories": [
+                    {"name": category.name, "id": category.id}
+                    for category in categories
+                ],
+                "feeds": feeds,
+            },
+        )
+
+    else:
+        return render(
+            request,
+            "feeds/discover.html",
+        )
+
+
+def feed_follow(request, feed_slug):
+    feed = get_object_or_404(Feed, slug=feed_slug)
+    if request.method == "POST":
+        form = SubscriptionForm(request.POST)
+        if form.is_valid():
+            form.instance.user = request.user
+            form.save()
+            return redirect(feed)
+    else:
+        form = SubscriptionForm(initial={"feed": feed.pk})
+    return render(request, "feeds/follow.html", {"feed": feed, "form": form})
 
 
 class SubscriptionDeleteView(DeleteView, LoginRequiredMixin):

@@ -41,6 +41,11 @@ urlpatterns = [
         name="feed-detail",
     ),
     path(
+        "feed/<slug:feed_slug>/follow",
+        views.feed_follow,
+        name="follow",
+    ),
+    path(
         "feed/<slug:feed_slug>/<str:uuid>/<slug:entry_slug>",
         views.entry_detail,
         name="entry-detail",
