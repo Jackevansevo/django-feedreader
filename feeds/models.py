@@ -87,9 +87,10 @@ class Subscription(models.Model):
 class Entry(models.Model):
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     title = models.CharField(
-        max_length=400, blank=False, validators=[MinLengthValidator(1)]
+        max_length=400, blank=True, null=True, validators=[MinLengthValidator(1)]
     )
-    link = models.URLField(max_length=300)
+    # Link is not actually required
+    link = models.URLField(max_length=300, blank=True, null=True)
     feed = models.ForeignKey(Feed, on_delete=models.CASCADE, related_name="entries")
     published = models.DateTimeField(null=True)
     updated = models.DateTimeField(null=True)
@@ -116,7 +117,6 @@ class Entry(models.Model):
     class Meta:
         constraints = [
             models.UniqueConstraint(fields=["feed", "guid"], name="duplicate guid"),
-            models.UniqueConstraint(fields=["feed", "link"], name="duplicate link"),
         ]
         verbose_name_plural = "entries"
         ordering = ["-published", "title"]

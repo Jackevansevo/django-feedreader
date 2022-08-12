@@ -19,7 +19,10 @@ logger = get_task_logger(__name__)
 # TODO Make the retry policy error specific
 
 
-@shared_task(autoretry_for=(httpx.RequestError,), retry_backoff=True)
+@shared_task(
+    autoretry_for=(httpx.TimeoutException,),
+    retry_backoff=True,
+)
 def fetch_feed(url, last_modified=None, etag=None):
     headers = {"User-Agent": USER_AGENT}
 

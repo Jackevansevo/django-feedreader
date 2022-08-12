@@ -1,6 +1,7 @@
 from urllib.parse import urlparse, urljoin
 
 import bleach
+import re
 import feedparser
 from bs4 import BeautifulSoup
 from dateutil import parser
@@ -90,17 +91,22 @@ def find_feed_from_url(url):
 def parse_feed(resp):
     parsed = feedparser.parse(resp["body"])
 
-    feed = {"last_checked": timezone.now(), "url": resp["url"]}
+    if parsed.entries == []:
+        return None, None
 
-    if parsed.feed.link == "":
-        parsed.feed.link = resp["url"]
+    feed = {"last_checked": timezone.now(), "url": re.sub("www.", "", resp["url"])}
 
-    feed["link"] = parsed.feed.link
-
-    if parsed.feed.title != "":
-        feed["title"] = parsed.feed.title
+    link = parsed.feed.get("link")
+    if link and link != "/":
+        feed["link"] = link
     else:
-        feed["title"] = urlparse(parsed.feed.link).netloc.lstrip("www.")
+        feed["link"] = urlparse(resp["url"]).netloc.lstrip("www.")
+
+    title = parsed.feed.get("title")
+    if title:
+        feed["title"] = title
+    else:
+        feed["title"] = urlparse(resp["url"]).netloc.lstrip("www.")
 
     if subtitle := parsed.feed.get("subtitle"):
         if subtitle != "":
@@ -147,9 +153,11 @@ def parse_feed_entry(entry, feed):
 
         summary = str(soup)
 
-    title = entry.title
-    if title == "":
-        # TODO Script any html from this
+    title = entry.get("title")
+    if not title:
+        # TODO Script any html from this, or figure out a better mechanism to
+        # have blank titles
+        # Example feed https://justtesting.org/rss
         title = strip_tags(content[:300])
 
     feed_parsed = urlparse(feed.url)
@@ -217,7 +225,7 @@ def parse_feed_entry(entry, feed):
         thumbnail=thumbnail,
         title=title,
         slug=slugify(unidecode(title)),
-        link=entry.link,
+        link=entry.link if hasattr(entry, "link") else None,
         published=published,
         updated=updated,
         content=content,
