@@ -395,6 +395,35 @@ def entry_detail(
     return render(request, "feeds/entry_detail.html", {"entry": entry})
 
 
+@transaction.atomic
+def fetch_url(url: str):
+    # TODO Wrap me in a transaction
+    task = tasks.fetch_feed.delay(parser.find_feed_from_url(url))
+    resp = task.get()
+    parsed, entries = parse_feed(resp)
+
+    if not parsed:
+        return None
+
+    try:
+        with transaction.atomic():
+            feed = Feed.objects.create(**parsed)
+    except IntegrityError:
+        # The feed potentially already exists
+        if resp["url"] != url:
+            feed = Feed.objects.get(url=resp["url"])
+            return feed
+        else:
+            raise
+
+    Entry.objects.bulk_create(
+        entry
+        for entry in (parse_feed_entry(entry, feed) for entry in entries)
+        if entry is not None
+    )
+    return feed
+
+
 @login_required
 def discover(request: HttpRequest) -> HttpResponse:
     search_term = request.GET.get("q")
@@ -402,36 +431,45 @@ def discover(request: HttpRequest) -> HttpResponse:
         categories = Category.objects.filter(user=request.user)
         is_url = is_valid_url(search_term)
 
-        # First attempt to lookup pre-existing/similar feeds
-        feeds = (
-            Feed.objects.prefetch_related("entries")
-            .annotate(
-                search=SearchVector("title", "url", "link"),
-                subscribed=Exists(Subscription.objects.filter(feed=OuterRef("pk"))),
-            )
-            .filter(search=strip_scheme(search_term) if is_url else search_term)
-        )
+        feeds = []
 
-        # If there are no pre-existing results
-        if not feeds and is_url:
-            print("getting", search_term)
-            task = tasks.fetch_feed.delay(parser.find_feed_from_url(search_term))
-            resp = task.get()
-            parsed, entries = parse_feed(resp)
+        if is_url:
             try:
-                feed = Feed.objects.create(**parsed)
-            except IntegrityError:
-                # We got redirect to another feed, so use this one instead
-                if resp["url"] != search_term:
-                    feed = Feed.objects.get(url=resp["url"])
-                    feeds = [feed]
-                else:
-                    raise
-            else:
-                Entry.objects.bulk_create(
-                    parse_feed_entry(entry, feed) for entry in entries
+                feed = (
+                    Feed.objects.prefetch_related("entries")
+                    .annotate(
+                        subscribed=Exists(
+                            Subscription.objects.filter(
+                                feed=OuterRef("pk"), user=request.user
+                            )
+                        ),
+                    )
+                    .get(url__icontains=strip_scheme(search_term))
                 )
+            except Feed.DoesNotExist:
+                # If there are no pre-existing results
+                try:
+                    feed = fetch_url(search_term)
+                    if feed is not None:
+                        feeds = [feed]
+                except Exception as exc:
+                    messages.error(request, str(exc))
+            else:
                 feeds = [feed]
+        else:
+            # First attempt to lookup pre-existing/similar feeds
+            feeds = (
+                Feed.objects.prefetch_related("entries")
+                .annotate(
+                    search=SearchVector("title", "url"),
+                    subscribed=Exists(
+                        Subscription.objects.filter(
+                            feed=OuterRef("pk"), user=request.user
+                        )
+                    ),
+                )
+                .filter(search=strip_scheme(search_term) if is_url else search_term)
+            )
 
         return render(
             request,

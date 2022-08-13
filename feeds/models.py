@@ -51,7 +51,6 @@ class Feed(models.Model):
         return reverse("feeds:feed-detail", kwargs={"feed_slug": self.slug})
 
     def save(self, *args, **kwargs):
-        self.slug = slugify(unidecode(self.title))
         super(Feed, self).save(*args, **kwargs)
 
     class Meta:
@@ -90,14 +89,14 @@ class Entry(models.Model):
         max_length=400, blank=True, null=True, validators=[MinLengthValidator(1)]
     )
     # Link is not actually required
-    link = models.URLField(max_length=300, blank=True, null=True)
+    link = models.URLField(max_length=1000, blank=True, null=True)
     feed = models.ForeignKey(Feed, on_delete=models.CASCADE, related_name="entries")
     published = models.DateTimeField(null=True)
     updated = models.DateTimeField(null=True)
     slug = models.SlugField(max_length=400)
     content = models.TextField(blank=True, null=True)
     summary = models.TextField(blank=True, null=True)
-    guid = models.CharField(max_length=400, blank=True, null=True, unique=True)
+    guid = models.CharField(max_length=400, blank=True, null=True)
     author = models.CharField(max_length=400, blank=True, null=True)
     thumbnail = models.URLField(blank=True, null=True, max_length=500)
 
@@ -115,11 +114,5 @@ class Entry(models.Model):
         return self.title
 
     class Meta:
-        constraints = [
-            models.UniqueConstraint(fields=["feed", "guid"], name="duplicate guid"),
-        ]
         verbose_name_plural = "entries"
         ordering = ["-published", "title"]
-        indexes = [
-            models.Index(fields=["guid"]),
-        ]

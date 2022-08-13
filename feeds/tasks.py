@@ -74,7 +74,9 @@ def add_subscription(resp, category_name, user_id):
             parse_feed_entry(entry, feed) for entry in unique_entries.values()
         )
 
-        Entry.objects.bulk_create(parsed_entries)
+        Entry.objects.bulk_create(
+            entry for entry in parsed_entries if entry is not None
+        )
 
         if category_name is not None:
             category, _ = Category.objects.get_or_create(
@@ -122,6 +124,10 @@ def update_feed(resp, feed_id, url):
         updated = False
         parsed_entries = (parse_feed_entry(entry, feed) for entry in new_entries)
         for entry in parsed_entries:
+
+            if entry is None:
+                continue
+
             try:
                 feed.entries.add(entry, bulk=False)
             except IntegrityError as err:

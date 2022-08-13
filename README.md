@@ -37,3 +37,4 @@ Then visit localhost:8000
 - [x] Refresh feeds button in admin?
 - [ ] Admin mechanism to cancel tasks?
 - [ ] Solve redis connection loss issue on redis node OOM
+- [ ] Some entries might not have links, in which case hide the link

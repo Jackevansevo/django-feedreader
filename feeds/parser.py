@@ -70,7 +70,7 @@ def find_feed_from_url(url):
     if parsed.netloc.endswith("wordpress.com") or parsed.netloc.endswith(
         "bearblog.dev"
     ):
-        if not parsed.path.endswith("/feed/"):
+        if not parsed.path.rstrip("/").endswith("/feed"):
             return parsed._replace(path=f"{parsed.path}/feed/").geturl()
     elif parsed.netloc.endswith("substack.com"):
         if not parsed.path.endswith("/feed"):
@@ -96,17 +96,19 @@ def parse_feed(resp):
 
     feed = {"last_checked": timezone.now(), "url": re.sub("www.", "", resp["url"])}
 
+    base_url = urlparse(resp["url"]).netloc.lstrip("www.")
+
     link = parsed.feed.get("link")
     if link and link != "/":
         feed["link"] = link
     else:
-        feed["link"] = urlparse(resp["url"]).netloc.lstrip("www.")
+        feed["link"] = base_url
 
     title = parsed.feed.get("title")
     if title:
         feed["title"] = title
     else:
-        feed["title"] = urlparse(resp["url"]).netloc.lstrip("www.")
+        feed["title"] = base_url
 
     if subtitle := parsed.feed.get("subtitle"):
         if subtitle != "":
@@ -115,6 +117,12 @@ def parse_feed(resp):
     # https://feedparser.readthedocs.io/en/latest/http-etag.html
 
     headers = resp["headers"]
+
+    slug = slugify(unidecode(feed["title"]))
+    if slug == "":
+        slug = slugify(base_url)
+
+    feed["slug"] = slug
 
     if headers.get("etag"):
         feed["etag"] = headers["etag"]
@@ -134,7 +142,10 @@ def parse_feed_entry(entry, feed):
 
     summary = entry.get("summary")
 
-    if content is None and summary is not None:
+    if not content and not summary:
+        return None
+
+    if not content and summary:
         content = summary
         summary = None
     elif summary == content:
