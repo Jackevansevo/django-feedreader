@@ -76,7 +76,7 @@ def is_valid_url(query: str):
         return True
 
 
-def find_feed_from_url(url):
+def find_common_feed_urls(url):
     parsed = urlparse(url)
 
     if parsed.netloc.endswith("wordpress.com") or parsed.netloc.endswith(
