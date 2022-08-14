@@ -1,13 +1,9 @@
-import uuid
-
-import re
 import logging
-from django.db.models import Q
-from urllib.parse import urlparse, urljoin
+import uuid
+from urllib.parse import urlparse
+
 import listparser
-from bs4 import BeautifulSoup
 from celery import group, result
-from django.db.models import Exists, OuterRef
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -16,14 +12,14 @@ from django.contrib.auth.models import User
 from django.contrib.postgres.search import SearchVector
 from django.core.cache import cache
 from django.core.paginator import Paginator
-from django.db import IntegrityError, transaction
-from django.db.models import Count
+from django.db import IntegrityError
+from django.db.models import Count, Exists, OuterRef, Q
 from django.http import (
     Http404,
     HttpRequest,
     HttpResponse,
-    HttpResponseNotFound,
     HttpResponseBadRequest,
+    HttpResponseNotFound,
     JsonResponse,
 )
 from django.shortcuts import get_object_or_404, redirect, render
@@ -32,12 +28,11 @@ from django.utils import timezone
 from django.views.generic.detail import DetailView
 from django.views.generic.edit import CreateView, DeleteView
 
+import feeds.parser as parser
 import feeds.tasks as tasks
-from feeds.parser import parse_feed, parse_feed_entry
 
 from .forms import CategoryForm, OPMLUploadForm, SignUpForm, SubscriptionForm
 from .models import Category, Entry, Feed, Subscription
-import feeds.parser as parser
 
 # TODO Mechanism to all the subtasks status from a parent tasks
 # Or task status for multiple tasks
@@ -393,99 +388,6 @@ def entry_detail(
     return render(request, "feeds/entry_detail.html", {"entry": entry})
 
 
-def crawl_url(url: str):
-    task = tasks.fetch_feed.delay(parser.find_common_feed_urls(url))
-    resp = task.get()
-
-    if "html" in resp["headers"].get("content-type"):
-        logger.info("{} returned HTML response".format(url))
-        # TODO should we prefer atom over rss? What if they find both?
-        soup = BeautifulSoup(resp["body"], features="html.parser")
-
-        rss_link = soup.find(
-            "link", {"type": re.compile(r"application\/(atom|rss)\+xml$")}
-        )
-
-        if rss_link is None:
-            rss_link = soup.find("a", string=re.compile("rss", re.I))
-
-        if rss_link is None:
-            rss_link = soup.find(
-                "a", {"href": re.compile(r"(index|feed|rss|atom).*.xml$")}
-            )
-
-        if rss_link is not None:
-            logger.info("Found RSS link in page body for {}".format(url))
-            url = urljoin(url, rss_link["href"])
-            logger.info("Crawling {}".format(url))
-            task = tasks.fetch_feed.delay(url)
-            resp = task.get()
-        else:
-            logger.info("No RSS link in page body for {}".format(url))
-
-            logger.info("Crawling common extensions for {}".format(url))
-
-            common_extensions = (
-                "feed.xml",
-                "index.xml",
-                "rss.xml",
-                "rss",
-                "atom.xml",
-                "atom",
-                "feed.atom",
-            )
-
-            possible_locations = []
-
-            # TODO: clean up
-            rel_path = url
-            if not url.endswith("/"):
-                rel_path += "/"
-            for extention in common_extensions:
-                possible_locations.append(urljoin(rel_path, extention))
-
-            parsed_url = urlparse(url)
-            if parsed_url.path != "":
-                base_url = parsed_url._replace(path="").geturl()
-                for extention in common_extensions:
-                    possible_locations.append(urljoin(base_url, extention))
-
-            for loc in possible_locations:
-                logger.info("Trying {}".format(loc))
-                task = tasks.fetch_feed.delay(loc)
-                resp = task.get()
-                if resp["status"] != 404:
-                    break
-
-    return resp
-
-
-@transaction.atomic
-def parse_resp(resp, url):
-    parsed, entries = parse_feed(resp)
-
-    if not parsed:
-        return None
-
-    try:
-        with transaction.atomic():
-            feed = Feed.objects.create(**parsed)
-    except IntegrityError:
-        # The feed potentially already exists
-        if resp["url"] != url:
-            feed = Feed.objects.get(url=resp["url"])
-            return feed
-        else:
-            raise
-
-    Entry.objects.bulk_create(
-        entry
-        for entry in (parse_feed_entry(entry, feed) for entry in entries)
-        if entry is not None
-    )
-    return feed
-
-
 @login_required
 def discover(request: HttpRequest) -> HttpResponse:
     search_term = request.GET.get("q")
@@ -520,10 +422,11 @@ def discover(request: HttpRequest) -> HttpResponse:
             except Feed.DoesNotExist:
                 logger.info("Crawling web for {}".format(search_term))
                 try:
-                    resp = crawl_url(search_term)
-                    feed = parse_resp(resp, search_term)
-                    if feed is not None:
-                        feeds = [feed]
+                    resp = parser.crawl_url(search_term)
+                    if resp is not None:
+                        feed = parser.ingest_feed(resp, search_term)
+                        if feed is not None:
+                            feeds = [feed]
                 except Exception as exc:
                     messages.error(request, str(exc))
             else:

@@ -1,18 +1,21 @@
-from urllib.parse import urlparse, urljoin
+import logging
+import re
+from urllib.parse import urljoin, urlparse
 
 import bleach
-import re
 import feedparser
 from bs4 import BeautifulSoup
 from dateutil import parser
+from django.core.exceptions import ValidationError
+from django.core.validators import URLValidator
+from django.db import IntegrityError, transaction
 from django.utils import timezone
 from django.utils.html import strip_tags
 from django.utils.text import slugify
 from unidecode import unidecode
-from django.core.validators import URLValidator
-from django.core.exceptions import ValidationError
 
-from feeds.models import Entry
+import feeds.tasks as tasks
+from feeds.models import Entry, Feed
 
 BLEACH_ALLOWED_TAGS = [
     "a",
@@ -66,6 +69,9 @@ BLEACH_ALLOWED_TAGS = [
 ]
 
 
+logger = logging.getLogger(__name__)
+
+
 def is_valid_url(query: str):
     url_validator = URLValidator()
     try:
@@ -98,6 +104,102 @@ def find_common_feed_urls(url):
             return urljoin(url, "feeds/posts/default")
 
     return url
+
+
+def crawl_url(url: str):
+    task = tasks.fetch_feed.delay(find_common_feed_urls(url))
+    resp = task.get()
+
+    if "html" in resp["headers"].get("content-type"):
+        logger.info("{} returned HTML response".format(url))
+        # TODO should we prefer atom over rss? What if they find both?
+        soup = BeautifulSoup(resp["body"], features="html.parser")
+
+        rss_link = soup.find(
+            "link", {"type": re.compile(r"application\/(atom|rss)\+xml$")}
+        )
+
+        if rss_link is None:
+            rss_link = soup.find("a", string=re.compile("rss", re.I))
+
+        if rss_link is None:
+            rss_link = soup.find(
+                "a", {"href": re.compile(r"(index|feed|rss|atom).*.xml$")}
+            )
+
+        if rss_link is None:
+            rss_link = soup.find("a", {"href": re.compile(r".*(rss|atom)$")})
+
+        if rss_link is not None:
+            logger.info("Found feed link in page body for {}".format(url))
+            url = urljoin(url, rss_link["href"])
+            logger.info("Crawling {}".format(url))
+            task = tasks.fetch_feed.delay(url)
+            resp = task.get()
+        else:
+            logger.info("No feed link in page body for {}".format(url))
+
+            logger.info("Crawling common extensions for {}".format(url))
+
+            common_extensions = (
+                "feed.xml",
+                "index.xml",
+                "rss.xml",
+                "rss",
+                "atom.xml",
+                "atom",
+                "feed.atom",
+            )
+
+            possible_locations = []
+
+            # TODO: clean up
+            rel_path = url
+            if not url.endswith("/"):
+                rel_path += "/"
+            for extention in common_extensions:
+                possible_locations.append(urljoin(rel_path, extention))
+
+            parsed_url = urlparse(url)
+            if parsed_url.path != "":
+                base_url = parsed_url._replace(path="").geturl()
+                for extention in common_extensions:
+                    possible_locations.append(urljoin(base_url, extention))
+
+            for loc in possible_locations:
+                logger.info("Trying {}".format(loc))
+                task = tasks.fetch_feed.delay(loc)
+                resp = task.get()
+                if resp["status"] != 404:
+                    break
+
+    return resp
+
+
+@transaction.atomic
+def ingest_feed(resp, url):
+    parsed, entries = parse_feed(resp)
+
+    if not parsed:
+        return None
+
+    try:
+        with transaction.atomic():
+            feed = Feed.objects.create(**parsed)
+    except IntegrityError:
+        # The feed potentially already exists
+        if resp["url"] != url:
+            feed = Feed.objects.get(url=resp["url"])
+            return feed
+        else:
+            raise
+
+    Entry.objects.bulk_create(
+        entry
+        for entry in (parse_feed_entry(entry, feed) for entry in entries)
+        if entry is not None
+    )
+    return feed
 
 
 def parse_feed(resp):

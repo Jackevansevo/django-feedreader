@@ -1,12 +1,11 @@
 import httpx
 from celery import chain, group, shared_task
+from celery.exceptions import Ignore
 from celery.utils.log import get_task_logger
 from django.db import IntegrityError, transaction
 from django.db.models import Count
 from django.utils import timezone
 from django.utils.http import http_date
-from celery.exceptions import Ignore
-
 
 from feeds.models import Category, Entry, Feed, Subscription
 
