@@ -1,6 +1,7 @@
 import json
 import uuid
 
+from django.db.models import Q
 from urllib.parse import urlparse
 import listparser
 from django.core.exceptions import ValidationError
@@ -115,11 +116,17 @@ def import_opml_feeds(request: HttpRequest) -> HttpResponse:
             fetching = []
             skipped = []
 
+            # TODO test this out
+
+            urls = [feed.url for feed in parsed.feeds]
+
+            q = Q(user=request.user)
+            for url in urls:
+                q |= Q(feed__url__icontains=url)
+
             # Filter out any feeds that the user is already subscribed to
             existing_subscriptions = set(
-                Subscription.objects.filter(
-                    user=request.user, feed__url__in=[feed.url for feed in parsed.feeds]
-                ).values_list("feed__url", flat=True)
+                Subscription.objects.filter(q).values_list("feed__url", flat=True)
             )
 
             for feed in parsed.feeds:
@@ -190,16 +197,6 @@ def strip_scheme(url):
     return parsed.geturl().replace(scheme, "", 1)
 
 
-def is_valid_url(query: str):
-    url_validator = URLValidator()
-    try:
-        url_validator(query)
-    except ValidationError:
-        return False
-    else:
-        return True
-
-
 def feed_search(request: HttpRequest):
     """Searches for existing feeds"""
 
@@ -214,7 +211,7 @@ def feed_search(request: HttpRequest):
     # I..e if 'http://site/index.xml' is entered instead of 'http://site/index.xml'
     # We want to match on just 'site/index.xml'
 
-    is_url = is_valid_url(search_term)
+    is_url = parser.is_valid_url(search_term)
 
     # First attempt to lookup pre-existing/similar feeds
     feeds = (
@@ -429,7 +426,7 @@ def discover(request: HttpRequest) -> HttpResponse:
     search_term = request.GET.get("q")
     if search_term:
         categories = Category.objects.filter(user=request.user)
-        is_url = is_valid_url(search_term)
+        is_url = parser.is_valid_url(search_term)
 
         feeds = []
 

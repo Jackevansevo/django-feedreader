@@ -9,6 +9,8 @@ from django.utils import timezone
 from django.utils.html import strip_tags
 from django.utils.text import slugify
 from unidecode import unidecode
+from django.core.validators import URLValidator
+from django.core.exceptions import ValidationError
 
 from feeds.models import Entry
 
@@ -64,6 +66,16 @@ BLEACH_ALLOWED_TAGS = [
 ]
 
 
+def is_valid_url(query: str):
+    url_validator = URLValidator()
+    try:
+        url_validator(query)
+    except ValidationError:
+        return False
+    else:
+        return True
+
+
 def find_feed_from_url(url):
     parsed = urlparse(url)
 
@@ -94,9 +106,9 @@ def parse_feed(resp):
     if parsed.entries == []:
         return None, None
 
-    feed = {"last_checked": timezone.now(), "url": re.sub("www.", "", resp["url"])}
+    feed = {"last_checked": timezone.now(), "url": resp["url"]}
 
-    base_url = urlparse(resp["url"]).netloc.lstrip("www.")
+    base_url = urlparse(resp["url"])
 
     link = parsed.feed.get("link")
     if link and link != "/":
@@ -108,7 +120,7 @@ def parse_feed(resp):
     if title:
         feed["title"] = title
     else:
-        feed["title"] = base_url
+        feed["title"] = base_url.netloc.lstrip("www.")
 
     if subtitle := parsed.feed.get("subtitle"):
         if subtitle != "":

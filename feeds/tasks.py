@@ -1,16 +1,18 @@
 import httpx
 from celery import chain, group, shared_task
+from bs4 import BeautifulSoup
 from celery.utils.log import get_task_logger
 from django.db import IntegrityError, transaction
 from django.db.models import Count
 from django.utils import timezone
 from django.utils.http import http_date
 from celery.exceptions import Ignore
+from urllib.parse import urljoin
 
 
 from feeds.models import Category, Entry, Feed, Subscription
 
-from .parser import parse_feed, parse_feed_entry
+from .parser import parse_feed, parse_feed_entry, is_valid_url
 
 USER_AGENT = "feedreader/1 +https://github.com/Jackevansevo/feedreader/"
 
@@ -31,15 +33,22 @@ def fetch_feed(url, last_modified=None, etag=None):
     if last_modified is not None:
         headers["If-Modified-Since"] = http_date(last_modified.timestamp())
 
-    response = httpx.get(url, headers=headers, follow_redirects=True)
+    resp = httpx.get(url, headers=headers, follow_redirects=True)
+
+    if "html" in resp.headers.get("content-type"):
+        rss_link = BeautifulSoup(resp, features="html.parser").find(
+            "link", {"type": "application/rss+xml"}
+        )["href"]
+        url = urljoin(url, rss_link)
+        resp = httpx.get(url, headers=headers, follow_redirects=True)
 
     return {
-        "status": response.status_code,
-        "url": str(response.url),
-        "body": response.read(),
+        "status": resp.status_code,
+        "url": str(resp.url),
+        "body": resp.read(),
         "headers": {
-            "etag": response.headers.get("etag"),
-            "last-modified": response.headers.get("last-modified"),
+            "etag": resp.headers.get("etag"),
+            "last-modified": resp.headers.get("last-modified"),
         },
     }
 
