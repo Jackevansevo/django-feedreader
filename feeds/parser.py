@@ -72,6 +72,12 @@ BLEACH_ALLOWED_TAGS = [
 logger = logging.getLogger(__name__)
 
 
+def strip_scheme(url):
+    parsed = urlparse(url)
+    scheme = "%s://" % parsed.scheme
+    return parsed.geturl().replace(scheme, "", 1)
+
+
 def is_valid_url(query: str):
     url_validator = URLValidator()
     try:
@@ -248,7 +254,6 @@ def parse_feed(resp):
 
 def parse_feed_entry(entry, feed):
 
-    # TODO move this code into some parsing logic
     if hasattr(entry, "content"):
         content = entry.content[0]["value"]
     else:
@@ -279,11 +284,20 @@ def parse_feed_entry(entry, feed):
         summary = str(soup)
 
     title = entry.get("title")
-    if not title:
-        # TODO Script any html from this, or figure out a better mechanism to
+
+    if title:
+        slug = slugify(unidecode(title))
+    else:
+        # TODO Strip any html from this, or figure out a better mechanism to
         # have blank titles
         # Example feed https://justtesting.org/rss
         title = strip_tags(content[:300])
+
+    if slug == "":
+        if hasattr(entry, "link"):
+            slug = slugify(urlparse(entry.link).path)
+        else:
+            return None
 
     feed_parsed = urlparse(feed.url)
 
@@ -349,7 +363,7 @@ def parse_feed_entry(entry, feed):
         feed=feed,
         thumbnail=thumbnail,
         title=title,
-        slug=slugify(unidecode(title)),
+        slug=slug,
         link=entry.link if hasattr(entry, "link") else None,
         published=published,
         updated=updated,

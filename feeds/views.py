@@ -187,12 +187,6 @@ def import_opml_feeds(request: HttpRequest) -> HttpResponse:
     return render(request, "feeds/import_feeds.html", data)
 
 
-def strip_scheme(url):
-    parsed = urlparse(url)
-    scheme = "%s://" % parsed.scheme
-    return parsed.geturl().replace(scheme, "", 1)
-
-
 def feed_search(request: HttpRequest):
     """Searches for existing feeds"""
 
@@ -216,7 +210,7 @@ def feed_search(request: HttpRequest):
             search=SearchVector("title", "url", "link"),
             subscribed=Exists(Subscription.objects.filter(feed=OuterRef("pk"))),
         )
-        .filter(search=strip_scheme(search_term) if is_url else search_term)
+        .filter(search=parser.strip_scheme(search_term) if is_url else search_term)
     )
 
     return JsonResponse(
@@ -417,7 +411,7 @@ def discover(request: HttpRequest) -> HttpResponse:
                             )
                         ),
                     )
-                    .get(url__icontains=strip_scheme(search_term))
+                    .get(url__icontains=parser.strip_scheme(search_term))
                 )
             except Feed.DoesNotExist:
                 logger.info("Crawling web for {}".format(search_term))
@@ -444,7 +438,9 @@ def discover(request: HttpRequest) -> HttpResponse:
                         )
                     ),
                 )
-                .filter(search=strip_scheme(search_term) if is_url else search_term)
+                .filter(
+                    search=parser.strip_scheme(search_term) if is_url else search_term
+                )
             )
             if feeds:
                 logger.info("Found existing matches for: '{}'".format(search_term))

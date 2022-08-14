@@ -13,9 +13,7 @@ def restart_celery():
 
     subprocess.call(shlex.split(cmd))
     subprocess.call(
-        shlex.split(
-            "celery -q -A feedreader worker -E --without-heartbeat --without-mingle --without-gossip -l info -n worker@%h"  # noqa
-        )
+        shlex.split("celery -q -A feedreader worker -l info -n worker@%h")  # noqa
     )
 
 

@@ -17,6 +17,12 @@ logger = get_task_logger(__name__)
 
 # TODO Make the retry policy error specific
 
+timeout = httpx.Timeout(10.0, connect=60.0)
+limits = httpx.Limits(
+    max_keepalive_connections=None, max_connections=None, keepalive_expiry=10
+)
+client = httpx.Client(timeout=timeout, limits=limits, follow_redirects=True)
+
 
 @shared_task(
     autoretry_for=(httpx.TimeoutException,),
@@ -30,7 +36,7 @@ def fetch_feed(url, last_modified=None, etag=None):
     if last_modified is not None:
         headers["If-Modified-Since"] = http_date(last_modified.timestamp())
 
-    resp = httpx.get(url, headers=headers, follow_redirects=True)
+    resp = client.get(url, headers=headers)
 
     return {
         "status": resp.status_code,
