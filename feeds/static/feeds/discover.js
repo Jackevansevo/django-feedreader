@@ -1,6 +1,3 @@
-const categories = JSON.parse(
-  document.getElementById("categories").textContent
-);
 const form = document.getElementById("discoverForm");
 const searchInput = form.elements.namedItem("q");
 const resultsSection = document.getElementById("results");

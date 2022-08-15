@@ -1,6 +1,9 @@
 {% extends 'feeds/base.html' %}
+
 {% block content %}
-<div class="container">
+
+<div class="container-fluid"
+
   <nav aria-label="breadcrumbs">
     <ol class="breadcrumb">
       <li class="breadcrumb-item active"><a href="{% url 'feeds:index' %}" aria-current="page">Home</a></li>
@@ -91,5 +94,6 @@
     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
   </div>
   {% endif %}
+
 </div>
 {% endblock %}

@@ -1,5 +1,6 @@
 {% load i18n %}
-<nav class="navbar navbar-expand-lg {% if debug %}navbar-light bg-warning{% else %}navbar-dark bg-primary{% endif %}">
+<header>
+<nav class="navbar navbar-expand-lg navbar-light bg-light d-lg-none">
   <div class="container-fluid">
     <a class="navbar-brand" href="{% url 'feeds:index' %}">
       <span class="icon-text">
@@ -118,3 +119,4 @@
     </div>
   </div>
 </nav>
+</header>

@@ -1,0 +1,81 @@
+<div class="flex-shrink-0 p-3 bg-white d-none d-lg-block" style="width: 280px; height: 100%">
+  <a href="/" class="d-flex align-items-center pb-3 mb-3 link-dark text-decoration-none border-bottom">
+    <span class="icon-text">
+      <span class="icon">
+	<i class="fas fa-rss"></i>
+      </span>
+      <span class="fs-5 fw-semibold">&nbsp;Feedreader</span>
+  </a>
+  <ul class="nav nav-pills flex-column mb-auto">
+    {% url 'feeds:index' as link %}
+    {% if link %}
+    <li class="nav-item">
+      <a href="{{ link }}" class="nav-link {% if request.path == link %}active{% else %}link-dark{% endif %}" aria-current="page">
+	<span class="icon-text">
+	  <span class="icon">
+	    <i class="fas fa-home"></i>
+	  </span>
+	  <span>&nbsp;Home</span>
+	</span>
+      </a>
+    </li>
+    {% endif %}
+    {% url 'feeds:feed-discover' as link %}
+    {% if link %}
+    <li>
+      <a href="{{ link }}" class="nav-link {% if request.path == link %}active{% else %}link-dark{% endif %}">
+	<span class="icon-text">
+	  <span class="icon">
+	    <i class="fas fa-plus"></i>
+	  </span>
+	  <span>&nbsp;Add Feed</span>
+	</span>
+      </a>
+    </li>
+    {% endif %}
+    {% url 'feeds:profile' as link %}
+    {% if link %}
+    <li>
+      <a href="{{ link }}" class="nav-link {% if request.path == link %}active{% else %}link-dark{% endif %}">
+	<span class="icon">
+	  <i class="fas fa-user"></i>
+	</span>
+	<span>&nbsp;Profile</span>
+      </a>
+    </li>
+    {% endif %}
+  </ul>
+  <ul class="list-unstyled ps-0">
+    <li class="border-top my-3"></li>
+    {% for category in categories %}
+    <li class="mb-1">
+      <button class="btn btn-toggle align-items-center rounded collapsed" data-bs-toggle="collapse" data-bs-target="#{{category}}-collapse" aria-expanded="false">
+	{{ category.name }}
+      </button>
+      <div class="collapse" id="{{category}}-collapse">
+	<ul class="btn-toggle-nav list-unstyled fw-normal pb-1 small">
+	  {% for subscription in category.subscriptions.all %}
+	  <li><a href={{ subscription.feed.get_absolute_url }} class="link-dark rounded">{{ subscription.feed.title }}</a></li>
+	  {% endfor %}
+	</ul>
+      </div>
+    </li>
+    {% endfor %}
+    <li class="border-top my-3"></li>
+  </ul>
+  <ul class="list-unstyled ps-0">
+    <li class="mb-1 my-3">
+      <button class="btn btn-toggle align-items-center rounded collapsed" data-bs-toggle="collapse" data-bs-target="#account-collapse" aria-expanded="false">
+	Account
+      </button>
+      <div class="collapse" id="account-collapse">
+	<ul class="btn-toggle-nav list-unstyled fw-normal pb-1 small">
+	  <li><a href="#" class="link-dark rounded">New...</a></li>
+	  <li><a href="#" class="link-dark rounded">Profile</a></li>
+	  <li><a href="#" class="link-dark rounded">Settings</a></li>
+	  <li><a href="#" class="link-dark rounded">Sign out</a></li>
+	</ul>
+      </div>
+    </li>
+  </ul>
+</div>

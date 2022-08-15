@@ -13,7 +13,7 @@ from django.contrib.postgres.search import SearchVector
 from django.core.cache import cache
 from django.core.paginator import Paginator
 from django.db import IntegrityError
-from django.db.models import Count, Exists, OuterRef, Q
+from django.db.models import Count, Exists, OuterRef, Q, Prefetch
 from django.http import (
     Http404,
     HttpRequest,
@@ -38,6 +38,20 @@ from .models import Category, Entry, Feed, Subscription
 # Or task status for multiple tasks
 
 logger = logging.getLogger(__name__)
+
+
+def subscriptions_by_category(request):
+    if request.user.is_authenticated:
+        categories = Category.objects.prefetch_related(
+            Prefetch(
+                "subscriptions",
+                queryset=Subscription.objects.select_related("feed").order_by(
+                    "feed__title"
+                ),
+            )
+        ).filter(user=request.user)
+        return {"categories": categories}
+    return {}
 
 
 def profile(request):
@@ -386,8 +400,6 @@ def entry_detail(
 def discover(request: HttpRequest) -> HttpResponse:
     search_term = request.GET.get("q")
     if search_term:
-        categories = Category.objects.filter(user=request.user)
-
         # TODO better way to determine if search_term is possible URL?
         if " " not in search_term and "." in search_term:
             if not search_term.startswith("http"):
@@ -451,10 +463,6 @@ def discover(request: HttpRequest) -> HttpResponse:
             request,
             "feeds/discover.html",
             {
-                "categories": [
-                    {"name": category.name, "id": category.id}
-                    for category in categories
-                ],
                 "feeds": feeds,
             },
         )
