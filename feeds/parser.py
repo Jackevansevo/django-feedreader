@@ -216,7 +216,7 @@ def parse_feed(resp):
 
     feed = {"last_checked": timezone.now(), "url": resp["url"]}
 
-    base_url = urlparse(resp["url"])
+    base_url = urlparse(resp["url"]).netloc
 
     link = parsed.feed.get("link")
     if link and link != "/":
@@ -228,7 +228,7 @@ def parse_feed(resp):
     if title:
         feed["title"] = title
     else:
-        feed["title"] = base_url.netloc.lstrip("www.")
+        feed["title"] = base_url.lstrip("www.")
 
     if subtitle := parsed.feed.get("subtitle"):
         if subtitle != "":
