@@ -30,8 +30,9 @@
     <main>
       {% include 'feeds/sidebar.html' %}
 
+      <div class="flex-grow-1 pt-3">
       {% if messages %}
-      <div class="container">
+      <div class="container-fluid">
 	{% for message in messages %}
 	{% if message.tags == "debug" %}
 	<div class="alert alert-danger alert-dismissible fade show" role="alert">
@@ -67,8 +68,6 @@
 	{% endfor %}
       </div>
       {% endif %}
-
-      <div class="flex-grow-1 pt-3">
       {% block content %}
       {% endblock %}
       </div>
