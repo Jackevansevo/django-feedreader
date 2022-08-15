@@ -418,7 +418,9 @@ def discover(request: HttpRequest) -> HttpResponse:
                 try:
                     resp = parser.crawl_url(search_term)
                     if resp is not None:
+                        logger.info("Parsing resp: {}".format(search_term))
                         feed = parser.ingest_feed(resp, search_term)
+                        logger.info("Parsed: {}".format(search_term))
                         if feed is not None:
                             feeds = [feed]
                 except Exception as exc:
