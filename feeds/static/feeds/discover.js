@@ -1,5 +1,5 @@
 const form = document.getElementById("discoverForm");
-const searchInput = form.elements.namedItem("q");
+const searchInput = form.elements["q"];
 const resultsSection = document.getElementById("results");
 
 let timer;
