@@ -27,6 +27,8 @@ client = httpx.Client(timeout=timeout, limits=limits, follow_redirects=True)
 @shared_task(
     autoretry_for=(httpx.TimeoutException,),
     retry_backoff=True,
+    acks_late=True,
+    task_reject_on_worker_lost=True,
 )
 def fetch_feed(url, last_modified=None, etag=None):
     headers = {"User-Agent": USER_AGENT}
@@ -57,7 +59,7 @@ def create_subscription(url, category_name, user_id):
     )
 
 
-@shared_task
+@shared_task(acks_late=True, task_reject_on_worker_lost=True)
 def add_subscription(resp, category_name, user_id):
 
     parsed, entries = parse_feed(resp)
