@@ -1,7 +1,10 @@
 app = "feedreader"
 kill_signal = "SIGINT"
 kill_timeout = 5
-processes = []
+
+[processes]
+  web = "gunicorn -b 0.0.0.0:8000 --workers 2 feedreader.wsgi"
+  beat = "celery -A feedreader beat -l INFO"
 
 [env]
   HOSTNAME = "feedreader.fly.dev"
@@ -14,8 +17,8 @@ processes = []
   auto_rollback = true
 
 [[services]]
+  processes = ["web"]
   internal_port = 8000
-  processes = ["app"]
   protocol = "tcp"
   script_checks = []
   [services.concurrency]
@@ -43,4 +46,4 @@ processes = []
   url_prefix = "/static/"
 
 [deploy]
-  release_command = "python manage.py migrate"
+  release_command = "sh release.sh"
