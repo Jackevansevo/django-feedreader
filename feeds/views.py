@@ -12,7 +12,7 @@ from django.contrib.postgres.search import SearchVector
 from django.core.cache import cache
 from django.core.paginator import Paginator
 from django.db import IntegrityError
-from django.db.models import Count, Exists, OuterRef, Q, Prefetch
+from django.db.models import Count, Exists, OuterRef, Q
 from django.http import (
     Http404,
     HttpRequest,
@@ -41,15 +41,13 @@ logger = logging.getLogger(__name__)
 
 def subscriptions_by_category(request):
     if request.user.is_authenticated:
-        categories = Category.objects.prefetch_related(
-            Prefetch(
-                "subscriptions",
-                queryset=Subscription.objects.select_related("feed").order_by(
-                    "feed__title"
-                ),
-            )
-        ).filter(user=request.user)
-        return {"categories": categories}
+        subscriptions = (
+            Subscription.objects.select_related("category")
+            .filter(user=request.user)
+            .order_by("category__name")
+        )
+
+        return {"subscriptions": subscriptions}
     return {}
 
 

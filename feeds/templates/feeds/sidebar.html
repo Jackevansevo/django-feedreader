@@ -47,14 +47,19 @@
   </ul>
   <ul class="list-unstyled ps-0">
     <li class="border-top my-3"></li>
-    {% for category in categories %}
+    {% regroup subscriptions by category as subscriptions_by_category %}
+    {% for category in subscriptions_by_category %}
     <li class="mb-1">
-      <button class="btn btn-toggle align-items-center rounded collapsed" data-bs-toggle="collapse" data-bs-target="#{{category}}-collapse" aria-expanded="false">
-	{{ category.name }}
+      <button class="btn btn-toggle align-items-center rounded collapsed" data-bs-toggle="collapse" data-bs-target="#{{category.grouper}}-collapse" aria-expanded="false">
+	  {% if category.grouper %}
+	  {{ category.grouper }}
+	  {% else %}
+	  Ungrouped
+	  {% endif %}
       </button>
-      <div class="collapse" id="{{category}}-collapse">
+      <div class="collapse" id="{{category.grouper}}-collapse">
 	<ul class="btn-toggle-nav list-unstyled fw-normal pb-1 small">
-	  {% for subscription in category.subscriptions.all %}
+	  {% for subscription in category.list %}
 	  <li>
 	    <a href={{ subscription.feed.get_absolute_url }} class="link-dark rounded d-flex align-items-center">
 	      {% if subscription.feed.favicon %}
