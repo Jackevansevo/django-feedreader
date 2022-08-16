@@ -182,6 +182,9 @@ def scrape_common_endpoints(parsed_url):
 
 def crawl_url(url: str):
 
+    # TODO: merge with create_subscription logic, code is duplicated /
+    # conflicting across async/sync code
+
     # The user has either passed in:
     # - A site: i.e. site.com (html)
     # - A feed: i.e. site.com/index.xml (xml)
