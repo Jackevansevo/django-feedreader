@@ -35,11 +35,16 @@
   {% for feed in feeds %}
   <div class="card mb-4">
     <div class="card-body">
+      <span class="d-flex align-items-center">
+      {% if feed.favicon %}
+      <img style="width: 25px; height: 25px; margin-right: 10px" src="{{ feed.favicon }}"></img>
+      {% endif %}
       <a class="text-decoration-none" href="{{ feed.get_absolute_url }}">
 	<h5 class="card-title">{{ feed.title }}</h5>
       </a>
+      </span>
       {% if feed.subtitle %}
-      <h6 class="card-subtitle mb-2 text-muted">
+      <h6 class="card-subtitle my-2 text-muted">
 	{{ feed.subtitle }}
       </h6>
       {% endif %}
