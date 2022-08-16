@@ -2,6 +2,7 @@ import logging
 import re
 from urllib.parse import urljoin, urlparse
 
+import httpx
 import bleach
 import feedparser
 from bs4 import BeautifulSoup
@@ -94,8 +95,8 @@ def find_common_feed_urls(url):
     if parsed.netloc.endswith("wordpress.com") or parsed.netloc.endswith(
         "bearblog.dev"
     ):
-        if not parsed.path.rstrip("/").endswith("/feed"):
-            return parsed._replace(path=f"{parsed.path}/feed/").geturl()
+        if not parsed.path.endswith("/feed"):
+            return parsed._replace(path=f"{parsed.path.strip('/')}/feed/").geturl()
     elif parsed.netloc.endswith("substack.com"):
         if not parsed.path.endswith("/feed"):
             return parsed._replace(path=f"{parsed.path}/feed").geturl()
@@ -112,29 +113,99 @@ def find_common_feed_urls(url):
     return url
 
 
+def find_favicon(base_url, soup):
+    favicon_link = soup.find("link", {"rel": re.compile(r".*icon.*")})
+    if favicon_link is not None:
+        return urljoin(base_url, favicon_link["href"])
+
+
+def find_rss_link(soup):
+    rss_link = soup.find("link", {"type": re.compile(r"application\/(atom|rss)\+xml$")})
+
+    if rss_link is None:
+        rss_link = soup.find("a", string=re.compile("rss", re.I))
+
+    if rss_link is None:
+        rss_link = soup.find("a", {"href": re.compile(r"(index|feed|rss|atom).*.xml$")})
+
+    if rss_link is None:
+        rss_link = soup.find("a", {"href": re.compile(r".*(rss|atom)$")})
+
+    return rss_link
+
+
+def find_common_extensions(parsed_url):
+    url = parsed_url.geturl()
+
+    common_extensions = (
+        "feed.xml",
+        "index.xml",
+        "rss.xml",
+        "feed",
+        "rss",
+        "atom.xml",
+        "atom",
+        "feed.atom",
+    )
+
+    possible_locations = []
+
+    # If we have a path i.e. site.com/blog check:
+    # - site.com/blog/feed
+    # - site.com/blog/index.xml
+    if parsed_url.path:
+        path = parsed_url._replace(path="").geturl()
+        if not path.endswith("/"):
+            path += "/"
+        for extention in common_extensions:
+            possible_locations.append(urljoin(path, extention))
+
+    for extention in common_extensions:
+        path = url
+        if not path.endswith("/"):
+            path += "/"
+        possible_locations.append(urljoin(path, extention))
+
+    return possible_locations
+
+
+def scrape_common_endpoints(parsed_url):
+    logger.info("Crawling common extensions for {}".format(parsed_url.geturl()))
+
+    for loc in find_common_extensions(parsed_url):
+        logger.info("Trying {}".format(loc))
+        task = tasks.fetch_feed.delay(loc)
+        resp = task.get()
+        if resp["status"] != 404:
+            return resp
+
+
 def crawl_url(url: str):
+
+    # The user has either passed in:
+    # - A site: i.e. site.com (html)
+    # - A feed: i.e. site.com/index.xml (xml)
+
+    # Regardless we'll need to end up scraping both
+
+    # Assumes the user has passed a feed (happy path)
     task = tasks.fetch_feed.delay(find_common_feed_urls(url))
     resp = task.get()
 
+    parsed_url = urlparse(url)
+    base_url = parsed_url._replace(path="").geturl()
+
+    favicon = None
+    html_resp = None
+
+    # If we acually got back HTML
     if "html" in resp["headers"].get("content-type"):
         logger.info("{} returned HTML response".format(url))
+        html_resp = resp
         # TODO should we prefer atom over rss? What if they find both?
         soup = BeautifulSoup(resp["body"], features="html.parser")
 
-        rss_link = soup.find(
-            "link", {"type": re.compile(r"application\/(atom|rss)\+xml$")}
-        )
-
-        if rss_link is None:
-            rss_link = soup.find("a", string=re.compile("rss", re.I))
-
-        if rss_link is None:
-            rss_link = soup.find(
-                "a", {"href": re.compile(r"(index|feed|rss|atom).*.xml$")}
-            )
-
-        if rss_link is None:
-            rss_link = soup.find("a", {"href": re.compile(r".*(rss|atom)$")})
+        rss_link = find_rss_link(soup)
 
         if rss_link is not None:
             logger.info("Found feed link in page body for {}".format(url))
@@ -145,39 +216,25 @@ def crawl_url(url: str):
         else:
             logger.info("No feed link in page body for {}".format(url))
 
-            logger.info("Crawling common extensions for {}".format(url))
+            resp = scrape_common_endpoints(parsed_url)
 
-            common_extensions = (
-                "feed.xml",
-                "index.xml",
-                "rss.xml",
-                "rss",
-                "atom.xml",
-                "atom",
-                "feed.atom",
-            )
+    if html_resp is None:
+        task = tasks.fetch_feed.delay(base_url)
+        html_resp = task.get()
 
-            possible_locations = []
+    soup = BeautifulSoup(html_resp["body"], features="html.parser")
+    favicon = find_favicon(base_url, soup)
 
-            # TODO: clean up
-            rel_path = url
-            if not url.endswith("/"):
-                rel_path += "/"
-            for extention in common_extensions:
-                possible_locations.append(urljoin(rel_path, extention))
+    if favicon is None:
+        path = base_url
+        if not path.endswith("/"):
+            path += "/"
+            favicon_path = urljoin(path, "favicon.ico")
+            favicon_resp = httpx.get(favicon_path, follow_redirects=True)
+            if favicon_resp.status_code == 200:
+                favicon = str(favicon_resp.url)
 
-            parsed_url = urlparse(url)
-            if parsed_url.path != "":
-                base_url = parsed_url._replace(path="").geturl()
-                for extention in common_extensions:
-                    possible_locations.append(urljoin(base_url, extention))
-
-            for loc in possible_locations:
-                logger.info("Trying {}".format(loc))
-                task = tasks.fetch_feed.delay(loc)
-                resp = task.get()
-                if resp["status"] != 404:
-                    break
+    resp["favicon"] = favicon
 
     return resp
 
@@ -243,6 +300,7 @@ def parse_feed(resp):
         slug = slugify(base_url)
 
     feed["slug"] = slug
+    feed["favicon"] = resp.get("favicon")
 
     if headers.get("etag"):
         feed["etag"] = headers["etag"]

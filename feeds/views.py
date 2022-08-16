@@ -363,11 +363,11 @@ def feed_detail(request: HttpRequest, feed_slug: str) -> HttpResponse:
 
     # TODO Can this be done in a single query?
 
-    feed = (
-        Feed.objects.filter(slug=feed_slug)
-        .annotate(subscribed=Exists(Subscription.objects.filter(feed=OuterRef("pk"))))
-        .first()
+    queryset = Feed.objects.annotate(
+        subscribed=Exists(Subscription.objects.filter(feed=OuterRef("pk")))
     )
+
+    feed = get_object_or_404(queryset, slug=feed_slug)
 
     if feed.subscribed:
         subscription = Subscription.objects.get(feed=feed, user=request.user)
