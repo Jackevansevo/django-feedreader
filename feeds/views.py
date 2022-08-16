@@ -1,6 +1,5 @@
 import logging
 import uuid
-from urllib.parse import urlparse
 
 import listparser
 from celery import group, result
