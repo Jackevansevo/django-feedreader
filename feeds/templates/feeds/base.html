@@ -30,7 +30,7 @@
     <main>
       {% include 'feeds/sidebar.html' %}
 
-      <div class="flex-grow-1 pt-3">
+      <div class="flex-grow-1 pt-3 overflow-auto" style="overflow-x:auto;">
       {% if messages %}
       <div class="container-fluid">
 	{% for message in messages %}
