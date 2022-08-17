@@ -115,6 +115,7 @@ def find_common_feed_urls(url):
 
 
 def find_favicon(base_url, soup):
+    # TODO This can return multiple, which do we actually want?
     favicon_link = soup.find("link", {"rel": re.compile(r".*icon.*")})
     if favicon_link is not None:
         return urljoin(base_url, favicon_link["href"])
@@ -228,14 +229,34 @@ def crawl_url(url: str):
 
     soup = BeautifulSoup(html_resp["body"], features="html.parser")
     favicon = find_favicon(base_url, soup)
+    if favicon is not None:
+        logger.info("Found favicon in page body for {}".format(url))
+        if favicon.startswith("http"):
+            # Verify the favicon exists
+            favicon_resp = httpx.get(favicon, follow_redirects=True)
+            if (
+                favicon_resp.status_code == 200
+                and "html" not in favicon_resp.headers["content-type"]
+            ):
+                favicon = str(favicon_resp.url)
+            else:
+                favicon = None
 
     if favicon is None:
         path = base_url
         if not path.endswith("/"):
             path += "/"
             favicon_path = urljoin(path, "favicon.ico")
+            logger.info(
+                "No favicon found in page body for {}, will try {}".format(
+                    url, favicon_path
+                )
+            )
             favicon_resp = httpx.get(favicon_path, follow_redirects=True)
-            if favicon_resp.status_code == 200:
+            if (
+                favicon_resp.status_code == 200
+                and "html" not in favicon_resp.headers["content-type"]
+            ):
                 favicon = str(favicon_resp.url)
 
     resp["favicon"] = favicon
@@ -277,11 +298,11 @@ def parse_feed(resp):
 
     feed = {"last_checked": timezone.now(), "url": resp["url"]}
 
-    base_url = urlparse(resp["url"]).netloc
+    base_url = urlparse(resp["url"])._replace(path="").geturl()
 
     link = parsed.feed.get("link")
     if link and link != "/":
-        feed["link"] = link
+        feed["link"] = urlparse(link)._replace(query="").geturl()
     else:
         feed["link"] = base_url
 

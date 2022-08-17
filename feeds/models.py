@@ -46,7 +46,7 @@ class Feed(models.Model):
     last_modified = models.DateTimeField(null=True)
     last_checked = models.DateTimeField(auto_now=True)
     created_at = models.DateTimeField(auto_now_add=True)
-    favicon = models.URLField(blank=True, null=True)
+    favicon = models.URLField(blank=True, null=True, max_length=1000)
 
     def get_absolute_url(self):
         return reverse("feeds:feed-detail", kwargs={"feed_slug": self.slug})
