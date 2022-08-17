@@ -1,4 +1,5 @@
 # flake8: noqa
+import httpx
 import feedparser
 import listparser
 from bs4 import BeautifulSoup
