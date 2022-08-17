@@ -347,19 +347,21 @@ def parse_feed_entry(entry, feed):
 
     title = entry.get("title")
 
+    slug = None
     if title:
         slug = slugify(unidecode(title))
-    else:
-        # TODO Strip any html from this, or figure out a better mechanism to
-        # have blank titles
-        # Example feed https://justtesting.org/rss
-        title = strip_tags(content[:300])
 
-    if slug == "":
+    if not slug:
         if hasattr(entry, "link"):
             slug = slugify(urlparse(entry.link).path)
         else:
             return None
+
+    if not title:
+        # TODO Strip any html from this, or figure out a better mechanism to
+        # have blank titles
+        # Example feed https://justtesting.org/rss
+        title = strip_tags(content[:300])
 
     feed_parsed = urlparse(feed.url)
 

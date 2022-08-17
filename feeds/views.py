@@ -433,6 +433,7 @@ def discover(request: HttpRequest) -> HttpResponse:
                         if feed is not None:
                             feeds = [feed]
                 except Exception as exc:
+                    raise
                     messages.error(request, str(exc))
             else:
                 logger.info("Found pre-existing feed for {}".format(search_term))
