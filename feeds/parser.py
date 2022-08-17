@@ -187,12 +187,19 @@ def check_favicon(path):
     resp = httpx.get(
         path, follow_redirects=True, headers={"User-Agent": tasks.USER_AGENT}
     )
-    if (
-        resp.status_code == 200
-        and "html" not in resp.headers["content-type"]
-        and resp.headers.get("cross-origin-resource-policy") != "same-origin"
-    ):
-        return resp.url
+    if resp.status_code != 200:
+        return
+
+    if "html" in resp.headers["content-type"]:
+        return
+
+    if resp.headers.get("cross-origin-resource-policy") == "same-origin":
+        return
+
+    if resp.headers.get("access-control-allow-origin", "*") != "*":
+        return
+
+    return resp.url
 
 
 def crawl_url(url: str):
