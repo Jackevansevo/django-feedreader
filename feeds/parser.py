@@ -184,7 +184,9 @@ def scrape_common_endpoints(parsed_url):
 
 def check_favicon(path):
     # Verify the favicon exists
-    resp = httpx.get(path, follow_redirects=True)
+    resp = httpx.get(
+        path, follow_redirects=True, headers={"User-Agent": tasks.USER_AGENT}
+    )
     if (
         resp.status_code == 200
         and "html" not in resp.headers["content-type"]
