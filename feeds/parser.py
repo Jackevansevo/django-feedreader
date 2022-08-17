@@ -182,6 +182,17 @@ def scrape_common_endpoints(parsed_url):
             return resp
 
 
+def check_favicon(path):
+    # Verify the favicon exists
+    resp = httpx.get(path, follow_redirects=True)
+    if (
+        resp.status_code == 200
+        and "html" not in resp.headers["content-type"]
+        and resp.headers.get("cross-origin-resource-policy") != "same-origin"
+    ):
+        return resp.url
+
+
 def crawl_url(url: str):
 
     # TODO: merge with create_subscription logic, code is duplicated /
@@ -227,37 +238,25 @@ def crawl_url(url: str):
         task = tasks.fetch_feed.delay(base_url)
         html_resp = task.get()
 
+    # TODO we probably want to actually download the favicon ourselves to avoid
+    # cross-origin-resource-policy restrictions
+
     soup = BeautifulSoup(html_resp["body"], features="html.parser")
     favicon = find_favicon(base_url, soup)
     if favicon is not None:
         logger.info("Found favicon in page body for {}".format(url))
         if favicon.startswith("http"):
-            # Verify the favicon exists
-            favicon_resp = httpx.get(favicon, follow_redirects=True)
-            if (
-                favicon_resp.status_code == 200
-                and "html" not in favicon_resp.headers["content-type"]
-            ):
-                favicon = str(favicon_resp.url)
-            else:
-                favicon = None
+            favicon = check_favicon(favicon)
 
     if favicon is None:
         path = base_url
         if not path.endswith("/"):
             path += "/"
-            favicon_path = urljoin(path, "favicon.ico")
+            favicon = urljoin(path, "favicon.ico")
             logger.info(
-                "No favicon found in page body for {}, will try {}".format(
-                    url, favicon_path
-                )
+                "No favicon found in page body for {}, will try {}".format(url, favicon)
             )
-            favicon_resp = httpx.get(favicon_path, follow_redirects=True)
-            if (
-                favicon_resp.status_code == 200
-                and "html" not in favicon_resp.headers["content-type"]
-            ):
-                favicon = str(favicon_resp.url)
+            favicon = check_favicon(favicon)
 
     resp["favicon"] = favicon
 
