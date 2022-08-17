@@ -1,12 +1,13 @@
 import logging
 import re
 from urllib.parse import urljoin, urlparse
+from datetime import datetime
 
 import httpx
 import bleach
 import feedparser
+import dateutil.parser
 from bs4 import BeautifulSoup
-from dateutil import parser
 from django.core.exceptions import ValidationError
 from django.core.validators import URLValidator
 from django.db import IntegrityError, transaction
@@ -308,7 +309,7 @@ def parse_feed(resp):
     if headers.get("etag"):
         feed["etag"] = headers["etag"]
     if headers.get("last-modified"):
-        feed["last_modified"] = parser.parse(headers["last-modified"])
+        feed["last_modified"] = dateutil.parser.parse(headers["last-modified"])
 
     return feed, parsed.entries
 
@@ -400,16 +401,22 @@ def parse_feed_entry(entry, feed):
     published = None
     if hasattr(entry, "published"):
         try:
-            published = parser.parse(entry.published)
-        except ValueError:
-            return None
+            published = dateutil.parser.parse(entry.published)
+        except dateutil.parser.ParserError:
+            try:
+                published = datetime.strptime(entry["published"], "%d %b %Y %Z")
+            except ValueError:
+                return None
 
     updated = None
     if hasattr(entry, "updated"):
         try:
-            updated = parser.parse(entry.updated)
-        except ValueError:
-            return None
+            updated = dateutil.parser.parse(entry.updated)
+        except dateutil.parser.ParserError:
+            try:
+                updated = datetime.strptime(entry["updated"], "%d %b %Y %Z")
+            except ValueError:
+                return None
 
     if published is None and updated is not None:
         # Just for sorting
