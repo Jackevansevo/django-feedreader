@@ -44,7 +44,7 @@ def subscriptions_by_category(request):
         subscriptions = (
             Subscription.objects.select_related("category")
             .filter(user=request.user)
-            .order_by("category__name")
+            .order_by("category__name", "feed__title")
         )
 
         return {"subscriptions": subscriptions}
