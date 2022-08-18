@@ -119,7 +119,7 @@ def find_favicon(base_url, soup):
     # TODO This can return multiple, which do we actually want?
     favicon_link = soup.find("link", {"rel": re.compile(r".*icon.*")})
     if favicon_link is not None:
-        return posixpath.join(base_url, favicon_link["href"])
+        return urljoin(base_url, favicon_link["href"])
 
 
 def find_rss_link(soup):
@@ -230,7 +230,7 @@ def crawl_url(url: str):
 
         if rss_link is not None:
             logger.info("Found feed link in page body for {}".format(url))
-            url = posixpath(url, rss_link["href"])
+            url = urljoin(url, rss_link["href"])
             logger.info("Crawling {}".format(url))
             task = tasks.fetch_feed.delay(url)
             resp = task.get()
