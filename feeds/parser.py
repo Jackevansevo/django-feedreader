@@ -1,4 +1,5 @@
 import logging
+from PIL import Image
 import re
 import posixpath
 from urllib.parse import urljoin, urlparse
@@ -192,10 +193,13 @@ def check_favicon(path):
     if resp.headers.get("cross-origin-resource-policy") == "same-origin":
         return
 
-    if resp.headers.get("access-control-allow-origin", "*") != "*":
+    try:
+        Image.open(resp)
+    except Exception as err:
+        logger.error("failed to parse favicon img: {}".format(err))
         return
 
-    return resp.url
+    return str(resp.url)
 
 
 def crawl_url(url: str):
@@ -214,13 +218,13 @@ def crawl_url(url: str):
     resp = task.get()
 
     parsed_url = urlparse(url)
-    base_url = parsed_url._replace(path="").geturl()
+    base_url = parsed_url._replace(path="", query="").geturl()
 
     favicon = None
     html_resp = None
 
     # If we acually got back HTML
-    if "html" in resp["headers"].get("content-type"):
+    if not url.endswith(".xml") and "html" in resp["headers"].get("content-type"):
         logger.info("{} returned HTML response".format(url))
         html_resp = resp
         # TODO should we prefer atom over rss? What if they find both?
@@ -240,17 +244,19 @@ def crawl_url(url: str):
             resp = scrape_common_endpoints(parsed_url)
 
     if html_resp is None:
-        # Query the parent path i.e:
-        # - site.com/feed           -> site.com
-        # - site.com/blog/index.xml -> site.com/blog
-        task = tasks.fetch_feed.delay(posixpath.dirname(url))
+        # Query the parent path i.e: site.com/blog/index.xml -> site.com/blog
+        task = tasks.fetch_feed.delay(posixpath.dirname(url.rstrip("/")))
         html_resp = task.get()
+        # If this isn't found then query the base_url: site.com/feed -> site.com
+        if html_resp["status"] != 200:
+            task = tasks.fetch_feed.delay(base_url)
+            html_resp = task.get()
 
     # TODO we probably want to actually download the favicon ourselves to avoid
     # cross-origin-resource-policy restrictions
 
     soup = BeautifulSoup(html_resp["body"], features="html.parser")
-    favicon = find_favicon(base_url, soup)
+    favicon = find_favicon(html_resp["url"], soup)
     if favicon is not None:
         logger.info("Found favicon in page body for {}".format(url))
         if favicon.startswith("http"):
@@ -259,7 +265,9 @@ def crawl_url(url: str):
     if favicon is None:
         favicon = posixpath.join(base_url, "favicon.ico")
         logger.info(
-            "No favicon found in page body for {}, will try {}".format(url, favicon)
+            "No favicon found in page body for {}, will try {}".format(
+                html_resp["url"], favicon
+            )
         )
         favicon = check_favicon(favicon)
 

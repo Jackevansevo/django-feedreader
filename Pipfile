@@ -37,6 +37,7 @@ beautifulsoup4 = "*"
 bleach = "*"
 httpx = "*"
 django-allauth = "*"
+pillow = "*"
 
 [pipenv]
 allow_prereleases = true
