@@ -1,5 +1,6 @@
 import logging
 import re
+import posixpath
 from urllib.parse import urljoin, urlparse
 from datetime import datetime
 
@@ -118,7 +119,7 @@ def find_favicon(base_url, soup):
     # TODO This can return multiple, which do we actually want?
     favicon_link = soup.find("link", {"rel": re.compile(r".*icon.*")})
     if favicon_link is not None:
-        return urljoin(base_url, favicon_link["href"])
+        return posixpath.join(base_url, favicon_link["href"])
 
 
 def find_rss_link(soup):
@@ -157,16 +158,11 @@ def find_common_extensions(parsed_url):
     # - site.com/blog/index.xml
     if parsed_url.path:
         path = parsed_url._replace(path="").geturl()
-        if not path.endswith("/"):
-            path += "/"
         for extention in common_extensions:
-            possible_locations.append(urljoin(path, extention))
+            possible_locations.append(posixpath.join(path, extention))
 
     for extention in common_extensions:
-        path = url
-        if not path.endswith("/"):
-            path += "/"
-        possible_locations.append(urljoin(path, extention))
+        possible_locations.append(posixpath.join(url, extention))
 
     return possible_locations
 
@@ -234,7 +230,7 @@ def crawl_url(url: str):
 
         if rss_link is not None:
             logger.info("Found feed link in page body for {}".format(url))
-            url = urljoin(url, rss_link["href"])
+            url = posixpath(url, rss_link["href"])
             logger.info("Crawling {}".format(url))
             task = tasks.fetch_feed.delay(url)
             resp = task.get()
@@ -258,14 +254,11 @@ def crawl_url(url: str):
             favicon = check_favicon(favicon)
 
     if favicon is None:
-        path = base_url
-        if not path.endswith("/"):
-            path += "/"
-            favicon = urljoin(path, "favicon.ico")
-            logger.info(
-                "No favicon found in page body for {}, will try {}".format(url, favicon)
-            )
-            favicon = check_favicon(favicon)
+        favicon = posixpath.join(base_url, "favicon.ico")
+        logger.info(
+            "No favicon found in page body for {}, will try {}".format(url, favicon)
+        )
+        favicon = check_favicon(favicon)
 
     resp["favicon"] = favicon
 
