@@ -183,9 +183,13 @@ def scrape_common_endpoints(parsed_url):
 
 def check_favicon(path):
     # Verify the favicon exists
-    resp = httpx.get(
-        path, follow_redirects=True, headers={"User-Agent": tasks.USER_AGENT}
-    )
+    try:
+        resp = httpx.get(
+            path, follow_redirects=True, headers={"User-Agent": tasks.USER_AGENT}
+        )
+    except httpx.HTTPError:
+        return
+
     if resp.status_code != 200:
         return
 
