@@ -305,8 +305,17 @@ def parse_feed(resp):
     base_url = urlparse(resp["url"])._replace(path="").geturl()
 
     link = parsed.feed.get("link")
-    if link and link != "/":
-        feed["link"] = urlparse(link)._replace(query="").geturl()
+    if link:
+        u = urlparse(link)
+        # Remove any query params, and double slashes
+        sanitised = u._replace(query="", path=(u.path.replace("//", "/"))).geturl()
+        # Ignore if the link is the same as the feed
+        # we need the link to the parent site
+        if sanitised != resp["url"]:
+            # Will handle absolute or relative paths
+            feed["link"] = urljoin(base_url, sanitised)
+        else:
+            feed["link"] = posixpath.dirname(sanitised)
     else:
         feed["link"] = base_url
 
