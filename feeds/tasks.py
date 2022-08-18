@@ -1,6 +1,5 @@
 import httpx
 from celery import chain, group, shared_task
-from celery.exceptions import Ignore
 from celery.utils.log import get_task_logger
 from django.db import IntegrityError, transaction
 from django.db.models import Count
