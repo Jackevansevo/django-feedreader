@@ -258,21 +258,22 @@ def crawl_url(url: str):
     # cross-origin-resource-policy restrictions
 
     soup = BeautifulSoup(html_resp["body"], features="html.parser")
-    for favicon in find_favicons(html_resp["url"], soup):
+
+    for favicon_loc in find_favicons(html_resp["url"], soup):
         logger.info("Found favicon in page body for {}".format(url))
-        if favicon.startswith("http"):
-            favicon = check_favicon(favicon)
+        if favicon_loc.startswith("http"):
+            favicon = check_favicon(favicon_loc)
             if favicon is not None:
                 break
 
     if favicon is None:
-        favicon = posixpath.join(base_url, "favicon.ico")
+        favicon_loc = posixpath.join(base_url, "favicon.ico")
         logger.info(
             "No favicon found in page body for {}, will try {}".format(
-                html_resp["url"], favicon
+                html_resp["url"], favicon_loc
             )
         )
-        favicon = check_favicon(favicon)
+        favicon = check_favicon(favicon_loc)
 
     resp["favicon"] = favicon
 
