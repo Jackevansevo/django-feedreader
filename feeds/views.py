@@ -41,7 +41,7 @@ logger = logging.getLogger(__name__)
 def subscriptions_by_category(request):
     if request.user.is_authenticated:
         subscriptions = (
-            Subscription.objects.select_related("category")
+            Subscription.objects.select_related("category", "feed")
             .filter(user=request.user)
             .order_by("category__name", "feed__title")
         )
