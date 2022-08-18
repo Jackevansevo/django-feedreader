@@ -258,12 +258,6 @@ def crawl_url(url: str):
             task = tasks.fetch_feed.delay(base_url)
             html_resp = task.get()
 
-        # TODO We probably want to actually find the favicons in the HTML
-        # response here, else recurse further up the tree, example:
-        # https://eev.ee/feeds/blog.atom.xml -> is the feed
-        # https://eev.ee/feeds/ -> is the parent of the feed (would usually contain the favicon but doesn't)
-        # https://eev.ee -> is the actually location of the favicon
-
     # TODO we probably want to actually download the favicon ourselves to avoid
     # cross-origin-resource-policy restrictions
 
@@ -276,7 +270,6 @@ def crawl_url(url: str):
             if favicon is not None:
                 break
 
-    # TODO If html parsing has worked properly, we should never end up here
     if favicon is None:
         for extension in ("favicon.ico", "favicon.png"):
             favicon_loc = posixpath.join(base_url, extension)
