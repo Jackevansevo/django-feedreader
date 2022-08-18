@@ -484,7 +484,7 @@ def parse_feed_entry(entry, feed):
         thumbnail=thumbnail,
         title=title,
         slug=slug,
-        link=entry.link if hasattr(entry, "link") else None,
+        link=urljoin(feed.link, entry.link) if hasattr(entry, "link") else None,
         published=published,
         updated=updated,
         content=content,
