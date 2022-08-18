@@ -240,7 +240,10 @@ def crawl_url(url: str):
             resp = scrape_common_endpoints(parsed_url)
 
     if html_resp is None:
-        task = tasks.fetch_feed.delay(base_url)
+        # Query the parent path i.e:
+        # - site.com/feed           -> site.com
+        # - site.com/blog/index.xml -> site.com/blog
+        task = tasks.fetch_feed.delay(posixpath.dirname(url))
         html_resp = task.get()
 
     # TODO we probably want to actually download the favicon ourselves to avoid
