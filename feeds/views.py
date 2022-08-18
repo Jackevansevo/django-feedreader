@@ -7,7 +7,6 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.contrib.auth.models import User
 from django.contrib.postgres.search import SearchVector
 from django.core.cache import cache
 from django.core.paginator import Paginator
@@ -283,14 +282,6 @@ class SignUpFormView(CreateView):
     template_name = "sign_up.html"
     form_class = SignUpForm
     success_url = settings.LOGIN_URL
-
-
-class ProfileView(DetailView, LoginRequiredMixin):
-    template_name = "profile.html"
-    model = User
-
-    def get_object(self, queryset=None):
-        return self.request.user
 
 
 class CategoryDetail(DetailView, LoginRequiredMixin):
