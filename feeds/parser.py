@@ -1,9 +1,12 @@
+import io
+
 import logging
 from PIL import Image
 import re
 import posixpath
 from urllib.parse import urljoin, urlparse
 from datetime import datetime
+from django.core.files.images import ImageFile
 
 import httpx
 import bleach
@@ -196,16 +199,8 @@ def check_favicon(path):
     if "html" in resp.headers["content-type"]:
         return
 
-    if resp.headers.get("cross-origin-resource-policy") == "same-origin":
-        return
-
-    try:
-        Image.open(resp)
-    except Exception as err:
-        logger.error("failed to parse favicon img: {}".format(err))
-        return
-
-    return str(resp.url)
+    parsed = urlparse(str(resp.url))
+    return ImageFile(io.BytesIO(resp.read()), name=f"{parsed.netloc}-{parsed.path}")
 
 
 def crawl_url(url: str):
@@ -258,13 +253,10 @@ def crawl_url(url: str):
             task = tasks.fetch_feed.delay(base_url)
             html_resp = task.get()
 
-    # TODO we probably want to actually download the favicon ourselves to avoid
-    # cross-origin-resource-policy restrictions
-
     soup = BeautifulSoup(html_resp["body"], features="html.parser")
 
     for favicon_loc in find_favicons(html_resp["url"], soup):
-        logger.info("Found favicon in page body for {}".format(url))
+        logger.info("Found favicon: {} in page body for {}".format(favicon_loc, url))
         if favicon_loc.startswith("http"):
             favicon = check_favicon(favicon_loc)
             if favicon is not None:

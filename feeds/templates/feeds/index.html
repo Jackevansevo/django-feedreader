@@ -51,7 +51,12 @@
 	{% endif %}
       </td>
       <td>
-	<a class="text-decoration-none" href={{ entry.feed.get_absolute_url }}>{{ entry.feed.title }}</a>
+	<a class="text-decoration-none" href={{ entry.feed.get_absolute_url }}>
+	      {% if entry.feed.favicon %}
+	        <img style="border-radius: 50%; width: 20px; height: 20px; margin-right: 0.3rem;" src="{{ entry.feed.favicon.url }}"></img>
+	      {% endif %}
+		{{ entry.feed.title }}
+	</a>
       </td>
     </tr>
     {% endfor %}
