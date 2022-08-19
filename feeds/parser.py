@@ -1,3 +1,4 @@
+import os
 import io
 
 import logging
@@ -200,7 +201,8 @@ def check_favicon(path):
         return
 
     parsed = urlparse(str(resp.url))
-    return ImageFile(io.BytesIO(resp.read()), name=f"{parsed.netloc}-{parsed.path}")
+    _, ext = os.path.splitext(parsed.path)
+    return ImageFile(io.BytesIO(resp.read()), name=f"{parsed.netloc}-favicon{ext}")
 
 
 def crawl_url(url: str):
