@@ -9,12 +9,12 @@ coverage = "*"
 ipython = "*"
 black = "*"
 mypy = "*"
-django-stubs = "*"
 ipdb = "*"
 isort = "*"
 django-debug-toolbar = "*"
 pgcli = "*"
 pre-commit = "*"
+django-stubs = {extras = ["compatible-mypy"], version = "*"}
 
 [requires]
 python_version = "3.10"
