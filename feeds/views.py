@@ -46,7 +46,7 @@ def subscriptions_by_category(request):
             .order_by("category__name", "feed__title")
         )
 
-        return {"subscriptions": subscriptions}
+        return {"all_subscriptions": subscriptions}
     return {}
 
 

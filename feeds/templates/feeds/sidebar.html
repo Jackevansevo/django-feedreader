@@ -6,6 +6,9 @@
       </span>
       <span class="fs-5 fw-semibold">&nbsp;Feedreader</span>
   </a>
+  <form class="pb-2" role="search" method="GET" action="{% url 'feeds:search' %}">
+    <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search" name="q" autocomplete="off" value="{% if request.path == '/search' %}{{ request.GET.q }}{% endif %}" required>
+  </form>
   <ul class="nav nav-pills flex-column mb-auto">
     {% url 'feeds:index' as link %}
     {% if link %}
@@ -47,7 +50,7 @@
   </ul>
   <ul class="list-unstyled ps-0">
     <li class="border-top my-3"></li>
-    {% regroup subscriptions by category as subscriptions_by_category %}
+    {% regroup all_subscriptions by category as subscriptions_by_category %}
     {% for category in subscriptions_by_category %}
     <li class="mb-1">
       <button class="btn btn-toggle align-items-center rounded collapsed" data-bs-toggle="collapse" data-bs-target="#{{category.grouper}}-collapse" aria-expanded="false">
