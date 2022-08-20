@@ -258,7 +258,7 @@ def crawl_url(url: str):
     soup = BeautifulSoup(html_resp["body"], features="html.parser")
 
     for favicon_loc in find_favicons(html_resp["url"], soup):
-        logger.info("Found favicon: {} in page body for {}".format(favicon_loc, url))
+        logger.info("Found favicon in page body for {}".format(html_resp["url"]))
         if favicon_loc.startswith("http"):
             favicon = check_favicon(favicon_loc)
             if favicon is not None:
