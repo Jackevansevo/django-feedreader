@@ -36,14 +36,14 @@
       </a>
     </li>
     {% endif %}
-    {% url 'feeds:profile' as link %}
+    {% url 'feeds:feed-list' as link %}
     {% if link %}
     <li>
       <a href="{{ link }}" class="nav-link {% if request.path == link %}active{% else %}link-dark{% endif %}">
 	<span class="icon">
-	  <i class="fas fa-user"></i>
+	  <i class="fas fa-list"></i>
 	</span>
-	<span>&nbsp;Profile</span>
+	<span>&nbsp;Feeds</span>
       </a>
     </li>
     {% endif %}
@@ -78,19 +78,17 @@
     {% endfor %}
     <li class="border-top my-3"></li>
   </ul>
-  <ul class="list-unstyled ps-0">
-    <li class="mb-1 my-3">
-      <button class="btn btn-toggle align-items-center rounded collapsed" data-bs-toggle="collapse" data-bs-target="#account-collapse" aria-expanded="false">
-	Account
-      </button>
-      <div class="collapse" id="account-collapse">
-	<ul class="btn-toggle-nav list-unstyled fw-normal pb-1 small">
-	  <li><a href="#" class="link-dark rounded">New...</a></li>
-	  <li><a href="#" class="link-dark rounded">Profile</a></li>
-	  <li><a href="#" class="link-dark rounded">Settings</a></li>
-	  <li><a href="#" class="link-dark rounded">Sign out</a></li>
-	</ul>
-      </div>
+  <ul class="nav nav-pills flex-column mb-auto">
+    {% url 'feeds:profile' as link %}
+    {% if link %}
+    <li>
+      <a href="{{ link }}" class="nav-link {% if request.path == link %}active{% else %}link-dark{% endif %}">
+	<span class="icon">
+	  <i class="fas fa-user"></i>
+	</span>
+	<span>&nbsp;Profile</span>
+      </a>
     </li>
+    {% endif %}
   </ul>
 </div>
