@@ -47,6 +47,17 @@
       </a>
     </li>
     {% endif %}
+    {% url 'feeds:category-list' as link %}
+    {% if link %}
+    <li>
+      <a href="{{ link }}" class="nav-link {% if request.path == link %}active{% else %}link-dark{% endif %}">
+	<span class="icon">
+	  <i class="fas fa-tags"></i>
+	</span>
+	<span>&nbsp;Categories</span>
+      </a>
+    </li>
+    {% endif %}
   </ul>
   <ul class="list-unstyled ps-0">
     <li class="border-top my-3"></li>
