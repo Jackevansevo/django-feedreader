@@ -2,7 +2,6 @@ import os
 import io
 
 import logging
-from PIL import Image
 import re
 import posixpath
 from urllib.parse import urljoin, urlparse
