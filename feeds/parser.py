@@ -123,7 +123,7 @@ def find_common_feed_urls(url):
 def find_favicons(base_url, soup):
     favicons = []
     for favicon_link in soup.findAll(
-        "link", {"rel": re.compile(r".*icon.*"), "href": re.compile(r"^http(s?)://.*")}
+        "link", {"rel": re.compile(r".*icon.*"), "href": re.compile(r"^(?!data).*$")}
     ):
         favicons.append(urljoin(base_url, favicon_link["href"]))
     return favicons
