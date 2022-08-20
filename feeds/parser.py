@@ -102,7 +102,7 @@ def find_common_feed_urls(url):
     if parsed.netloc.endswith("wordpress.com") or parsed.netloc.endswith(
         "bearblog.dev"
     ):
-        if not parsed.path.endswith("/feed"):
+        if not parsed.path.rstrip("/").endswith("/feed"):
             return parsed._replace(path=f"{parsed.path.strip('/')}/feed/").geturl()
     elif parsed.netloc.endswith("substack.com"):
         if not parsed.path.endswith("/feed"):
