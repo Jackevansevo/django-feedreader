@@ -121,11 +121,11 @@ def find_common_feed_urls(url):
 
 
 def find_favicons(base_url, soup):
-    # Some links might be empty
     favicons = []
-    for favicon_link in soup.findAll("link", {"rel": re.compile(r".*icon.*")}):
-        if favicon_link is not None and favicon_link.get("href"):
-            favicons.append(urljoin(base_url, favicon_link["href"]))
+    for favicon_link in soup.findAll(
+        "link", {"rel": re.compile(r".*icon.*"), "href": re.compile(r"^http(s?)://.*")}
+    ):
+        favicons.append(urljoin(base_url, favicon_link["href"]))
     return favicons
 
 
@@ -259,10 +259,9 @@ def crawl_url(url: str):
 
     for favicon_loc in find_favicons(html_resp["url"], soup):
         logger.info("Found favicon in page body for {}".format(html_resp["url"]))
-        if favicon_loc.startswith("http"):
-            favicon = check_favicon(favicon_loc)
-            if favicon is not None:
-                break
+        favicon = check_favicon(favicon_loc)
+        if favicon is not None:
+            break
 
     if favicon is None:
         for extension in ("favicon.ico", "favicon.png"):
