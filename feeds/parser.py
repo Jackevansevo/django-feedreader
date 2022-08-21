@@ -79,6 +79,11 @@ BLEACH_ALLOWED_TAGS = [
 logger = logging.getLogger(__name__)
 
 
+# TODO: I think there would be some benefits to rewriting this all to be async
+# because there's a lot of blocking network calls but I'm not sure how this
+# would be compatible with celery jobs
+
+
 def strip_scheme(url):
     parsed = urlparse(url)
     scheme = "%s://" % parsed.scheme
