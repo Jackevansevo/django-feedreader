@@ -2,5 +2,6 @@ db.sqlite3
 __pycache__
 .envrc
 /static/
+/media/
 data/
 secrets.env
