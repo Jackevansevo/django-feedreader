@@ -1,5 +1,6 @@
 import os
 import io
+from lxml import etree
 
 import logging
 import re
@@ -222,6 +223,27 @@ def check_favicon(path):
     return ImageFile(io.BytesIO(resp.read()), name=f"{parsed.netloc}-favicon{ext}")
 
 
+def find_links_in_feed(et):
+    root = et.getroot()
+    nsmap = root.nsmap
+    if root.tag == 'rss':
+        links = et.find('channel').iterfind('link')
+        return [{'href': link.text for link in links}]
+    else:
+        links = et.iterfind('link', namespaces=nsmap)
+
+    return [link.attrib for link in links]
+
+
+def get_feed_link(url, links):
+    for link in links:
+        if link.get('rel') == 'alternate' and link.get('type') == 'text/html':
+            return urljoin(url, link.get('href'))
+
+    for link in links:
+        return urljoin(url, link.get('href'))
+
+
 def crawl_url(url: str):
 
     # TODO: merge with create_subscription logic, code is duplicated /
@@ -263,12 +285,29 @@ def crawl_url(url: str):
 
             resp = scrape_common_endpoints(parsed_url)
 
+    # TODO Custom parser maybe????
+
+    parser = etree.XMLParser(recover=True)
+    et = etree.parse(io.BytesIO(resp['body']), parser=parser)
+
     if html_resp is None:
-        # Query the parent path i.e: site.com/blog/index.xml -> site.com/blog
-        task = tasks.fetch_feed.delay(posixpath.dirname(url.rstrip("/")))
+
+        parsed_links = find_links_in_feed(et)
+        # Use the most appropriate link
+        link = get_feed_link(resp['url'], parsed_links)
+        # Fall back to using the base url:
+        # i.e: site.com/blog/index.xml -> site.com/blog/
+        if link is None:
+            link = posixpath.dirname(url.rstrip("/")) + "/"
+            logger.info('No site link found in feed xml, falling back to: {}'.format(link))
+        else:
+            logger.info('Site link found in feed xml: {}'.format(link))
+
+        task = tasks.fetch_feed.delay(link)
         html_resp = task.get()
         # If this isn't found then query the base_url: site.com/feed -> site.com
         if html_resp["status"] != 200:
+            logger.info('Failed to fetch: {}, reverting to {}'.format(link, base_url))
             task = tasks.fetch_feed.delay(base_url)
             html_resp = task.get()
 
