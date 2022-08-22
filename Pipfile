@@ -38,6 +38,7 @@ bleach = "*"
 httpx = "*"
 django-allauth = "*"
 pillow = "*"
+lxml = "*"
 
 [pipenv]
 allow_prereleases = true
