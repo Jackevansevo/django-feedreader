@@ -223,25 +223,151 @@ def check_favicon(path):
     return ImageFile(io.BytesIO(resp.read()), name=f"{parsed.netloc}-favicon{ext}")
 
 
-def find_links_in_feed(et):
-    root = et.getroot()
-    nsmap = root.nsmap
-    if root.tag == 'rss':
-        links = et.find('channel').iterfind('link')
-        return [{'href': link.text for link in links}]
-    else:
-        links = et.iterfind('link', namespaces=nsmap)
+def parse(resp):
+    # Would it be better to dispatch to child classes via Parser instead of
+    # returning the child class?
+    parser = Parser(resp)
+    if parser.root.tag == "rss":
+        return RSSParser(resp)
+    elif parser.root.tag.endswith("feed"):
+        return AtomParser(resp)
+    elif parser.root.tag.endswith("RDF"):
+        return RDFParser(resp)
 
-    return [link.attrib for link in links]
+
+class Parser:
+
+    # TODO Can namespace stuff be avoided?
+
+    # TODO Test against a wide variety of inputs
+
+    # This should just be a convenient mechanism to query for data in RSS/XML
+    # that's feed type agnostic.
+
+    # TODO Hopefully there won't be any issues between versions????
+
+    def __init__(self, content):
+        xml_parser = etree.XMLParser(recover=True)
+        self.et = etree.parse(io.BytesIO(content), parser=xml_parser)
+        self.root = self.et.getroot()
+        self.nsmap = self.root.nsmap
+
+    def subtitle(self):
+        # Alias for subtitle
+        return self.description()
+
+
+class RSSParser(Parser):
+    def __init__(self, content):
+        self.type = "rss"
+        super().__init__(content)
+
+    def title(self):
+        return self.et.find("channel", namespaces=self.nsmap).findtext(
+            "title", namespaces=self.nsmap
+        )
+
+    def description(self):
+        return self.et.find("channel", namespaces=self.nsmap).findtext(
+            "description", namespaces=self.nsmap
+        )
+
+    def author(self):
+        raise NotImplemented
+
+    def links(self):
+        links = self.et.find("channel", namespaces=self.nsmap).iterfind(
+            "link", namespaces=self.nsmap
+        )
+        return [{"href": link.text for link in links}]
+
+    def _parse_entry(self, raw_entry):
+        entry = {}
+        for element in raw_entry:
+            match element.tag:
+                case "title" | "guid" | "description" | "pubDate" | "link":
+                    entry[element.tag] = element.text
+                case _:
+                    if "content" in element.tag:
+                        entry["content"] = element.text
+
+        return entry
+
+    def entries(self):
+        return [
+            self._parse_entry(entry)
+            for entry in self.et.find("channel", namespaces=self.nsmap).iterfind("item", namespaces=self.nsmap)
+        ]
+
+
+class AtomParser(Parser):
+    def __init__(self, content):
+        self.type = "atom"
+        super().__init__(content)
+
+    def title(self):
+        return self.et.findtext("title", namespaces=self.nsmap)
+
+    def description(self):
+        return self.et.findtext("subtitle", namespaces=self.nsmap)
+
+    def author(self):
+        author_tag = self.et.find("author", namespaces=self.nsmap)
+
+        if author_tag is not None:
+            name_tag = author_tag.find("name", namespaces=self.nsmap)
+            if name_tag is not None:
+                author["name"] = name_tag.text
+
+            email_tag = author_tag.find("name", namespaces=self.nsmap)
+            if email_tag is not None:
+                author["email"] = email_tag.text
+
+            return author
+
+    def links(self):
+        return [link.attrib for link in self.et.iterfind("link", namespaces=self.nsmap)]
+
+    def _parse_entry(self, raw_entry):
+        entry = {}
+        for element in raw_entry:
+            # TODO This is awful: Figure out how to deal with weird namespace
+            # prefix '{http://www.w3.org/2005/Atom}title'
+            if "}" in element.tag:
+                tag = element.tag.split("}")[0]
+            else:
+                tag = element.tag
+
+            match tag:
+                case "title" | "guid" | "description" | "updated" | "id":
+                    entry[element.tag] = element.text
+                case 'link':
+                    entry[element.tag] = element.get('href')
+                case _:
+                    if "content" in element.tag:
+                        entry["content"] = element.text
+
+        return entry
+
+    def entries(self):
+        return [
+            self._parse_entry(entry)
+            for entry in self.et.iterfind("entry", namespaces=self.nsmap)
+        ]
+
+class RDFParser(RSSParser):
+    def __init__(self, content):
+        self.type = "rdf"
+        super().__init__(content)
 
 
 def get_feed_link(url, links):
     for link in links:
-        if link.get('rel') == 'alternate' and link.get('type') == 'text/html':
-            return urljoin(url, link.get('href'))
+        if link.get("rel") == "alternate" and link.get("type") == "text/html":
+            return urljoin(url, link.get("href"))
 
     for link in links:
-        return urljoin(url, link.get('href'))
+        return urljoin(url, link.get("href"))
 
 
 def crawl_url(url: str):
@@ -287,27 +413,28 @@ def crawl_url(url: str):
 
     # TODO Custom parser maybe????
 
-    parser = etree.XMLParser(recover=True)
-    et = etree.parse(io.BytesIO(resp['body']), parser=parser)
+    parser = parse(resp["body"])
 
     if html_resp is None:
 
-        parsed_links = find_links_in_feed(et)
+        parsed_links = parser.links()
         # Use the most appropriate link
-        link = get_feed_link(resp['url'], parsed_links)
+        link = get_feed_link(resp["url"], parsed_links)
         # Fall back to using the base url:
         # i.e: site.com/blog/index.xml -> site.com/blog/
         if link is None:
             link = posixpath.dirname(url.rstrip("/")) + "/"
-            logger.info('No site link found in feed xml, falling back to: {}'.format(link))
+            logger.info(
+                "No site link found in feed xml, falling back to: {}".format(link)
+            )
         else:
-            logger.info('Site link found in feed xml: {}'.format(link))
+            logger.info("Site link found in feed xml: {}".format(link))
 
         task = tasks.fetch_feed.delay(link)
         html_resp = task.get()
         # If this isn't found then query the base_url: site.com/feed -> site.com
         if html_resp["status"] != 200:
-            logger.info('Failed to fetch: {}, reverting to {}'.format(link, base_url))
+            logger.info("Failed to fetch: {}, reverting to {}".format(link, base_url))
             task = tasks.fetch_feed.delay(base_url)
             html_resp = task.get()
 
