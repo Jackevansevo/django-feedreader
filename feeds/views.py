@@ -27,6 +27,7 @@ from django.views.generic.detail import DetailView
 from django.views.generic.edit import CreateView, DeleteView
 
 import feeds.parser as parser
+import feeds.crawler as crawler
 import feeds.tasks as tasks
 
 from .forms import CategoryForm, OPMLUploadForm, SignUpForm, SubscriptionForm
@@ -416,10 +417,10 @@ def discover(request: HttpRequest) -> HttpResponse:
             except Feed.DoesNotExist:
                 logger.info("Crawling web for {}".format(search_term))
                 try:
-                    resp = parser.crawl_url(search_term)
+                    resp = crawler.crawl_url(search_term)
                     if resp is not None:
                         logger.info("Parsing resp: {}".format(search_term))
-                        feed = parser.ingest_feed(resp, search_term)
+                        feed = crawler.ingest_feed(resp, search_term)
                         logger.info("Parsed: {}".format(search_term))
                         if feed is not None:
                             feeds = [feed]
