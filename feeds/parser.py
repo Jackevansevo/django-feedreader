@@ -1,10 +1,10 @@
+import io
 import posixpath
 from datetime import datetime
 from urllib.parse import urljoin, urlparse
 
 import bleach
 import dateutil.parser
-import feedparser
 from bs4 import BeautifulSoup
 from django.core.exceptions import ValidationError
 from django.core.validators import URLValidator
@@ -100,13 +100,22 @@ def parse(resp):
 
     match root_tag:
         case "rss":
-            return RSSParser(et)
+            parser = RSSParser(et)
         case "feed":
-            return AtomParser(et)
+            parser = AtomParser(et)
         case "RDF":
-            return RDFParser(et)
+            parser = RDFParser(et)
         case "_":
             raise NotImplementedError(f"Not able to parse {root_tag}")
+
+    # TODO Do we want to save some of these attributes in slots in a class
+    return {
+        "link": parser.link(),
+        "title": parser.title(),
+        "subtitle": parser.description(),
+        "author": parser.author(),
+        "entries": parser.entries(),
+    }
 
 
 def parse_author_text(text):
@@ -130,7 +139,7 @@ class RSSParser:
         return self.channel.findtext("title", namespaces=self.nsmap)
 
     def description(self):
-        return self.et.channel.findtext("description", namespaces=self.nsmap)
+        return self.channel.findtext("description", namespaces=self.nsmap)
 
     def author(self):
         author = {}
@@ -189,7 +198,6 @@ class AtomParser:
         self.et = et
         self.root = self.et.getroot()
         self.nsmap = self.root.nsmap
-        self.channel = self.et.find("channel")
 
     def title(self):
         return self.et.findtext("title", namespaces=self.nsmap)
@@ -282,16 +290,16 @@ class RDFParser(RSSParser):
 
 
 def parse_feed(resp):
-    parsed = feedparser.parse(resp["body"])
+    parsed = parse(io.BytesIO(resp["body"]))
 
-    if parsed.entries == []:
+    if parsed["entries"] == []:
         return None, None
 
     feed = {"last_checked": timezone.now(), "url": resp["url"]}
 
     base_url = urlparse(resp["url"])._replace(path="").geturl()
 
-    link = parsed.feed.get("link")
+    link = parsed.get("link")
     if link:
         u = urlparse(link)
         # Remove any query params, and double slashes
@@ -306,17 +314,15 @@ def parse_feed(resp):
     else:
         feed["link"] = base_url
 
-    title = parsed.feed.get("title")
+    title = parsed.get("title")
     if title:
         feed["title"] = title
     else:
         feed["title"] = base_url.lstrip("www.")
 
-    if subtitle := parsed.feed.get("subtitle"):
+    if subtitle := parsed.get("subtitle"):
         if subtitle != "":
             feed["subtitle"] = subtitle
-
-    # https://feedparser.readthedocs.io/en/latest/http-etag.html
 
     headers = resp["headers"]
 
@@ -332,12 +338,14 @@ def parse_feed(resp):
     if headers.get("last-modified"):
         feed["last_modified"] = dateutil.parser.parse(headers["last-modified"])
 
-    return feed, parsed.entries
+    return feed, parsed["entries"]
 
 
 def parse_feed_entry(entry, feed):
 
-    if hasattr(entry, "content"):
+    # TODO update parse to parse descriptions and publish dates properly
+
+    if entry.get("content"):
         content = entry.content[0]["value"]
     else:
         content = None

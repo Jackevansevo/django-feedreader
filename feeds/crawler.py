@@ -182,11 +182,11 @@ def crawl_url(url: str):
 
     # TODO Custom parser maybe????
 
-    xml_parser = parser.parse(io.BytesIO(resp["body"]))
+    parsed = parser.parse(io.BytesIO(resp["body"]))
 
     if html_resp is None:
 
-        parsed_link = xml_parser.link()
+        parsed_link = parsed.get("link")
         # Use the most appropriate link
         link = urljoin(resp["url"], parsed_link)
         # Fall back to using the base url:
