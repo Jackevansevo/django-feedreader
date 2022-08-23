@@ -257,29 +257,55 @@ class Parser:
         return self.description()
 
 
+def parse_author_text(text):
+    try:
+        email, name = text.split(" ", maxsplit=1)
+    except ValueError:
+        # TODO Should we validate check this is an email and not a name?
+        return {"email": text}
+    else:
+        return {"name": name, "email": email}
+
+
 class RSSParser(Parser):
     def __init__(self, content):
         self.type = "rss"
         super().__init__(content)
+        self.channel = self.et.find("channel", namespaces=self.nsmap)
 
     def title(self):
-        return self.et.find("channel", namespaces=self.nsmap).findtext(
-            "title", namespaces=self.nsmap
-        )
+        return self.channel.findtext("title", namespaces=self.nsmap)
 
     def description(self):
-        return self.et.find("channel", namespaces=self.nsmap).findtext(
-            "description", namespaces=self.nsmap
-        )
+        return self.et.channel.findtext("description", namespaces=self.nsmap)
 
     def author(self):
-        raise NotImplemented
+        author = {}
 
-    def links(self):
-        links = self.et.find("channel", namespaces=self.nsmap).iterfind(
-            "link", namespaces=self.nsmap
-        )
-        return [{"href": link.text for link in links}]
+        if "itunes" in self.nsmap:
+            itunes_tag = self.channel.find("itunes:owner", namespaces=self.nsmap)
+            if itunes_tag is not None:
+                name_text = itunes_tag.findtext("itunes:name", namespaces=self.nsmap)
+                if name_text:
+                    author["name"] = name_text
+
+                email_text = itunes_tag.findtext("itunes:email", namespaces=self.nsmap)
+                if email_text:
+                    author["email"] = email_text
+
+                return author
+
+        if self.root.get("version") == "2.0":
+            managing_editor_text = self.channel.findtext(
+                "managingEditor", namespaces=self.nsmap
+            )
+            if managing_editor_text:
+                return parse_author_text(managing_editor_text)
+
+        return
+
+    def link(self):
+        return self.channel.findtext("link", namespaces=self.nsmap)
 
     def _parse_entry(self, raw_entry):
         entry = {}
@@ -296,7 +322,7 @@ class RSSParser(Parser):
     def entries(self):
         return [
             self._parse_entry(entry)
-            for entry in self.et.find("channel", namespaces=self.nsmap).iterfind("item", namespaces=self.nsmap)
+            for entry in self.channel.iterfind("item", namespaces=self.nsmap)
         ]
 
 
@@ -312,21 +338,49 @@ class AtomParser(Parser):
         return self.et.findtext("subtitle", namespaces=self.nsmap)
 
     def author(self):
+
+        author = {}
+
         author_tag = self.et.find("author", namespaces=self.nsmap)
 
         if author_tag is not None:
-            name_tag = author_tag.find("name", namespaces=self.nsmap)
-            if name_tag is not None:
-                author["name"] = name_tag.text
+            name_text = author_tag.findtext("name", namespaces=self.nsmap)
+            if name_text:
+                author["name"] = name_text
 
-            email_tag = author_tag.find("name", namespaces=self.nsmap)
-            if email_tag is not None:
-                author["email"] = email_tag.text
+            email_text = author_tag.findtext("email", namespaces=self.nsmap)
+            if email_text:
+                author["email"] = email_text
 
             return author
 
-    def links(self):
-        return [link.attrib for link in self.et.iterfind("link", namespaces=self.nsmap)]
+    def link(self):
+        links = self.et.findall("link", namespaces=self.nsmap)
+
+        # TODO would it be better to build a dictionary here?
+
+        for link in links:
+            # Return the best matching link
+            if link.get("rel") == "alternate" and link.get("type") == "text/html":
+                return link.get("href")
+
+        for link in links:
+            if link.get("rel") == "alternate":
+                return link.get("href")
+
+        for link in links:
+            if link.get("rel") == "self" or link.get("rel") == "hub":
+                continue
+
+            href = link.get("href")
+            if href is not None:
+                return href
+            else:
+                return link.text
+
+        id_text = self.et.findtext("id", namespaces=self.nsmap)
+        if id_text is not None and is_valid_url(id_text):
+            return id_text
 
     def _parse_entry(self, raw_entry):
         entry = {}
@@ -341,8 +395,8 @@ class AtomParser(Parser):
             match tag:
                 case "title" | "guid" | "description" | "updated" | "id":
                     entry[element.tag] = element.text
-                case 'link':
-                    entry[element.tag] = element.get('href')
+                case "link":
+                    entry[element.tag] = element.get("href")
                 case _:
                     if "content" in element.tag:
                         entry["content"] = element.text
@@ -355,10 +409,17 @@ class AtomParser(Parser):
             for entry in self.et.iterfind("entry", namespaces=self.nsmap)
         ]
 
+
 class RDFParser(RSSParser):
     def __init__(self, content):
         self.type = "rdf"
         super().__init__(content)
+
+    def author(self):
+        if self.nsmap.get("dc") == "http://purl.org/dc/elements/1.1/":
+            creator_text = self.channel.findtext("dc:creator", namespaces=self.nsmap)
+            if creator_text:
+                return parse_author_text(creator_text)
 
 
 def get_feed_link(url, links):
