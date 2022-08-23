@@ -1,4 +1,4 @@
-import io
+import posixpath
 from datetime import datetime
 from urllib.parse import urljoin, urlparse
 
@@ -15,6 +15,9 @@ from lxml import etree
 from unidecode import unidecode
 
 from feeds.models import Entry
+
+XML_PARSER = etree.XMLParser(recover=True, remove_comments=True)
+
 
 BLEACH_ALLOWED_TAGS = [
     "a",
@@ -90,37 +93,20 @@ def is_valid_url(query: str):
 
 
 def parse(resp):
-    # Would it be better to dispatch to child classes via Parser instead of
-    # returning the child class?
-    parser = Parser(resp)
-    if parser.root.tag == "rss":
-        return RSSParser(resp)
-    elif parser.root.tag.endswith("feed"):
-        return AtomParser(resp)
-    elif parser.root.tag.endswith("RDF"):
-        return RDFParser(resp)
 
+    et = etree.parse(resp, parser=XML_PARSER)
 
-class Parser:
+    root_tag = et.getroot().tag
 
-    # TODO Can namespace stuff be avoided?
-
-    # TODO Test against a wide variety of inputs
-
-    # This should just be a convenient mechanism to query for data in RSS/XML
-    # that's feed type agnostic.
-
-    # TODO Hopefully there won't be any issues between versions????
-
-    def __init__(self, content):
-        xml_parser = etree.XMLParser(recover=True)
-        self.et = etree.parse(io.BytesIO(content), parser=xml_parser)
-        self.root = self.et.getroot()
-        self.nsmap = self.root.nsmap
-
-    def subtitle(self):
-        # Alias for subtitle
-        return self.description()
+    match root_tag:
+        case "rss":
+            return RSSParser(et)
+        case "feed":
+            return AtomParser(et)
+        case "RDF":
+            return RDFParser(et)
+        case "_":
+            raise NotImplementedError(f"Not able to parse {root_tag}")
 
 
 def parse_author_text(text):
@@ -133,11 +119,12 @@ def parse_author_text(text):
         return {"name": name, "email": email}
 
 
-class RSSParser(Parser):
-    def __init__(self, content):
-        self.type = "rss"
-        super().__init__(content)
-        self.channel = self.et.find("channel", namespaces=self.nsmap)
+class RSSParser:
+    def __init__(self, et):
+        self.et = et
+        self.root = self.et.getroot()
+        self.nsmap = self.root.nsmap
+        self.channel = self.et.find("channel")
 
     def title(self):
         return self.channel.findtext("title", namespaces=self.nsmap)
@@ -177,11 +164,16 @@ class RSSParser(Parser):
         entry = {}
         for element in raw_entry:
             match element.tag:
-                case "title" | "guid" | "description" | "pubDate" | "link":
+                case "title" | "guid" | "description" | "link":
                     entry[element.tag] = element.text
+                case "pubDate":
+                    entry["published"] = element.text
                 case _:
-                    if "content" in element.tag:
-                        entry["content"] = element.text
+                    try:
+                        if "content" in element.tag:
+                            entry["content"] = element.text
+                    except Exception:
+                        breakpoint()
 
         return entry
 
@@ -192,10 +184,12 @@ class RSSParser(Parser):
         ]
 
 
-class AtomParser(Parser):
-    def __init__(self, content):
-        self.type = "atom"
-        super().__init__(content)
+class AtomParser:
+    def __init__(self, et):
+        self.et = et
+        self.root = self.et.getroot()
+        self.nsmap = self.root.nsmap
+        self.channel = self.et.find("channel")
 
     def title(self):
         return self.et.findtext("title", namespaces=self.nsmap)
@@ -277,9 +271,8 @@ class AtomParser(Parser):
 
 
 class RDFParser(RSSParser):
-    def __init__(self, content):
-        self.type = "rdf"
-        super().__init__(content)
+    def __init__(self, et):
+        super().__init__(et)
 
     def author(self):
         if self.nsmap.get("dc") == "http://purl.org/dc/elements/1.1/":

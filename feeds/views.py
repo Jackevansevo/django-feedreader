@@ -26,8 +26,8 @@ from django.utils import timezone
 from django.views.generic.detail import DetailView
 from django.views.generic.edit import CreateView, DeleteView
 
-import feeds.parser as parser
 import feeds.crawler as crawler
+import feeds.parser as parser
 import feeds.tasks as tasks
 
 from .forms import CategoryForm, OPMLUploadForm, SignUpForm, SubscriptionForm

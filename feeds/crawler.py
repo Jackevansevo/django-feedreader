@@ -182,7 +182,7 @@ def crawl_url(url: str):
 
     # TODO Custom parser maybe????
 
-    xml_parser = parser.parse(resp["body"])
+    xml_parser = parser.parse(io.BytesIO(resp["body"]))
 
     if html_resp is None:
 
