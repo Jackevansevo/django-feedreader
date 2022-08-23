@@ -1,3 +1,4 @@
 data/
 .git
 docker-compose.yml
+examples/
