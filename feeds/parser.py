@@ -96,17 +96,20 @@ def parse(resp):
 
     et = etree.parse(resp, parser=XML_PARSER)
 
-    root_tag = et.getroot().tag
+    root = et.getroot()
 
-    match root_tag:
+    match root.tag:
         case "rss":
             parser = RSSParser(et)
-        case "feed":
-            parser = AtomParser(et)
         case "RDF":
             parser = RDFParser(et)
-        case "_":
-            raise NotImplementedError(f"Not able to parse {root_tag}")
+        case _:
+            if root.nsmap.get(
+                None
+            ) == "http://www.w3.org/2005/Atom" and root.tag.endswith("feed"):
+                parser = AtomParser(et)
+            else:
+                raise NotImplementedError(f"Not able to parse {root.tag}")
 
     # TODO Do we want to save some of these attributes in slots in a class
     return {
@@ -173,16 +176,15 @@ class RSSParser:
         entry = {}
         for element in raw_entry:
             match element.tag:
-                case "title" | "guid" | "description" | "link":
+                case "title" | "guid" | "link" | "content":
                     entry[element.tag] = element.text
                 case "pubDate":
                     entry["published"] = element.text
+                case "description":
+                    entry["summary"] = element.text
                 case _:
-                    try:
-                        if "content" in element.tag:
-                            entry["content"] = element.text
-                    except Exception:
-                        breakpoint()
+                    if element.prefix == "content":
+                        entry["content"] = element.text
 
         return entry
 
@@ -256,15 +258,15 @@ class AtomParser:
             # TODO This is awful: Figure out how to deal with weird namespace
             # prefix '{http://www.w3.org/2005/Atom}title'
             if "}" in element.tag:
-                tag = element.tag.split("}")[0]
+                tag = element.tag.split("}")[1]
             else:
                 tag = element.tag
 
             match tag:
-                case "title" | "guid" | "description" | "updated" | "id":
-                    entry[element.tag] = element.text
+                case "title" | "guid" | "updated" | "id" | "published" | "updated" | "summary":
+                    entry[tag] = element.text
                 case "link":
-                    entry[element.tag] = element.get("href")
+                    entry[tag] = element.get("href")
                 case _:
                     if "content" in element.tag:
                         entry["content"] = element.text
@@ -345,15 +347,8 @@ def parse_feed_entry(entry, feed):
 
     # TODO update parse to parse descriptions and publish dates properly
 
-    if entry.get("content"):
-        content = entry.content[0]["value"]
-    else:
-        content = None
-
+    content = entry.get("content")
     summary = entry.get("summary")
-
-    if not content and not summary:
-        return None
 
     if not content and summary:
         content = summary
@@ -381,8 +376,8 @@ def parse_feed_entry(entry, feed):
         slug = slugify(unidecode(title))
 
     if not slug:
-        if hasattr(entry, "link"):
-            slug = slugify(urlparse(entry.link).path)
+        if entry.get("link"):
+            slug = slugify(urlparse(entry["link"]).path)
         else:
             return None
 
@@ -430,9 +425,9 @@ def parse_feed_entry(entry, feed):
         content = str(soup)
 
     published = None
-    if hasattr(entry, "published"):
+    if entry.get("published"):
         try:
-            published = dateutil.parser.parse(entry.published)
+            published = dateutil.parser.parse(entry["published"])
         except dateutil.parser.ParserError:
             try:
                 published = datetime.strptime(entry["published"], "%d %b %Y %Z")
@@ -440,9 +435,9 @@ def parse_feed_entry(entry, feed):
                 return None
 
     updated = None
-    if hasattr(entry, "updated"):
+    if entry.get("updated"):
         try:
-            updated = dateutil.parser.parse(entry.updated)
+            updated = dateutil.parser.parse(entry["updated"])
         except dateutil.parser.ParserError:
             try:
                 updated = datetime.strptime(entry["updated"], "%d %b %Y %Z")
@@ -454,20 +449,19 @@ def parse_feed_entry(entry, feed):
         published = updated
 
     guid = None
-    if hasattr(entry, "guid"):
-        if not (hasattr(entry, "guidislink") and entry.guidislink):
-            guid = entry.guid
+    if entry.get("guid"):
+        guid = entry["guid"]
 
     return Entry(
         feed=feed,
         thumbnail=thumbnail,
         title=title,
         slug=slug,
-        link=urljoin(feed.link, entry.link) if hasattr(entry, "link") else None,
+        link=urljoin(feed.link, entry["link"]) if entry.get("link") else None,
         published=published,
         updated=updated,
         content=content,
-        author=entry.author if hasattr(entry, "author") else None,
+        author=entry["author"] if entry.get("author") else None,
         summary=summary,
         guid=guid,
     )
