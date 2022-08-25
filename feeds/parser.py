@@ -412,7 +412,7 @@ def parse_feed_entry(entry, feed):
         # TODO Strip any html from this, or figure out a better mechanism to
         # have blank titles
         # Example feed https://justtesting.org/rss
-        title = strip_tags(content[:300])
+        title = slug
 
     feed_parsed = urlparse(feed.url)
 
