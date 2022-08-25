@@ -161,11 +161,15 @@ def crawl_url(url: str):
     html_resp = None
 
     # If we acually got back HTML
-    if not url.endswith(".xml") and "html" in resp["headers"].get("content-type"):
+
+    # TODO Can we trust headers to be included? Do we need to inspect the contents
+    if "html" in resp["headers"].get("content-type"):
+        # TODO should we prefer atom over rss? What if they find both?
+        # TOOD if this fails the response type is probably not valid HTML ...
+        soup = BeautifulSoup(resp["body"], features="html.parser")
+
         logger.info("{} returned HTML response".format(url))
         html_resp = resp
-        # TODO should we prefer atom over rss? What if they find both?
-        soup = BeautifulSoup(resp["body"], features="html.parser")
 
         rss_link = find_rss_link(soup)
 
