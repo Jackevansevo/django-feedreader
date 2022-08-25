@@ -372,14 +372,11 @@ def parse_feed_entry(entry, feed):
     title = entry.get("title")
 
     slug = None
-    if title:
-        slug = slugify(unidecode(title))
 
-    if not slug:
-        if entry.get("link"):
-            slug = slugify(urlparse(entry["link"]).path)
-        else:
-            return None
+    if entry.get("link"):
+        slug = urlparse(entry["link"].rstrip("/")).path.rsplit("/", 1)[-1]
+    else:
+        slug = slugify(unidecode(title))
 
     if not title:
         # TODO Strip any html from this, or figure out a better mechanism to
