@@ -1,7 +1,8 @@
 import io
 import posixpath
-from datetime import datetime
+from datetime import datetime, timedelta
 from urllib.parse import urljoin, urlparse
+import httpx
 
 import bleach
 import dateutil.parser
@@ -13,6 +14,7 @@ from django.utils.html import strip_tags
 from django.utils.text import slugify
 from lxml import etree
 from unidecode import unidecode
+import feeds.tasks as tasks
 
 from feeds.models import Entry
 
@@ -92,9 +94,15 @@ def is_valid_url(query: str):
         return True
 
 
-def parse(resp):
+def parse(f):
 
-    et = etree.parse(resp, parser=XML_PARSER)
+    if isinstance(f, str) and is_valid_url(f):
+        resp = httpx.get(
+            f, follow_redirects=True, headers={"User-Agent": tasks.USER_AGENT}
+        )
+        f = io.BytesIO(resp.content)
+
+    et = etree.parse(f, parser=XML_PARSER)
 
     root = et.getroot()
 
@@ -112,13 +120,20 @@ def parse(resp):
                 raise NotImplementedError(f"Not able to parse {root.tag}")
 
     # TODO Do we want to save some of these attributes in slots in a class
-    return {
+    attributes = {
         "link": parser.link(),
         "title": parser.title(),
         "subtitle": parser.description(),
         "author": parser.author(),
         "entries": parser.entries(),
     }
+
+    if isinstance(parser, RSSParser):
+        ttl = parser.ttl()
+        if ttl is not None:
+            attributes["ttl"] = ttl
+
+    return attributes
 
 
 def parse_author_text(text):
@@ -143,6 +158,11 @@ class RSSParser:
 
     def description(self):
         return self.channel.findtext("description", namespaces=self.nsmap)
+
+    def ttl(self):
+        ttl = self.channel.findtext("ttl", namespaces=self.nsmap)
+        if ttl is not None:
+            return timedelta(minutes=int(ttl))
 
     def author(self):
         author = {}
