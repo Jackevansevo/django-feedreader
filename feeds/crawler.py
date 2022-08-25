@@ -79,7 +79,8 @@ def find_rss_link(soup):
 
 
 def find_common_extensions(parsed_url):
-    url = parsed_url.geturl()
+
+    orig = parsed_url
 
     common_extensions = (
         "feed.xml",
@@ -92,18 +93,32 @@ def find_common_extensions(parsed_url):
         "feed.atom",
     )
 
+    # Horrific
+
+    last_part = parsed_url.path.rsplit("/", 1)[-1]
+    if last_part in common_extensions:
+        parsed_url = parsed_url._replace(
+            path=parsed_url.path.replace(last_part, "").rstrip("/")
+        )
+
+    url = parsed_url.geturl()
+
     possible_locations = []
 
     # If we have a path i.e. site.com/blog check:
     # - site.com/blog/feed
     # - site.com/blog/index.xml
-    if parsed_url.path:
+    if parsed_url.path.rstrip("/"):
         path = parsed_url._replace(path="").geturl()
         for extention in common_extensions:
-            possible_locations.append(posixpath.join(path, extention))
+            new_loc = posixpath.join(path, extention)
+            if new_loc != orig.geturl():
+                possible_locations.append(new_loc)
 
     for extention in common_extensions:
-        possible_locations.append(posixpath.join(url, extention))
+        new_loc = posixpath.join(url, extention)
+        if new_loc != orig.geturl():
+            possible_locations.append(new_loc)
 
     return possible_locations
 

@@ -1,3 +1,4 @@
+import os
 import io
 import posixpath
 import re
@@ -404,7 +405,9 @@ def parse_feed_entry(entry, feed):
     slug = None
 
     if entry.get("link"):
-        slug = urlparse(entry["link"].rstrip("/")).path.rsplit("/", 1)[-1]
+        slug = os.path.splitext(
+            urlparse(entry["link"].rstrip("/")).path.rsplit("/", 1)[-1]
+        )[0]
     else:
         slug = slugify(unidecode(title))
 
