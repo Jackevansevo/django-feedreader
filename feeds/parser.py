@@ -1,11 +1,12 @@
 import io
 import posixpath
+import re
 from datetime import datetime, timedelta
 from urllib.parse import urljoin, urlparse
-import httpx
 
 import bleach
 import dateutil.parser
+import httpx
 from bs4 import BeautifulSoup
 from django.core.exceptions import ValidationError
 from django.core.validators import URLValidator
@@ -14,8 +15,8 @@ from django.utils.html import strip_tags
 from django.utils.text import slugify
 from lxml import etree
 from unidecode import unidecode
-import feeds.tasks as tasks
 
+import feeds.tasks as tasks
 from feeds.models import Entry
 
 XML_PARSER = etree.XMLParser(recover=True, remove_comments=True)
@@ -94,6 +95,10 @@ def is_valid_url(query: str):
         return True
 
 
+class ParseException(Exception):
+    pass
+
+
 def parse(f):
 
     if isinstance(f, str) and is_valid_url(f):
@@ -106,18 +111,23 @@ def parse(f):
 
     root = et.getroot()
 
-    match root.tag:
+    if root is None:
+        raise ParseException("missing root tag")
+
+    if "}" in root.tag:
+        root_tag = root.tag.split("}")[1]
+    else:
+        root_tag = root.tag
+
+    match root_tag:
         case "rss":
             parser = RSSParser(et)
         case "RDF":
             parser = RDFParser(et)
+        case "feed":
+            parser = AtomParser(et)
         case _:
-            if root.nsmap.get(
-                None
-            ) == "http://www.w3.org/2005/Atom" and root.tag.endswith("feed"):
-                parser = AtomParser(et)
-            else:
-                raise NotImplementedError(f"Not able to parse {root.tag}")
+            breakpoint()
 
     # TODO Do we want to save some of these attributes in slots in a class
     attributes = {
@@ -151,7 +161,7 @@ class RSSParser:
         self.et = et
         self.root = self.et.getroot()
         self.nsmap = self.root.nsmap
-        self.channel = self.et.find("channel")
+        self.channel = self.et.find("channel", namespaces=self.nsmap)
 
     def title(self):
         return self.channel.findtext("title", namespaces=self.nsmap)
