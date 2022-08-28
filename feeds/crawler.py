@@ -157,8 +157,9 @@ async def check_favicon(client, path):
     return ImageFile(io.BytesIO(resp.read()), name=f"{parsed.netloc}-favicon{ext}")
 
 
-async def crawl(client, url):
-    return await Crawler(client, url).crawl()
+async def crawl(url):
+    async with httpx.AsyncClient() as client:
+        return await Crawler(client, url).crawl()
 
 
 class Crawler:

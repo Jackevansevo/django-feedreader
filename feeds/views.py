@@ -7,7 +7,6 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.contrib.postgres.search import SearchVector
 from django.core.cache import cache
 from django.core.paginator import Paginator
 from django.db import IntegrityError
@@ -16,7 +15,6 @@ from django.http import (
     Http404,
     HttpRequest,
     HttpResponse,
-    HttpResponseBadRequest,
     HttpResponseNotFound,
     JsonResponse,
 )
@@ -199,54 +197,6 @@ def import_opml_feeds(request: HttpRequest) -> HttpResponse:
     return render(request, "feeds/import_feeds.html", data)
 
 
-def feed_search(request: HttpRequest):
-    """Searches for existing feeds"""
-
-    try:
-        search_term = request.GET["q"]
-    except KeyError:
-        return HttpResponseBadRequest(
-            f"Missing required search term {request.path}?q=term"
-        )
-
-    # If the search term is a URL we need to strip the scheme
-    # I..e if 'http://site/index.xml' is entered instead of 'http://site/index.xml'
-    # We want to match on just 'site/index.xml'
-
-    is_url = parser.is_valid_url(search_term)
-
-    # First attempt to lookup pre-existing/similar feeds
-    feeds = (
-        Feed.objects.prefetch_related("entries")
-        .annotate(
-            search=SearchVector("title", "url", "link"),
-            subscribed=Exists(Subscription.objects.filter(feed=OuterRef("pk"))),
-        )
-        .filter(search=parser.strip_scheme(search_term) if is_url else search_term)
-    )
-
-    return JsonResponse(
-        [
-            {
-                "title": feed.title,
-                "subtitle": feed.subtitle,
-                "subscribed": getattr(feed, "subscribed", None),
-                "links": {
-                    "internal": feed.get_absolute_url(),
-                    "external": feed.link,
-                    "rss": feed.url,
-                },
-                "entries": [
-                    {"title": entry.title, "link": entry.get_absolute_url()}
-                    for entry in feed.entries.all()[:3]
-                ],
-            }
-            for feed in feeds
-        ],
-        safe=False,
-    )
-
-
 @login_required
 def search(request: HttpRequest):
     search_term = request.GET.get("q")
@@ -418,7 +368,7 @@ def discover(request: HttpRequest) -> HttpResponse:
             except Feed.DoesNotExist:
                 logger.info("Crawling web for {}".format(search_term))
                 try:
-                    sync_crawl_url = async_to_sync(crawler.crawl_url)
+                    sync_crawl_url = async_to_sync(crawler.crawl)
                     resp, parsed, favicon = sync_crawl_url(search_term)
                     if resp is not None:
                         logger.info("Parsing resp: {}".format(search_term))
