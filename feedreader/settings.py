@@ -11,7 +11,6 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 """
 import os
 import socket
-from datetime import timedelta
 from pathlib import Path
 
 import environ
@@ -96,7 +95,6 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "django.contrib.humanize",
     "django_celery_beat",
-    "django.contrib.postgres",
     "allauth",
     "allauth.account",
     "allauth.socialaccount",
@@ -181,7 +179,10 @@ WSGI_APPLICATION = "feedreader.wsgi.application"
 
 
 DATABASES = {
-    "default": env.db_url(default="postgres://postgres:postgres@db:5432/postgres")
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": BASE_DIR / "db.sqlite3",
+    }
 }
 
 # Password validation
@@ -234,20 +235,3 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 
 CSRF_TRUSTED_ORIGINS = [f"https://{HOSTNAME}"]
-
-if not DEBUG:
-    CACHES = {
-        "default": {
-            "BACKEND": "django.core.cache.backends.redis.RedisCache",
-            "LOCATION": os.environ.get("REDIS_URL", "redis://redis:6379/0"),
-        }
-    }
-
-CELERY_BROKER_URL = os.environ.get("REDIS_URL", "redis://redis:6379/0")
-CELERY_RESULT_BACKEND = os.environ.get("REDIS_URL", "redis://redis:6379/0")
-CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
-RESULT_EXPIRES = timedelta(hours=4)
-
-CELERY_TASK_ROUTES = {"feeds.tasks.fetch_feed": {"queue": "feeds"}}
-
-CELERY_WORKER_CANCEL_LONG_RUNNING_TASKS_ON_CONNECTION_LOSS = True

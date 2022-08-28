@@ -1,1 +1,0 @@
-docker run --rm -it --network feedreader_default --rm redis redis-cli -h feedreader_redis_1

@@ -21,6 +21,6 @@ from feeds.views import *
 user = User.objects.first()
 c = Client()
 
-with open("inoreader.xml") as f:
+with open("opml.xml") as f:
     parsed = listparser.parse(f.read())
     urls = [feed.url for feed in parsed.feeds]

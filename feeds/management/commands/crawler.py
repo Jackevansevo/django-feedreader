@@ -28,7 +28,7 @@ user = User.objects.first()
 
 
 async def crawl_url(client, url):
-    return await crawler.crawl(client, url)
+    return await crawler.Crawler(client, url).crawl()
 
 
 async def main(infile):
@@ -50,8 +50,11 @@ async def main(infile):
             ],
         )
         for result in results:
-            resp, parsed, favicon = result
-            print(resp.url, parsed["link"], favicon)
+            try:
+                resp, parsed, favicon = result
+                print(resp.url, parsed["link"], favicon)
+            except Exception:
+                breakpoint()
 
 
 class Command(BaseCommand):

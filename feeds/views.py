@@ -201,10 +201,10 @@ def import_opml_feeds(request: HttpRequest) -> HttpResponse:
 def search(request: HttpRequest):
     search_term = request.GET.get("q")
     entries = Entry.objects.prefetch_related("feed__subscriptions").filter(
-        title__search=search_term, feed__subscriptions__user=request.user
+        title__icontains=search_term, feed__subscriptions__user=request.user
     )[:100]
     subscriptions = Subscription.objects.select_related("feed").filter(
-        feed__title__search=search_term, user=request.user
+        feed__title__icontains=search_term, user=request.user
     )[:100]
     return render(
         request,
@@ -385,19 +385,17 @@ def discover(request: HttpRequest) -> HttpResponse:
                 feeds = [feed]
         else:
             # First attempt to lookup pre-existing/similar feeds
+            search_for = parser.strip_scheme(search_term) if is_url else search_term
             feeds = (
                 Feed.objects.prefetch_related("entries")
                 .annotate(
-                    search=SearchVector("title", "url"),
                     subscribed=Exists(
                         Subscription.objects.filter(
                             feed=OuterRef("pk"), user=request.user
                         )
                     ),
                 )
-                .filter(
-                    search=parser.strip_scheme(search_term) if is_url else search_term
-                )
+                .filter(title__icontains=search_for, url__icontains=search_for)
             )
             if feeds:
                 logger.info("Found existing matches for: '{}'".format(search_term))

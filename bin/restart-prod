@@ -1,3 +1,0 @@
-./scale-up-prod
-sleep 5
-./scale-down-prod

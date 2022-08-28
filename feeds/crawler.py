@@ -254,7 +254,10 @@ class Crawler:
 
             parsed_url = urlparse(url)
 
-            await self.crawl_url(url)
+            try:
+                await self.crawl_url(url)
+            except Exception:
+                breakpoint()
 
             self.crawled.add(self.sanitize_target(url))
 
