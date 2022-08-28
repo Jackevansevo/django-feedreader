@@ -52,11 +52,6 @@ def find_favicons(base_url, soup):
     for favicon_link in soup.findAll(
         "link", {"rel": re.compile(r".*icon.*"), "href": re.compile(r"^(?!data).*$")}
     ):
-        logger.info(
-            "Found favicon: {} in page body for {}".format(
-                favicon_link["href"], base_url
-            )
-        )
         favicons.append(urljoin(base_url, favicon_link["href"]))
 
     # Fall back to checking common extensions
@@ -177,12 +172,6 @@ class Crawler:
         self.html_resp = None
         self.soup = None
 
-    def __iter__(self):
-        pass
-
-    def __next__(self):
-        pass
-
     def add_target(self, target_url):
         parsed_target = urlparse(target_url)
         if parsed_target.path.endswith("/"):
@@ -192,96 +181,90 @@ class Crawler:
         if stripped not in self.crawled:
             self.targets.append(target_url)
 
+    async def crawl_url(self, client, url):
+        parsed_url = urlparse(url)
+
+        try:
+            self.crawled.add(url)
+            resp = await client.get(url, headers={"User-Agent": tasks.USER_AGENT})
+            resp.raise_for_status()
+        except httpx.HTTPError:
+            logger.error("Failed to fetch {}".format(url))
+        else:
+
+            content_type = resp.headers.get("content-type")
+
+            if (
+                content_type is not None
+                and "html" in content_type
+                and self.html_resp is None
+            ):
+                logger.info("{} returned HTML response".format(url))
+
+                self.html_resp = resp
+
+                # If we haven't scraped any HTML yet
+                if self.soup is None:
+                    self.soup = BeautifulSoup(resp, features="html.parser")
+
+                # Swap the html and feed resp
+
+                if self.feed is None:
+
+                    rss_link = find_rss_link(self.soup)
+
+                    if rss_link is not None:
+                        feed_url = urljoin(url, rss_link["href"])
+                        logger.info(
+                            "Found feed link: {} in page body of {}".format(
+                                feed_url, resp.url
+                            )
+                        )
+                        if urlparse(feed_url).netloc != parsed_url.netloc:
+                            logger.info("RSS links to different site: skipping")
+                        else:
+                            self.add_target(feed_url)
+                    else:
+                        logger.info("No feed link in page body for {}".format(url))
+                        for ext in find_common_extensions(parsed_url):
+                            self.add_target(ext)
+
+            else:
+                if self.feed is None:
+                    self.feed = parser.parse(io.BytesIO(resp.content))
+                    self.feed_resp = resp
+
+                if self.soup is None:
+                    if self.feed is not None:
+                        # Try to infer the site url from the parsed feed
+                        parsed_link = self.feed.get("link")
+                        link = urljoin(str(resp.url), parsed_link)
+                        logger.info(
+                            "Found site link: {} in parsed feed {}".format(
+                                link, resp.url
+                            )
+                        )
+                        self.add_target(link)
+                    else:
+                        if parsed_url.path:
+                            self.add_target(urlparse(url)._replace(path="").geturl())
+
+        if self.targets == [] and self.soup is None:
+            if parsed_url.path:
+                if parsed_url.path.endswith("/"):
+                    url = parsed_url._replace(path=parsed_url.path.rstrip("/")).geturl()
+                link = posixpath.dirname(url)
+                if parser.strip_scheme(link) not in self.crawled:
+                    self.add_target(link)
+
     async def crawl(self):
         async with httpx.AsyncClient(
             timeout=timeout, limits=limits, follow_redirects=True
         ) as client:
 
-            url = self.targets.pop()
-            parsed_url = urlparse(url)
-
-            try:
-                self.crawled.add(url)
-                resp = await client.get(url, headers={"User-Agent": tasks.USER_AGENT})
-            except httpx.RequestError:
-                logger.info("Failed to fetch {}".format(url))
-            else:
-                if resp.status_code == 503:
-                    logger.info("Service unavailable: {}".format(resp.url))
-                    return
-
-                content_type = resp.headers.get("content-type")
-
-                if (
-                    content_type is not None
-                    and "html" in content_type
-                    and self.html_resp is None
-                ):
-                    logger.info("{} returned HTML response".format(url))
-
-                    self.html_resp = resp
-
-                    # If we haven't scraped any HTML yet
-                    if self.soup is None:
-                        self.soup = BeautifulSoup(resp, features="html.parser")
-
-                    # Swap the html and feed resp
-
-                    if self.feed is None:
-
-                        rss_link = find_rss_link(self.soup)
-
-                        if rss_link is not None:
-                            feed_url = urljoin(url, rss_link["href"])
-                            logger.info(
-                                "Found feed link: {} in page body of {}".format(
-                                    feed_url, resp.url
-                                )
-                            )
-                            if urlparse(feed_url).netloc != parsed_url.netloc:
-                                logger.info("RSS links to different site: skipping")
-                            else:
-                                self.add_target(feed_url)
-                        else:
-                            logger.info("No feed link in page body for {}".format(url))
-                            for ext in find_common_extensions(parsed_url):
-                                self.add_target(ext)
-
-                else:
-                    if self.feed is None and resp.status_code != 404:
-                        self.feed = parser.parse(io.BytesIO(resp.content))
-                        self.feed_resp = resp
-
-                    if self.soup is None:
-                        if self.feed is not None:
-                            # Try to infer the site url from the parsed feed
-                            parsed_link = self.feed.get("link")
-                            link = urljoin(str(resp.url), parsed_link)
-                            logger.info(
-                                "Found site link: {} in parsed feed {}".format(
-                                    link, resp.url
-                                )
-                            )
-                            self.add_target(link)
-                        else:
-                            if parsed_url.path:
-                                self.add_target(
-                                    urlparse(url)._replace(path="").geturl()
-                                )
-
-            if self.targets == [] and self.soup is None:
-                if parsed_url.path:
-                    if parsed_url.path.endswith("/"):
-                        url = parsed_url._replace(
-                            path=parsed_url.path.rstrip("/")
-                        ).geturl()
-                    link = posixpath.dirname(url)
-                    if parser.strip_scheme(link) not in self.crawled:
-                        self.add_target(link)
-
-            # If we still have targets left to scrape
-            if self.targets:
-                return await self.crawl()
+            while self.targets:
+                url = self.targets.pop()
+                await self.crawl_url(client, url)
 
             favicon = None
 
