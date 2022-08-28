@@ -16,7 +16,7 @@ logger = get_task_logger(__name__)
 
 # TODO Make the retry policy error specific
 
-timeout = httpx.Timeout(10.0, connect=60.0)
+timeout = httpx.Timeout(10.0)
 limits = httpx.Limits(
     max_keepalive_connections=None, max_connections=None, keepalive_expiry=10
 )

@@ -1,7 +1,5 @@
-import os
 import io
 import posixpath
-import re
 from datetime import datetime, timedelta
 from urllib.parse import urljoin, urlparse
 
@@ -12,7 +10,6 @@ from bs4 import BeautifulSoup
 from django.core.exceptions import ValidationError
 from django.core.validators import URLValidator
 from django.utils import timezone
-from django.utils.html import strip_tags
 from django.utils.text import slugify
 from lxml import etree
 from unidecode import unidecode
@@ -128,7 +125,7 @@ def parse(f):
         case "feed":
             parser = AtomParser(et)
         case _:
-            breakpoint()
+            raise NotImplemented
 
     # TODO Do we want to save some of these attributes in slots in a class
     attributes = {
@@ -322,15 +319,14 @@ class RDFParser(RSSParser):
                 return parse_author_text(creator_text)
 
 
-def parse_feed(resp):
-    parsed = parse(io.BytesIO(resp["body"]))
+def parse_feed(resp, parsed, favicon):
 
     if parsed["entries"] == []:
         return None, None
 
-    feed = {"last_checked": timezone.now(), "url": resp["url"]}
+    feed = {"last_checked": timezone.now(), "url": str(resp.url)}
 
-    base_url = urlparse(resp["url"])._replace(path="").geturl()
+    base_url = urlparse(str(resp.url))._replace(path="").geturl()
 
     link = parsed.get("link")
     if link:
@@ -339,7 +335,7 @@ def parse_feed(resp):
         sanitised = u._replace(query="", path=(u.path.replace("//", "/"))).geturl()
         # Ignore if the link is the same as the feed
         # we need the link to the parent site
-        if sanitised != resp["url"]:
+        if sanitised != resp.url:
             # Will handle absolute or relative paths
             feed["link"] = urljoin(base_url, sanitised)
         else:
@@ -357,14 +353,14 @@ def parse_feed(resp):
         if subtitle != "":
             feed["subtitle"] = subtitle
 
-    headers = resp["headers"]
+    headers = resp.headers
 
     slug = slugify(unidecode(feed["title"]))
     if slug == "":
         slug = slugify(base_url)
 
     feed["slug"] = slug
-    feed["favicon"] = resp.get("favicon")
+    feed["favicon"] = favicon
 
     if headers.get("etag"):
         feed["etag"] = headers["etag"]
@@ -402,20 +398,17 @@ def parse_feed_entry(entry, feed):
 
     title = entry.get("title")
 
-    slug = None
-
-    if entry.get("link"):
-        slug = os.path.splitext(
-            urlparse(entry["link"].rstrip("/")).path.rsplit("/", 1)[-1]
-        )[0]
-    else:
-        slug = slugify(unidecode(title))
-
     if not title:
-        # TODO Strip any html from this, or figure out a better mechanism to
-        # have blank titles
-        # Example feed https://justtesting.org/rss
-        title = slug
+        if entry.get("link"):
+            title = unidecode(urlparse(entry["link"]).path)
+        else:
+            title = content[:50]
+
+    slug = slugify(unidecode(title))
+    if not slug:
+        path = urlparse(entry.get("link")).path.rstrip("/")
+        if path:
+            slug = posixpath.basename(path)
 
     feed_parsed = urlparse(feed.url)
 

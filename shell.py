@@ -4,6 +4,7 @@ from pathlib import Path
 from urllib.parse import urljoin, urlparse
 
 import feedparser
+from lxml import etree
 import httpx
 import listparser
 from bs4 import BeautifulSoup

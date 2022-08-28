@@ -25,6 +25,7 @@ from django.urls import reverse_lazy
 from django.utils import timezone
 from django.views.generic.detail import DetailView
 from django.views.generic.edit import CreateView, DeleteView
+from asgiref.sync import async_to_sync
 
 import feeds.crawler as crawler
 import feeds.parser as parser
@@ -417,10 +418,11 @@ def discover(request: HttpRequest) -> HttpResponse:
             except Feed.DoesNotExist:
                 logger.info("Crawling web for {}".format(search_term))
                 try:
-                    resp = crawler.crawl_url(search_term)
+                    sync_crawl_url = async_to_sync(crawler.crawl_url)
+                    resp, parsed, favicon = sync_crawl_url(search_term)
                     if resp is not None:
                         logger.info("Parsing resp: {}".format(search_term))
-                        feed = crawler.ingest_feed(resp, search_term)
+                        feed = crawler.ingest_feed(resp, parsed, favicon)
                         logger.info("Parsed: {}".format(search_term))
                         if feed is not None:
                             feeds = [feed]
