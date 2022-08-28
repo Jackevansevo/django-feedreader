@@ -157,14 +157,15 @@ async def check_favicon(client, path):
     return ImageFile(io.BytesIO(resp.read()), name=f"{parsed.netloc}-favicon{ext}")
 
 
-async def crawl_url(url):
-    return await Crawler(url).crawl()
+async def crawl(client, url):
+    return await Crawler(client, url).crawl()
 
 
 class Crawler:
-    def __init__(self, url):
+    def __init__(self, client, url):
         self.targets = [url]
         self.crawled = set()
+        self.client = client
 
         self.feed = None
         self.feed_resp = None
@@ -184,14 +185,16 @@ class Crawler:
         if sanitized_target not in self.crawled:
             self.targets.append(target_url)
 
-    async def crawl_url(self, client, url):
+    async def crawl_url(self, url):
         parsed_url = urlparse(url)
 
         try:
-            resp = await client.get(url, headers={"User-Agent": tasks.USER_AGENT})
+            resp = await self.client.get(
+                url, follow_redirects=True, headers={"User-Agent": tasks.USER_AGENT}
+            )
             resp.raise_for_status()
-        except httpx.HTTPError:
-            logger.error("Failed to fetch {}".format(url))
+        except httpx.HTTPError as err:
+            logger.error(str(err))
         else:
 
             # Content type can't always be trusted
@@ -244,43 +247,40 @@ class Crawler:
                         self.add_target(link)
 
     async def crawl(self):
-        async with httpx.AsyncClient(
-            timeout=timeout, limits=limits, follow_redirects=True
-        ) as client:
 
-            while self.targets:
-                url = self.targets.pop()
+        while self.targets:
+            url = self.targets.pop()
 
-                parsed_url = urlparse(url)
+            parsed_url = urlparse(url)
 
-                await self.crawl_url(client, url)
+            await self.crawl_url(url)
 
-                self.crawled.add(self.sanitize_target(url))
+            self.crawled.add(self.sanitize_target(url))
 
-                if self.targets == []:
-                    if self.feed is None:
-                        # Fall back to crawling common feed extensions
-                        for ext in find_common_extensions(parsed_url):
-                            self.add_target(ext)
+            if self.targets == []:
+                if self.feed is None:
+                    # Fall back to crawling common feed extensions
+                    for ext in find_common_extensions(parsed_url):
+                        self.add_target(ext)
 
-                    if self.html_resp is None:
-                        if parsed_url.path:
-                            if parsed_url.path.endswith("/"):
-                                url = parsed_url._replace(
-                                    path=parsed_url.path.rstrip("/")
-                                ).geturl()
-                            link = posixpath.dirname(url)
-                            self.add_target(link)
+                if self.html_resp is None:
+                    if parsed_url.path:
+                        if parsed_url.path.endswith("/"):
+                            url = parsed_url._replace(
+                                path=parsed_url.path.rstrip("/")
+                            ).geturl()
+                        link = posixpath.dirname(url)
+                        self.add_target(link)
 
-            favicon = None
+        favicon = None
 
-            if self.html_resp is not None:
-                for favicon_loc in find_favicons(str(self.html_resp.url), self.soup):
-                    favicon = await check_favicon(client, favicon_loc)
-                    if favicon is not None:
-                        break
+        if self.html_resp is not None:
+            for favicon_loc in find_favicons(str(self.html_resp.url), self.soup):
+                favicon = await check_favicon(self.client, favicon_loc)
+                if favicon is not None:
+                    break
 
-            return self.feed_resp, self.feed, favicon
+        return self.feed_resp, self.feed, favicon
 
 
 @transaction.atomic
