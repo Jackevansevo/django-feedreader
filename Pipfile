@@ -39,6 +39,7 @@ httpx = "*"
 django-allauth = "*"
 pillow = "*"
 lxml = "*"
+cchardet = "*"
 
 [pipenv]
 allow_prereleases = true
