@@ -194,25 +194,23 @@ class Crawler:
             logger.error("Failed to fetch {}".format(url))
         else:
 
+            # Content type can't always be trusted
             content_type = resp.headers.get("content-type")
 
             if (
                 content_type is not None
                 and "html" in content_type
                 and self.html_resp is None
+                and not resp.content[:5].decode().startswith("<?xml")
             ):
                 logger.info("{} returned HTML response".format(url))
 
                 self.html_resp = resp
 
                 # If we haven't scraped any HTML yet
-                if self.soup is None:
-                    self.soup = BeautifulSoup(resp, features="html.parser")
-
-                # Swap the html and feed resp
+                self.soup = BeautifulSoup(resp, features="html.parser")
 
                 if self.feed is None:
-
                     rss_link = find_rss_link(self.soup)
 
                     if rss_link is not None:
@@ -228,37 +226,22 @@ class Crawler:
                             self.add_target(feed_url)
                     else:
                         logger.info("No feed link in page body for {}".format(url))
-                        for ext in find_common_extensions(parsed_url):
-                            self.add_target(ext)
 
-            else:
-                if self.feed is None:
-                    self.feed = parser.parse(io.BytesIO(resp.content))
-                    self.feed_resp = resp
+            elif self.feed is None:
+                self.feed = parser.parse(io.BytesIO(resp.content))
+                self.feed_resp = resp
 
-                if self.soup is None:
-                    if self.feed is not None:
-                        # Try to infer the site url from the parsed feed
-                        parsed_link = self.feed.get("link")
-                        if parsed_link:
-                            link = urljoin(str(resp.url), parsed_link)
-                            logger.info(
-                                "Found site link: {} in parsed feed {}".format(
-                                    link, resp.url
-                                )
+                if self.html_resp is None:
+                    # Try to infer the site url from the parsed feed
+                    parsed_link = self.feed.get("link")
+                    if parsed_link:
+                        link = urljoin(str(resp.url), parsed_link)
+                        logger.info(
+                            "Found site link: {} in parsed feed {}".format(
+                                link, resp.url
                             )
-                            self.add_target(link)
-                    else:
-                        if parsed_url.path:
-                            self.add_target(urlparse(url)._replace(path="").geturl())
-
-        if self.targets == [] and self.soup is None:
-            if parsed_url.path:
-                if parsed_url.path.endswith("/"):
-                    url = parsed_url._replace(path=parsed_url.path.rstrip("/")).geturl()
-                link = posixpath.dirname(url)
-                if parser.strip_scheme(link) not in self.crawled:
-                    self.add_target(link)
+                        )
+                        self.add_target(link)
 
     async def crawl(self):
         async with httpx.AsyncClient(
@@ -267,8 +250,27 @@ class Crawler:
 
             while self.targets:
                 url = self.targets.pop()
+
+                parsed_url = urlparse(url)
+
                 await self.crawl_url(client, url)
+
                 self.crawled.add(self.sanitize_target(url))
+
+                if self.targets == []:
+                    if self.feed is None:
+                        # Fall back to crawling common feed extensions
+                        for ext in find_common_extensions(parsed_url):
+                            self.add_target(ext)
+
+                    if self.html_resp is None:
+                        if parsed_url.path:
+                            if parsed_url.path.endswith("/"):
+                                url = parsed_url._replace(
+                                    path=parsed_url.path.rstrip("/")
+                                ).geturl()
+                            link = posixpath.dirname(url)
+                            self.add_target(link)
 
             favicon = None
 
