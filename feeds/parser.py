@@ -14,7 +14,6 @@ from django.utils.text import slugify
 from lxml import etree
 from unidecode import unidecode
 
-import feeds.tasks as tasks
 from feeds.models import Entry
 
 XML_PARSER = etree.XMLParser(recover=True, remove_comments=True)

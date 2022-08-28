@@ -27,7 +27,6 @@ from asgiref.sync import async_to_sync
 
 import feeds.crawler as crawler
 import feeds.parser as parser
-import feeds.tasks as tasks
 
 from .forms import CategoryForm, OPMLUploadForm, SignUpForm, SubscriptionForm
 from .models import Category, Entry, Feed, Subscription
@@ -145,11 +144,11 @@ def import_opml_feeds(request: HttpRequest) -> HttpResponse:
 
                 # Right now we're potentially re-scraping all feeds in the import list
                 # If we're doing this then we probably want to pass the etag through?
-                feed_category = feed.categories[0][0]
-                category = feed_category if feed_category != "" else None
-                jobs.append(
-                    tasks.create_subscription(feed.url, category, request.user.id)
-                )
+                # feed_category = feed.categories[0][0]
+                # category = feed_category if feed_category != "" else None
+                # jobs.append(
+                #     tasks.create_subscription(feed.url, category, request.user.id)
+                # )
 
             # TODO figure out how to save the args (urls) here to each job,
             # along with the metadata of the request.user_id who started the

@@ -4,5 +4,7 @@
   <title>FeedReader Subscribed feeds</title>
 </head>
 <body>
-  <outline htmlUrl="https://www.joshwcomeau.com/" title="Josh Comeau's blog" xmlUrl="https://www.joshwcomeau.com/rss.xml"></outline>
+    <outline title="Coffee">
+      <outline htmlUrl="https://coffeeblog.co.uk" title="Coffee Blog" xmlUrl="https://coffeeblog.co.uk/feed/"></outline>
+    </outline>
 </outline>

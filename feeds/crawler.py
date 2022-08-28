@@ -11,8 +11,10 @@ from django.core.files.images import ImageFile
 from django.db import IntegrityError, transaction
 
 import feeds.parser as parser
-import feeds.tasks as tasks
 from feeds.models import Entry, Feed
+
+USER_AGENT = "feedreader/1 +https://github.com/Jackevansevo/feedreader/"
+
 
 logger = logging.getLogger(__name__)
 
@@ -129,7 +131,7 @@ async def scrape_common_endpoints(client, parsed_url):
     for loc in find_common_extensions(parsed_url):
         logger.info("Trying {}".format(loc))
         try:
-            resp = await client.get(loc, headers={"User-Agent": tasks.USER_AGENT})
+            resp = await client.get(loc, headers={"User-Agent": USER_AGENT})
         except httpx.ConnectError:
             continue
         else:
@@ -141,7 +143,7 @@ async def check_favicon(client, path):
     # Verify the favicon exists
     try:
         resp = await client.get(
-            path, follow_redirects=True, headers={"User-Agent": tasks.USER_AGENT}
+            path, follow_redirects=True, headers={"User-Agent": USER_AGENT}
         )
     except httpx.HTTPError:
         return
@@ -191,7 +193,7 @@ class Crawler:
 
         try:
             resp = await self.client.get(
-                url, follow_redirects=True, headers={"User-Agent": tasks.USER_AGENT}
+                url, follow_redirects=True, headers={"User-Agent": USER_AGENT}
             )
             resp.raise_for_status()
         except httpx.HTTPError as err:
