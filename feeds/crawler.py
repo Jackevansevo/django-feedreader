@@ -172,20 +172,22 @@ class Crawler:
         self.html_resp = None
         self.soup = None
 
-    def add_target(self, target_url):
+    def sanitize_target(self, target_url):
         parsed_target = urlparse(target_url)
         if parsed_target.path.endswith("/"):
             parsed_target = parsed_target._replace(path=parsed_target.path.rstrip("/"))
 
-        stripped = parser.strip_scheme(parsed_target.geturl())
-        if stripped not in self.crawled:
+        return parser.strip_scheme(parsed_target.geturl())
+
+    def add_target(self, target_url):
+        sanitized_target = self.sanitize_target(target_url)
+        if sanitized_target not in self.crawled:
             self.targets.append(target_url)
 
     async def crawl_url(self, client, url):
         parsed_url = urlparse(url)
 
         try:
-            self.crawled.add(url)
             resp = await client.get(url, headers={"User-Agent": tasks.USER_AGENT})
             resp.raise_for_status()
         except httpx.HTTPError:
@@ -238,13 +240,14 @@ class Crawler:
                     if self.feed is not None:
                         # Try to infer the site url from the parsed feed
                         parsed_link = self.feed.get("link")
-                        link = urljoin(str(resp.url), parsed_link)
-                        logger.info(
-                            "Found site link: {} in parsed feed {}".format(
-                                link, resp.url
+                        if parsed_link:
+                            link = urljoin(str(resp.url), parsed_link)
+                            logger.info(
+                                "Found site link: {} in parsed feed {}".format(
+                                    link, resp.url
+                                )
                             )
-                        )
-                        self.add_target(link)
+                            self.add_target(link)
                     else:
                         if parsed_url.path:
                             self.add_target(urlparse(url)._replace(path="").geturl())
@@ -265,6 +268,7 @@ class Crawler:
             while self.targets:
                 url = self.targets.pop()
                 await self.crawl_url(client, url)
+                self.crawled.add(self.sanitize_target(url))
 
             favicon = None
 
