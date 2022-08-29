@@ -24,7 +24,15 @@ h1, h2, h3, h4, h5, h6 {
   </nav>
 
   <div class="row">
+
+
+   <span class="d-flex align-items-baseline">
+  {% if feed.favicon %}
+  	<img style="border-radius: 50%; width: 25px; height: 25px; margin-right: 10px" src="{{ feed.favicon.url }}" loading="lazy">
+  {% endif %}
     <h1>{{ feed.title }}</h5>
+   </span>
+
     {% if feed.subscribed %}
     {% if subscription.category %}<h2 class="mb-2 text-muted">{{ subscription.category }}</h6>{% endif %}
     <h6>Last checked {{ subscription.feed.last_checked | naturaltime }}</h6>
@@ -85,7 +93,7 @@ h1, h2, h3, h4, h5, h6 {
     </div>
     {% if entry.thumbnail %}
     <div class="col-auto d-none d-lg-block">
-      <img style="max-height: 200px;" src="{{ entry.thumbnail }}" class="rounded-start">
+      <img style="max-height: 200px;" src="{{ entry.thumbnail }}" class="rounded-start" loading="lazy">
     </div>
     {% endif %}
   </div>

@@ -1,8 +1,8 @@
 import logging
 import uuid
+from typing import List
 
 import listparser
-from celery import group, result
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -53,33 +53,11 @@ def profile(request):
     return render(request, "profile.html")
 
 
-def task_status(_, task_id) -> JsonResponse:
-    task_result = result.AsyncResult(task_id)
-    data = {
-        "id": task_id,
-        "status": task_result.status,
-        "result": task_result.result,
-    }
-    return JsonResponse(data)
-
-
 def serialize_child(child):
     # TODO Error 'results' are serializable, not sure if there's a better way TODO this
     if child.status == "FAILURE":
         return {"id": child.id, "status": child.status, "error": str(child.result)}
     return {"id": child.id, "status": child.status, "result": child.result}
-
-
-def task_group_status(_: HttpRequest, task_id) -> HttpResponse:
-    group_result = result.GroupResult.restore(task_id)
-    if group_result is None:
-        return HttpResponseNotFound(f"GroupResult('{task_id}') not found")
-    data = {
-        "id": task_id,
-        "children": [serialize_child(child) for child in group_result.children],
-        "completedCount": group_result.completed_count(),
-    }
-    return JsonResponse(data)
 
 
 @login_required
@@ -95,103 +73,103 @@ def import_feed_detail(request: HttpRequest, task_id) -> HttpResponse:
 @login_required
 def import_opml_feeds(request: HttpRequest) -> HttpResponse:
 
-    is_running = False
-
-    running_job = cache.get(f"{request.user.id}-import")
-    # If we've cached a job, check it it's still running, if it is, disable the form
-    if running_job:
-        group_result = result.GroupResult.restore(running_job)
-        if not group_result.ready():
-            is_running = True
-        else:
-            cache.delete(f"{request.user.id}-import")
-
-    if request.method == "POST":
-        form = OPMLUploadForm(request.POST, request.FILES)
-
-        if is_running:
-            form.add_error("file", "Import task already running")
-
-        elif form.is_valid():
-            f = request.FILES["file"]
-            contents = f.read()
-            parsed = listparser.parse(contents)
-
-            jobs = []
-            fetching = []
-            skipped = []
-
-            # TODO test this out
-
-            urls = [feed.url for feed in parsed.feeds]
-
-            q = Q(user=request.user)
-            for url in urls:
-                q |= Q(feed__url__icontains=url)
-
-            # Filter out any feeds that the user is already subscribed to
-            existing_subscriptions = set(
-                Subscription.objects.filter(q).values_list("feed__url", flat=True)
-            )
-
-            for feed in parsed.feeds:
-
-                if feed.url in existing_subscriptions:
-                    skipped.append(feed.url)
-                    continue
-
-                fetching.append(feed)
-
-                # Right now we're potentially re-scraping all feeds in the import list
-                # If we're doing this then we probably want to pass the etag through?
-                # feed_category = feed.categories[0][0]
-                # category = feed_category if feed_category != "" else None
-                # jobs.append(
-                #     tasks.create_subscription(feed.url, category, request.user.id)
-                # )
-
-            # TODO figure out how to save the args (urls) here to each job,
-            # along with the metadata of the request.user_id who started the
-            # request
-            task = group(jobs)()
-
-            task.save()
-
-            # Cache temporary job information to redis
-            task_metadata = {
-                "id": task.id,
-                "user_id": request.user.id,
-                "skipped": skipped,
-                "children": [
-                    {
-                        "id": child.id,
-                        "url": feed.url,
-                        "category": feed.categories[0][0],
-                    }
-                    for (child, feed) in zip(task.children, fetching)
-                ],
-            }
-
-            cache.set_many(
-                {task.id: task_metadata, f"{request.user.id}-import": task.id},
-                60 * 30,
-            )
-
-            return redirect("feeds:opml-import-detail", task_id=task.id)
-
-    else:
-        form = OPMLUploadForm()
-
-    if is_running:
-        form.fields["file"].disabled = True
-
-    data = {
-        "form": form,
-        "is_running": is_running,
-    }
-
-    if is_running:
-        data["task_id"] = running_job
+    # is_running = False
+    #
+    # running_job = cache.get(f"{request.user.id}-import")
+    # # If we've cached a job, check it it's still running, if it is, disable the form
+    # if running_job:
+    #     group_result = result.GroupResult.restore(running_job)
+    #     if not group_result.ready():
+    #         is_running = True
+    #     else:
+    #         cache.delete(f"{request.user.id}-import")
+    #
+    # if request.method == "POST":
+    #     form = OPMLUploadForm(request.POST, request.FILES)
+    #
+    #     if is_running:
+    #         form.add_error("file", "Import task already running")
+    #
+    #     elif form.is_valid():
+    #         f = request.FILES["file"]
+    #         contents = f.read()
+    #         parsed = listparser.parse(contents)
+    #
+    #         jobs = []
+    #         fetching = []
+    #         skipped = []
+    #
+    #         # TODO test this out
+    #
+    #         urls = [feed.url for feed in parsed.feeds]
+    #
+    #         q = Q(user=request.user)
+    #         for url in urls:
+    #             q |= Q(feed__url__icontains=url)
+    #
+    #         # Filter out any feeds that the user is already subscribed to
+    #         existing_subscriptions = set(
+    #             Subscription.objects.filter(q).values_list("feed__url", flat=True)
+    #         )
+    #
+    #         for feed in parsed.feeds:
+    #
+    #             if feed.url in existing_subscriptions:
+    #                 skipped.append(feed.url)
+    #                 continue
+    #
+    #             fetching.append(feed)
+    #
+    #             # Right now we're potentially re-scraping all feeds in the import list
+    #             # If we're doing this then we probably want to pass the etag through?
+    #             # feed_category = feed.categories[0][0]
+    #             # category = feed_category if feed_category != "" else None
+    #             # jobs.append(
+    #             #     tasks.create_subscription(feed.url, category, request.user.id)
+    #             # )
+    #
+    #         # TODO figure out how to save the args (urls) here to each job,
+    #         # along with the metadata of the request.user_id who started the
+    #         # request
+    #         task = group(jobs)()
+    #
+    #         task.save()
+    #
+    #         # Cache temporary job information to redis
+    #         task_metadata = {
+    #             "id": task.id,
+    #             "user_id": request.user.id,
+    #             "skipped": skipped,
+    #             "children": [
+    #                 {
+    #                     "id": child.id,
+    #                     "url": feed.url,
+    #                     "category": feed.categories[0][0],
+    #                 }
+    #                 for (child, feed) in zip(task.children, fetching)
+    #             ],
+    #         }
+    #
+    #         cache.set_many(
+    #             {task.id: task_metadata, f"{request.user.id}-import": task.id},
+    #             60 * 30,
+    #         )
+    #
+    #         return redirect("feeds:opml-import-detail", task_id=task.id)
+    #
+    # else:
+    #     form = OPMLUploadForm()
+    #
+    # if is_running:
+    #     form.fields["file"].disabled = True
+    #
+    # data = {
+    #     "form": form,
+    #     "is_running": is_running,
+    # }
+    #
+    # if is_running:
+    #     data["task_id"] = running_job
 
     return render(request, "feeds/import_feeds.html", data)
 
@@ -338,6 +316,8 @@ def entry_detail(
 @login_required
 def discover(request: HttpRequest) -> HttpResponse:
     search_term = request.GET.get("q")
+    feeds: List[Feed] = []
+
     if search_term:
         # TODO better way to determine if search_term is possible URL?
         if " " not in search_term and "." in search_term:
@@ -399,19 +379,7 @@ def discover(request: HttpRequest) -> HttpResponse:
             if feeds:
                 logger.info("Found existing matches for: '{}'".format(search_term))
 
-        return render(
-            request,
-            "feeds/discover.html",
-            {
-                "feeds": feeds,
-            },
-        )
-
-    else:
-        return render(
-            request,
-            "feeds/discover.html",
-        )
+    return render(request, "feeds/discover.html", {"feeds": feeds})
 
 
 def feed_follow(request, feed_slug):

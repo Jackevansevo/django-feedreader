@@ -156,7 +156,7 @@ async def check_favicon(client, path):
 
     parsed = urlparse(str(resp.url))
     _, ext = os.path.splitext(parsed.path)
-    return ImageFile(io.BytesIO(resp.read()), name=f"{parsed.netloc}-favicon{ext}")
+    return ImageFile(io.BytesIO(resp.read()), name=f"{parsed.netloc}{ext}")
 
 
 async def crawl(url):

@@ -32,6 +32,10 @@ django-allauth = "*"
 pillow = "*"
 lxml = "*"
 cchardet = "*"
+uvicorn = "*"
+python-dateutil = "*"
+boto3 = "*"
+django-storages = "*"
 
 [pipenv]
 allow_prereleases = true

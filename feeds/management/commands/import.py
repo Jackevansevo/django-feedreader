@@ -16,10 +16,13 @@ USER_AGENT = "feedreader/1 +https://github.com/Jackevansevo/feedreader/"
 user = User.objects.first()
 
 
-def ingest(resp, parsed, favicon, category):
+def ingest(resp, parsed, favicon, category_name):
     try:
         feed = crawler.ingest_feed(resp, parsed, favicon)
-        category, _ = Category.objects.get_or_create(name=category, user=user)
+        if category_name:
+            category, _ = Category.objects.get_or_create(name=category_name, user=user)
+        else:
+            category = None
         Subscription.objects.create(feed=feed, user=user, category=category)
     except Exception:
         breakpoint()
