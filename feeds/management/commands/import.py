@@ -4,12 +4,12 @@ import sys
 
 import httpx
 import listparser
+from asgiref.sync import sync_to_async
+from django.contrib.auth.models import User
 from django.core.management.base import BaseCommand
 
-from feeds.models import Subscription, Category, Feed
-from django.contrib.auth.models import User
 import feeds.crawler as crawler
-from asgiref.sync import sync_to_async
+from feeds.models import Category, Feed, Subscription
 
 user = User.objects.first()
 
