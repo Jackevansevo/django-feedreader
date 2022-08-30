@@ -2,7 +2,7 @@ import logging
 import uuid
 from typing import List
 
-import listparser
+from asgiref.sync import async_to_sync
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -10,25 +10,18 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.cache import cache
 from django.core.paginator import Paginator
 from django.db import IntegrityError
-from django.db.models import Count, Exists, OuterRef, Q
-from django.http import (
-    Http404,
-    HttpRequest,
-    HttpResponse,
-    HttpResponseNotFound,
-    JsonResponse,
-)
+from django.db.models import Count, Exists, OuterRef
+from django.http import Http404, HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
 from django.utils import timezone
 from django.views.generic.detail import DetailView
 from django.views.generic.edit import CreateView, DeleteView
-from asgiref.sync import async_to_sync
 
 import feeds.crawler as crawler
 import feeds.parser as parser
 
-from .forms import CategoryForm, OPMLUploadForm, SignUpForm, SubscriptionForm
+from .forms import CategoryForm, SignUpForm, SubscriptionForm
 from .models import Category, Entry, Feed, Subscription
 
 # TODO Mechanism to all the subtasks status from a parent tasks
@@ -171,7 +164,8 @@ def import_opml_feeds(request: HttpRequest) -> HttpResponse:
     # if is_running:
     #     data["task_id"] = running_job
 
-    return render(request, "feeds/import_feeds.html", data)
+    # return render(request, "feeds/import_feeds.html", data)
+    pass
 
 
 @login_required
