@@ -11,8 +11,6 @@ from django.contrib.auth.models import User
 import feeds.crawler as crawler
 from asgiref.sync import sync_to_async
 
-USER_AGENT = "feedreader/1 +https://github.com/Jackevansevo/feedreader/"
-
 user = User.objects.first()
 
 
