@@ -55,7 +55,7 @@
       <td>
 	<a class="text-decoration-none" href="{{ subscription.get_absolute_url }}">
 	  {% if subscription.feed.favicon %}
-	    <img style="border-radius: 50%; width: 20px; height: 20px; margin-right: 0.3rem;" src="{{ subscription.feed.favicon.url }}" loading="lazy">
+	    <img style="border-radius: 50%; width: 20px; height: 20px; margin-right: 0.3rem;" src="{{ subscription.feed.favicon.url }}">
 	  {% endif %}
 	  {{ subscription.feed.title }}
 	</a>

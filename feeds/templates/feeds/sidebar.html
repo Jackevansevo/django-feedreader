@@ -13,7 +13,7 @@
     {% url 'feeds:index' as link %}
     {% if link %}
     <li class="nav-item">
-      <a href="{{ link }}" class="nav-link {% if request.path == link %}active{% else %}link-dark{% endif %}" aria-current="page">
+      <a href="{{ link }}" class="nav-link {% if request.path == link %}active{% else %}link-dark{% endif %}">
 	<span class="icon-text">
 	  <span class="icon">
 	    <i class="fas fa-home"></i>
