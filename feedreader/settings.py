@@ -80,7 +80,6 @@ INSTALLED_APPS = [
     "allauth.account",
     "allauth.socialaccount",
     "allauth.socialaccount.providers.google",
-    "storages",
 ]
 
 MIDDLEWARE = [
@@ -91,15 +90,17 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "django.middleware.cache.UpdateCacheMiddleware",
-    "django.middleware.common.CommonMiddleware",
-    "django.middleware.cache.FetchFromCacheMiddleware",
 ]
 
 if DEBUG:
     INSTALLED_APPS.append("debug_toolbar")
+    INSTALLED_APPS.append("django_browser_reload")
 
     MIDDLEWARE.append("debug_toolbar.middleware.DebugToolbarMiddleware")
+    MIDDLEWARE.append(
+        "django_browser_reload.middleware.BrowserReloadMiddleware",
+    )
+
     INTERNAL_IPS = ["127.0.0.1"]
 
     EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
@@ -195,9 +196,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.0/howto/static-files/
 
 
-DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
-
-if DEBUG:
+if not DEBUG:
+    DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
     AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
     AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
     AWS_STORAGE_BUCKET_NAME = os.getenv("AWS_STORAGE_BUCKET_NAME")
@@ -205,6 +205,12 @@ if DEBUG:
     AWS_S3_ENDPOINT_URL = f"https://{AWS_S3_REGION_NAME}.digitaloceanspaces.com"
     AWS_S3_OBJECT_PARAMETERS = {"CacheControl": "max-age=86400"}
     AWS_DEFAULT_ACL = "public-read"
+    INSTALLED_APPS += ["storages"]
+    MIDDLEWARE += [
+        "django.middleware.cache.UpdateCacheMiddleware",
+        "django.middleware.common.CommonMiddleware",
+        "django.middleware.cache.FetchFromCacheMiddleware",
+    ]
 
 MEDIA_URL = "media/"
 
