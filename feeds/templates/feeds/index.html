@@ -44,11 +44,7 @@
 	<a class="text-decoration-none" href="{{ entry.get_absolute_url }}">{{ entry.title|truncatewords:10 }}</a>
       </td>
       <td class="d-none d-lg-table-cell">
-	{% if entry.updated %}
-	{{ entry.updated | date }}
-	{% else %}
 	{{ entry.published | date }}
-	{% endif %}
       </td>
       <td>
 	<a class="text-decoration-none" href={{ entry.feed.get_absolute_url }}>
