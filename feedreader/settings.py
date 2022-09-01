@@ -206,11 +206,6 @@ if not DEBUG:
     AWS_S3_OBJECT_PARAMETERS = {"CacheControl": "max-age=86400"}
     AWS_DEFAULT_ACL = "public-read"
     INSTALLED_APPS += ["storages"]
-    MIDDLEWARE += [
-        "django.middleware.cache.UpdateCacheMiddleware",
-        "django.middleware.common.CommonMiddleware",
-        "django.middleware.cache.FetchFromCacheMiddleware",
-    ]
 
 MEDIA_URL = "media/"
 
