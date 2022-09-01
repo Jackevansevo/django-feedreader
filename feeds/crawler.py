@@ -9,6 +9,7 @@ import httpx
 from bs4 import BeautifulSoup
 from django.core.files.images import ImageFile
 from django.db import IntegrityError, transaction
+from PIL import Image, UnidentifiedImageError
 
 import feeds.parser as parser
 from feeds.models import Entry, Feed
@@ -154,9 +155,15 @@ async def check_favicon(client, path):
     if "html" in resp.headers["content-type"]:
         return
 
-    parsed = urlparse(str(resp.url))
-    _, ext = os.path.splitext(parsed.path)
-    return ImageFile(io.BytesIO(resp.read()), name=f"{parsed.netloc}{ext}")
+    try:
+        img = Image.open(resp)
+        img.verify()
+    except UnidentifiedImageError:
+        return
+    else:
+        parsed = urlparse(str(resp.url))
+        _, ext = os.path.splitext(parsed.path)
+        return ImageFile(io.BytesIO(resp.content), name=f"{parsed.netloc}{ext}")
 
 
 async def crawl(url):
