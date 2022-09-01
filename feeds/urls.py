@@ -7,12 +7,6 @@ urlpatterns = [
     path("", views.index, name="index"),
     path("search", views.search, name="search"),
     path("feeds/", views.feed_list, name="feed-list"),
-    path("feeds/import/opml", views.import_opml_feeds, name="opml-import"),
-    path(
-        "feeds/import/<str:task_id>",
-        views.import_feed_detail,
-        name="opml-import-detail",
-    ),
     path("feeds/export/opml", views.export_opml_feeds, name="opml-export"),
     path("categories/", views.category_list, name="category-list"),
     path(
