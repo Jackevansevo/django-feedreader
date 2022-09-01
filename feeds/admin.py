@@ -25,8 +25,6 @@ class FeedAdmin(admin.ModelAdmin):
     readonly_fields = (
         "title",
         "subtitle",
-        "link",
-        "favicon",
         "slug",
         "etag",
         "last_modified",
