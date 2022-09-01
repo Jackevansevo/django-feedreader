@@ -25,9 +25,11 @@ const cacheFirst = async (request) => {
 	}
 
   const responseFromNetwork = await fetch(request);
-	if (url.pathname.includes('/media/') || url.hostname.includes("digitaloceanspaces")) {
-		console.log('caching', request.url)
-		putInCache(url.pathname, responseFromNetwork.clone());
+	if (responseFromNetwork.ok) {
+		if (url.pathname.includes('/media/') || url.hostname.includes("digitaloceanspaces")) {
+			console.log('caching', request.url)
+			putInCache(url.pathname, responseFromNetwork.clone());
+		}
 	}
   return responseFromNetwork;
 };
