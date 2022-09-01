@@ -1,15 +1,15 @@
 from django.test import TestCase
 
-from feeds.models import Feed
+from feeds.crawler import translate_common_feed_extensions
 
 
 class TestFindFeedFromURL(TestCase):
     def assertIsPreserved(self, url):
-        self.assertEqual(Feed.find_feed_from_url(url), url)
+        self.assertEqual(translate_common_feed_extensions(url), url)
 
-    def test_convert_surls(self):
+    def test_converts_urls(self):
         """
-        Tests that Feed.find_feed_from_url returns the feed URL for common
+        Tests that translate_common_feed_extensions returns the feed URL for common
         blogging websites.
 
         Also ensure that it preserves original feed URLS, respecting trailing
@@ -18,19 +18,19 @@ class TestFindFeedFromURL(TestCase):
 
         self.assertIsPreserved("https://jack.bearblog.dev/feed/")
         self.assertEqual(
-            Feed.find_feed_from_url("https://jack.bearblog.dev"),
+            translate_common_feed_extensions("https://jack.bearblog.dev"),
             "https://jack.bearblog.dev/feed/",
         )
 
         self.assertIsPreserved("https://developer.wordpress.com/blog/feed/")
         self.assertEqual(
-            Feed.find_feed_from_url("https://developer.wordpress.com/blog"),
+            translate_common_feed_extensions("https://developer.wordpress.com/blog"),
             "https://developer.wordpress.com/blog/feed/",
         )
 
         self.assertIsPreserved("https://andrenader.substack.com/feed")
         self.assertEqual(
-            Feed.find_feed_from_url("https://andrenader.substack.com"),
+            translate_common_feed_extensions("https://andrenader.substack.com"),
             "https://andrenader.substack.com/feed",
         )
 
@@ -38,13 +38,13 @@ class TestFindFeedFromURL(TestCase):
             "https://googleprojectzero.blogspot.com/feeds/posts/default"
         )
         self.assertEqual(
-            Feed.find_feed_from_url("https://googleprojectzero.blogspot.com/"),
+            translate_common_feed_extensions("https://googleprojectzero.blogspot.com/"),
             "https://googleprojectzero.blogspot.com/feeds/posts/default",
         )
 
         self.assertIsPreserved("https://bradleylambertblog.tumblr.com/rss")
         self.assertEqual(
-            Feed.find_feed_from_url(
+            translate_common_feed_extensions(
                 "https://bradleylambertblog.tumblr.com",
             ),
             "https://bradleylambertblog.tumblr.com/rss",
@@ -52,13 +52,13 @@ class TestFindFeedFromURL(TestCase):
 
         self.assertIsPreserved("https://medium.com/feed/@dropbox")
         self.assertEqual(
-            Feed.find_feed_from_url("https://medium.com/@dropbox"),
+            translate_common_feed_extensions("https://medium.com/@dropbox"),
             "https://medium.com/feed/@dropbox",
         )
 
         self.assertIsPreserved("https://starcodes-heartcodes.medium.com/feed")
         self.assertEqual(
-            Feed.find_feed_from_url(
+            translate_common_feed_extensions(
                 "https://starcodes-heartcodes.medium.com",
             ),
             "https://starcodes-heartcodes.medium.com/feed",
@@ -66,6 +66,6 @@ class TestFindFeedFromURL(TestCase):
 
         self.assertIsPreserved("https://medium.com/feed/geekculture")
         self.assertEqual(
-            Feed.find_feed_from_url("https://medium.com/geekculture"),
+            translate_common_feed_extensions("https://medium.com/geekculture"),
             "https://medium.com/feed/geekculture",
         )
