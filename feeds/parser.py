@@ -439,6 +439,7 @@ def parse_feed_entry(entry, feed):
             img["class"] = "rounded mx-auto d-block"
 
             # TODO use the biggest image as the thumbnail
+            # TODO avoid using gifs as thumbails
             if thumbnail is None:
                 src = img.get("src")
                 if src is not None and len(src) < 500:
