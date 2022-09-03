@@ -1,152 +1,204 @@
-{% extends 'feeds/base.html' %}
-
-{% block content %}
+{% extends 'feeds/base.html' %} {% block content %}
 
 <div class="container-fluid">
-
   <div class="dropdown">
-    <button class="btn btn-light dropdown-toggle btn-sm" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+    <button
+      class="btn btn-light dropdown-toggle btn-sm"
+      type="button"
+      id="dropdownMenuButton1"
+      data-bs-toggle="dropdown"
+      aria-expanded="false"
+    >
       <span class="icon">
-	<i class="fas fa-eye"></i>
+        <i class="fas fa-eye"></i>
       </span>
       &nbsp;Layout
     </button>
     <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
       <li>
-	<a class="dropdown-item" href="?view=card">
-	  <span class="icon">
-	    <i class="fas fa-grip"></i>
-	  </span>
-	  &nbsp;Card
-	</a>
+        <a class="dropdown-item" href="?view=card">
+          <span class="icon">
+            <i class="fas fa-grip"></i>
+          </span>
+          &nbsp;Card
+        </a>
       </li>
-	<li>
-	  <a class="dropdown-item" href="?view=list">
-	    <span class="icon">
-	      <i class="fas fa-list"></i>
-	    </span>
-	    &nbsp;Table
-	  </a>
-	</li>
+      <li>
+        <a class="dropdown-item" href="?view=list">
+          <span class="icon">
+            <i class="fas fa-list"></i>
+          </span>
+          &nbsp;Table
+        </a>
+      </li>
     </ul>
   </div>
-  <br>
+  <br />
 
-  {% if page_obj %}
-
-  {% if request.GET.view|default:"grid" == "list" %}
-  <table class="table table-hover table-responsive table-sm text-decoration-none">
+  {% if page_obj %} {% if request.GET.view|default:"grid" == "list" %}
+  <table
+    class="table table-hover table-responsive table-sm text-decoration-none"
+  >
     <tr>
       <th class="col">
-	<span class="icon-text">
-	  <span class="icon">
-	    <i class="fas fa-rss"></i>
-	  </span>
-	  <span>&nbsp;Feed</span>
-	</span>
+        <span class="icon-text">
+          <span class="icon">
+            <i class="fas fa-rss"></i>
+          </span>
+          <span>&nbsp;Feed</span>
+        </span>
       </th>
       <th class="col-11">
-	<span class="icon-text">
-	  <span class="icon">
-	    <i class="fas fa-list"></i>
-	  </span>
-	  <span>&nbsp;Title</span>
-	</span>
+        <span class="icon-text">
+          <span class="icon">
+            <i class="fas fa-list"></i>
+          </span>
+          <span>&nbsp;Title</span>
+        </span>
       </th>
       <th class="text-nowrap d-none d-lg-table-cell col">
-	<span class="icon-text">
-	  <span class="icon">
-	    <i class="fas fa-calendar"></i>
-	  </span>
-	  <span>&nbsp;Published</span>
-	</span>
+        <span class="icon-text">
+          <span class="icon">
+            <i class="fas fa-calendar"></i>
+          </span>
+          <span>&nbsp;Published</span>
+        </span>
       </th>
     </tr>
     {% for entry in page_obj %}
     <tr>
-      <td class="col" style="white-space: nowrap; text-overflow:ellipsis; overflow: hidden; max-width:120px;">
-	<a class="text-decoration-none link-dark" href={{ entry.feed.get_absolute_url }}>
-	  {{ entry.feed.title }}
-	</a>
+      <td
+        class="col"
+        style="
+          white-space: nowrap;
+          text-overflow: ellipsis;
+          overflow: hidden;
+          max-width: 120px;
+        "
+      >
+        <a
+          class="text-decoration-none link-dark"
+          href="{{"
+          entry.feed.get_absolute_url
+          }}
+        >
+          {{ entry.feed.title }}
+        </a>
       </td>
       <td class="col-11">
-	<a class="text-decoration-none link-dark" href="{{ entry.get_absolute_url }}">{{ entry.title }}</a>
+        <a
+          class="text-decoration-none link-dark"
+          href="{{ entry.get_absolute_url }}"
+          >{{ entry.title }}</a
+        >
       </td>
-      <td class="d-none d-lg-table-cell col">
-	{{ entry.published | date }}
-      </td>
+      <td class="d-none d-lg-table-cell col">{{ entry.published | date }}</td>
     </tr>
     {% endfor %}
   </table>
   {% elif request.GET.view|default:"card" == "card" %}
-  <div style="display: grid; grid-template-columns: repeat(9, 1fr); grid-auto-rows: auto; gap: 1rem;" class="pb-4">
+  <div
+    style="
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      grid-auto-rows: auto;
+      gap: 1rem;
+    "
+    class="pb-4"
+  >
     {% for entry in page_obj %}
-    <div class="card" style="max-width: 25rem; height: 24rem; box-sizing: border-box;">
+    <div
+      class="card"
+      style="box-sizing: border-box"
+    >
       {% if entry.thumbnail %}
       <a href="{{ entry.get_absolute_url }}">
-	<img class="card-img-top" src="{{ entry.thumbnail }}" alt="Card image cap">
+        <img
+          class="card-img-top"
+          style="max-height: 20rem"
+          src="{{ entry.thumbnail }}"
+          alt="Card image cap"
+        />
       </a>
       {% endif %}
-      <div class="card-body pb-1">
-	<h6 class="card-title"><a class="link-dark text-decoration-none" href="{{ entry.get_absolute_url }}">{{ entry.title }}</a></h6>
-	{% if not entry.thumbnail %}
-	{% if entry.summary %}
-	<p class="card-text">{{ entry.summary|striptags|truncatewords:"100"}}</p>
-	{% else %}
-	<p class="card-text">{{ entry.content|striptags|truncatewords:"20"}}</p>
-	{% endif %}
-	{% endif %}
-	<small class="text-muted">{{ entry.published|timesince }} ago</small>
+      <div
+        class="card-body pb-1"
+        style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis"
+      >
+        <h6 class="card-title">
+          <a
+            class="link-dark text-decoration-none"
+            href="{{ entry.get_absolute_url }}"
+            >{{ entry.title }}</a
+          >
+        </h6>
+        {% if not entry.thumbnail %} {% if entry.summary %}
+        <p class="card-text">{{ entry.summary|striptags }}</p>
+        {% else %}
+        <p class="card-text">{{ entry.content|striptags }}</p>
+        {% endif %} {% endif %}
+        <small class="text-muted">{{ entry.published|timesince }} ago</small>
       </div>
-      <div class="card-footer" style="overflow: hidden; white-space: nowrap; text-overflow: ellipsis">
-	<small class="text-muted"><a class="link-dark text-decoration-none" href="{{ entry.feed.get_absolute_url }}">{{ entry.feed }}</a></small>
+      <div
+        class="card-footer"
+        style="overflow: hidden; white-space: nowrap; text-overflow: ellipsis"
+      >
+        <small class="text-muted"
+          ><a
+            class="link-dark text-decoration-none"
+            href="{{ entry.feed.get_absolute_url }}"
+            >{{ entry.feed }}</a
+          ></small
+        >
       </div>
     </div>
     {% endfor %}
   </div>
 
-
-{% comment %}
-  <div class="grid" style="--bs-gap: .25rem 1rem;">
-    {% for entry in page_obj %}
-      <div class="card" style="width: 18rem;">
-	{% if entry.thumbnail %}
-	<img src="{{ entry.thumbnail}}" class="card-img-top" alt="...">
-	{% endif %}
-	<div class="card-body">
-	  <h5 class="card-title">{{ entry.title}}</h5>
-	</div>
-      </div>
-    {% endfor %}
-  </div>
-  {% endcomment %}
   {% endif %}
-
 
   <nav aria-label="Page navigation example">
     <ul class="pagination">
-
       {% if page_obj.has_previous %}
-      <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a></li>
+      <li class="page-item">
+        <a class="page-link" href="?page={{ page_obj.previous_page_number }}"
+          >Previous</a
+        >
+      </li>
       {% else %}
-      <li class="page-item disabled"><a class="page-link" href="#">Previous</a></li>
+      <li class="page-item disabled">
+        <a class="page-link" href="#">Previous</a>
+      </li>
       {% endif %}
 
       <li class="page-item">
-	{% if page_obj.has_previous %}
-	<a href="?page={{ page_obj.previous_page_number }}" class="page-link" aria-label="Goto page {{ page_obj.previous_page_number }}">{{ page_obj.previous_page_number }}</a>
-	{% endif %}
+        {% if page_obj.has_previous %}
+        <a
+          href="?page={{ page_obj.previous_page_number }}"
+          class="page-link"
+          aria-label="Goto page {{ page_obj.previous_page_number }}"
+          >{{ page_obj.previous_page_number }}</a
+        >
+        {% endif %}
       </li>
       <li class="page-item active">
-	<span class="page-link">{{ page_obj.number }}</span>
+        <span class="page-link">{{ page_obj.number }}</span>
       </li>
       {% if page_obj.has_next %}
       <li class="page-item">
-	<a href="?page={{ page_obj.next_page_number }}" class="page-link" aria-label="Goto page {{ page_obj.next_page_number }}">{{ page_obj.next_page_number }}</a>
+        <a
+          href="?page={{ page_obj.next_page_number }}"
+          class="page-link"
+          aria-label="Goto page {{ page_obj.next_page_number }}"
+          >{{ page_obj.next_page_number }}</a
+        >
       </li>
-      {% endif %}
-      {% if page_obj.has_next %}
-      <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a></li>
+      {% endif %} {% if page_obj.has_next %}
+      <li class="page-item">
+        <a class="page-link" href="?page={{ page_obj.next_page_number }}"
+          >Next</a
+        >
+      </li>
       {% else %}
       <li class="page-item disabled"><a class="page-link" href="#">Next</a></li>
       {% endif %}
@@ -156,10 +208,19 @@
   {% else %}
   <div class="alert alert-warning alert-dismissible fade show" role="alert">
     <i class="fa-solid fa-triangle-exclamation"></i>&nbsp;
-    <span>No articles available <a class="alert-link" href="{% url 'feeds:feed-discover' %}">Add a feed</a></span>
-    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    <span
+      >No articles available
+      <a class="alert-link" href="{% url 'feeds:feed-discover' %}"
+        >Add a feed</a
+      ></span
+    >
+    <button
+      type="button"
+      class="btn-close"
+      data-bs-dismiss="alert"
+      aria-label="Close"
+    ></button>
   </div>
   {% endif %}
-
 </div>
 {% endblock %}
