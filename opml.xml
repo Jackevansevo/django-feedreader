@@ -36,6 +36,7 @@
       <outline htmlUrl="https://thisweek.gnome.org/" title="This Week in GNOME" xmlUrl="https://thisweek.gnome.org/index.xml"></outline>
       <outline htmlUrl="https://www.omgubuntu.co.uk/" title="OMG! Ubuntu!" xmlUrl="https://www.omgubuntu.co.uk/feed"></outline>
       <outline htmlUrl="https://www.pine64.org" title="Blog – PINE64" xmlUrl="https://www.pine64.org/blog/feed/"></outline>
+      <outline htmlUrl="https://www.volkerkrause.eu/" title="Volker Krause" xmlUrl="https://www.volkerkrause.eu/feed.xml"></outline>
     </outline>
     <outline title="Programming">
       <outline htmlUrl="http://ando.fyi/" title="Andrew's Blog" xmlUrl="https://blog.ando.fyi/index.xml"></outline>
@@ -46,6 +47,7 @@
       <outline htmlUrl="http://evertpot.com/" title="Evert Pot's blog" xmlUrl="https://evertpot.com/atom.xml"></outline>
       <outline htmlUrl="http://jeffq.com/blog" title="jeffq, published" xmlUrl="https://jeffq.com/blog/feed/"></outline>
       <outline htmlUrl="http://jvns.ca" title="Julia Evans" xmlUrl="https://jvns.ca/atom.xml"></outline>
+      <outline htmlUrl="http://jyn.dev/" title="The website of Joshua Nelson" xmlUrl="https://jyn.dev/feed.xml"></outline>
       <outline htmlUrl="http://kevinmahoney.co.uk/" title="Kevin Mahoney" xmlUrl="http://kevinmahoney.co.uk/feed.xml"></outline>
       <outline htmlUrl="http://khamidou.com/" title="Karim Hamidou" xmlUrl="https://khamidou.com/feed"></outline>
       <outline htmlUrl="http://lucumr.pocoo.org/" title="Armin Ronacher's Thoughts and Writings" xmlUrl="https://lucumr.pocoo.org/feed.atom"></outline>
@@ -58,7 +60,7 @@
       <outline htmlUrl="http://simonwillison.net/" title="Simon Willison's Weblog" xmlUrl="https://simonwillison.net/atom/everything/"></outline>
       <outline htmlUrl="http://techspot.zzzeek.org" title="zzzeek" xmlUrl="https://techspot.zzzeek.org/feed/index.xml"></outline>
       <outline htmlUrl="http://thorstenball.com/" title=" Thorsten Ball " xmlUrl="https://thorstenball.com/atom.xml"></outline>
-      <outline htmlUrl="http://www.benfrederickson.com/`" title="Ben Frederickson" xmlUrl="http://www.benfrederickson.com/atom.xml"></outline>
+      <outline htmlUrl="http://www.benfrederickson.com/`" title="Ben Frederickson" xmlUrl="https://www.benfrederickson.com/atom.xml"></outline>
       <outline htmlUrl="http://www.benjamistan.tech/" title="Benjamistan" xmlUrl="https://www.benjamistan.tech/feed.xml"></outline>
       <outline htmlUrl="http://www.codersnotes.com" title="codersnotes.com" xmlUrl="http://www.codersnotes.com/notes/feed"></outline>
       <outline htmlUrl="http://www.convalesco.org/notes" title="Convalesco|notes" xmlUrl="https://www.convalesco.org/feed-notes.xml"></outline>
@@ -74,6 +76,7 @@
       <outline htmlUrl="https://alexkrupp.typepad.com/sensemaking/" title="Sensemaking" xmlUrl="https://alexkrupp.typepad.com/sensemaking/atom.xml"></outline>
       <outline htmlUrl="https://alexwlchan.net/" title="alexwlchan" xmlUrl="https://alexwlchan.net/atom.xml"></outline>
       <outline htmlUrl="https://andrealmeid.com/post/" title="Posts on tony is coding" xmlUrl="https://andrealmeid.com/post/index.xml"></outline>
+      <outline htmlUrl="https://ar.al/" title="Aral Balkan" xmlUrl="https://ar.al/index.xml"></outline>
       <outline htmlUrl="https://ariadne.space/" title="Ariadne's Space" xmlUrl="https://ariadne.space/atom.xml"></outline>
       <outline htmlUrl="https://auth0.com/blog/" title="Auth0 Blog" xmlUrl="https://auth0.com/blog/rss.xml"></outline>
       <outline htmlUrl="https://ayende.com/blog/" title="Ayende @ Rahien" xmlUrl="http://feeds.feedburner.com/AyendeRahien"></outline>
@@ -99,6 +102,7 @@
       <outline htmlUrl="https://blog.janestreet.com" title="Jane Street Tech Blog" xmlUrl="https://blog.janestreet.com/feed.xml"></outline>
       <outline htmlUrl="https://blog.janetacarr.com/" title="Janet A. Carr" xmlUrl="https://blog.janetacarr.com/rss/"></outline>
       <outline htmlUrl="https://blog.jurn.io/" title="Jurn.io" xmlUrl="https://blog.jurn.io/rss/"></outline>
+      <outline htmlUrl="https://blog.lawrencejones.dev/" title="Lawrence Jones" xmlUrl="https://blog.lawrencejones.dev/feed.xml"></outline>
       <outline htmlUrl="https://blog.michielborkent.nl/" title="REPL adventures" xmlUrl="https://blog.michielborkent.nl/atom.xml"></outline>
       <outline htmlUrl="https://blog.najaryan.net/" title="Engineering 451." xmlUrl="https://blog.najaryan.net/index.xml"></outline>
       <outline htmlUrl="https://blog.ploeh.dk" title="ploeh blog" xmlUrl="https://blog.ploeh.dk/rss.xml"></outline>
@@ -119,6 +123,7 @@
       <outline htmlUrl="https://brntn.me/" title="Brenton Cleeland" xmlUrl="https://brntn.me/rss/"></outline>
       <outline htmlUrl="https://buttondown.email/hillelwayne" title="Computer Things" xmlUrl="https://buttondown.email/hillelwayne/rss"></outline>
       <outline htmlUrl="https://buttondown.email/j2kun" title="Halfspace" xmlUrl="https://buttondown.email/j2kun/rss"></outline>
+      <outline htmlUrl="https://cadence.moe/blog" title="Cadence's Blog" xmlUrl="https://cadence.moe/blog/rss.xml?limit=30"></outline>
       <outline htmlUrl="https://calebschoepp.com/" title="Caleb Schoepp" xmlUrl="https://calebschoepp.com/index.xml"></outline>
       <outline htmlUrl="https://calpaterson.com" title="Cal Paterson" xmlUrl="https://calpaterson.com/calpaterson.rss"></outline>
       <outline htmlUrl="https://carlosbecker.com/" title="Carlos Becker" xmlUrl="https://carlosbecker.com/index.xml"></outline>
@@ -182,6 +187,7 @@
       <outline htmlUrl="https://jacobian.org/" title="jacobian.org" xmlUrl="https://jacobian.org/index.xml"></outline>
       <outline htmlUrl="https://jfmengels.net" title="jfmengels' blog" xmlUrl="https://jfmengels.net/rss.xml"></outline>
       <outline htmlUrl="https://jlelse.blog/posts" title="✍️ Posts" xmlUrl="https://jlelse.blog/posts.rss"></outline>
+      <outline htmlUrl="https://jonashietala.se/" title="Jonas Hietala: ..." xmlUrl="https://www.jonashietala.se/feed.xml"></outline>
       <outline htmlUrl="https://kate.io/" title="Kate Murphy" xmlUrl="https://kate.io/feed.xml"></outline>
       <outline htmlUrl="https://kazimuth.github.io/blog/" title="james's web log" xmlUrl="https://kazimuth.github.io/blog/index.xml"></outline>
       <outline htmlUrl="https://kdspaul.github.io/" title="Lowering the bar, slowly." xmlUrl="https://kdspaul.github.io/feed.xml"></outline>
@@ -189,6 +195,7 @@
       <outline htmlUrl="https://kevin.burke.dev" title="Kevin Burke" xmlUrl="http://feeds.feedburner.com/kburke"></outline>
       <outline htmlUrl="https://kevincox.ca/" title="Kevin Cox's Blog" xmlUrl="https://kevincox.ca/feed.atom"></outline>
       <outline htmlUrl="https://kevinlawler.com" title="Kevin Lawler" xmlUrl="https://kevinlawler.com/feed"></outline>
+      <outline htmlUrl="https://kishvanchee.com/" title="Kishore's Blog" xmlUrl="https://kishvanchee.com/index.xml"></outline>
       <outline htmlUrl="https://kmicinski.com/" title="Kristopher Micinski" xmlUrl="https://kmicinski.com/feed.xml"></outline>
       <outline htmlUrl="https://krebsonsecurity.com" title="Krebs on Security" xmlUrl="https://krebsonsecurity.com/feed/"></outline>
       <outline htmlUrl="https://kristoff.it/" title="Loris Cro's Personal Website" xmlUrl="https://kristoff.it/index.xml"></outline>
@@ -208,7 +215,7 @@
       <outline htmlUrl="https://matt-rickard.com/" title="Matt Rickard" xmlUrl="https://matt-rickard.com/rss"></outline>
       <outline htmlUrl="https://maxleiter.com" title="Max Leiter" xmlUrl="https://maxleiter.com/feed.xml"></outline>
       <outline htmlUrl="https://metaredux.com/" title="Meta Redux" xmlUrl="https://metaredux.com/feed.xml"></outline>
-      <outline htmlUrl="https://mhlakhani.com/blog/" title="Hasnain Lakhani's Blog" xmlUrl="https://mhlakhani.com/blog/rss.xml"></outline>
+      <outline htmlUrl="https://mhlakhani.com/blog/" title="RSS" xmlUrl="https://mhlakhani.com/blog/rss.xml"></outline>
       <outline htmlUrl="https://micahcantor.com" title="Micah Cantor" xmlUrl="https://www.micahcantor.com/atom.xml"></outline>
       <outline htmlUrl="https://michael.stapelberg.ch/" title="Michael Stapelbergs Website" xmlUrl="https://michael.stapelberg.ch/feed"></outline>
       <outline htmlUrl="https://mikelevins.github.io/" title="engine of joy" xmlUrl="https://mikelevins.github.io/index.xml"></outline>
@@ -252,7 +259,7 @@
       <outline htmlUrl="https://robert.kra.hn/" title="Robert Krahn" xmlUrl="https://robert.kra.hn/feed.xml"></outline>
       <outline htmlUrl="https://roborooter.com/" title="Roborooter.com" xmlUrl="https://roborooter.com/feed/"></outline>
       <outline htmlUrl="https://ryanrodemoyer.github.io/" title="Ryan Rodemoyer" xmlUrl="https://ryanrodemoyer.github.io/feed"></outline>
-      <outline htmlUrl="https://samgerstenzang.substack.com" title="Sam’s Newsletter" xmlUrl="https://samgerstenzang.substack.com/feed"></outline>
+      <outline htmlUrl="https://samgerstenzang.substack.com" title="Sam’s Newsletter" xmlUrl="https://samgerstenzang.substack.com/feed.xml"></outline>
       <outline htmlUrl="https://seirdy.one/posts/" title="Posts on Seirdy's Home" xmlUrl="https://seirdy.one/posts/atom.xml"></outline>
       <outline htmlUrl="https://sergey.khabibullin.com" title="Gatsby Starter Blog RSS Feed" xmlUrl="https://sergey.khabibullin.com/rss"></outline>
       <outline htmlUrl="https://shekhargulati.com" title="Shekhar Gulati" xmlUrl="https://shekhargulati.com/feed/"></outline>
@@ -295,13 +302,14 @@
       <outline htmlUrl="https://www.alexedwards.net/blog" title="Alex Edwards" xmlUrl="https://www.alexedwards.net/static/feed.rss"></outline>
       <outline htmlUrl="https://www.allenpike.com/" title="Allen Pike" xmlUrl="https://feeds.allenpike.com/feed/"></outline>
       <outline htmlUrl="https://www.ardanlabs.com/blog/" title="Go (Golang) Programming Blog - Ardan Labs on" xmlUrl="https://www.ardanlabs.com/blog/index.xml"></outline>
+      <outline htmlUrl="https://www.arrdem.com" title="f : ⊥ x ⊥ → ⊥ | All posts" xmlUrl="https://arrdem.com/feeds/all.xml"></outline>
       <outline htmlUrl="https://www.b-list.org/" title="James Bennett (b-list.org)" xmlUrl="https://www.b-list.org/feeds/entries/"></outline>
       <outline htmlUrl="https://www.bryanbraun.com/" title="Bryan Braun - Frontend Developer" xmlUrl="https://www.bryanbraun.com/rss.xml"></outline>
       <outline htmlUrl="https://www.ctrl.blog/" title="Ctrl blog" xmlUrl="https://feed.ctrl.blog/latest.atom"></outline>
       <outline htmlUrl="https://www.danielsieger.com/" title="Daniel Sieger" xmlUrl="https://www.danielsieger.com/atom.xml"></outline>
       <outline htmlUrl="https://www.djangoproject.com/weblog/" title="The Django weblog" xmlUrl="https://www.djangoproject.com/rss/weblog/"></outline>
       <outline htmlUrl="https://www.hanselman.com/blog/" title="Scott Hanselman's Blog" xmlUrl="http://feeds.hanselman.com/ScottHanselman"></outline>
-      <outline htmlUrl="https://www.haskellforall.com/" title="Haskell for all" xmlUrl="https://blog.ando.fyi/index.xml"></outline>
+      <outline htmlUrl="https://www.haskellforall.com/" title="Haskell for all" xmlUrl="https://www.haskellforall.com/feeds/posts/default"></outline>
       <outline htmlUrl="https://www.hillelwayne.com/post/" title="Blog on Hillel Wayne" xmlUrl="https://hillelwayne.com/post/index.xml"></outline>
       <outline htmlUrl="https://www.holovaty.com/" title="Holovaty.com" xmlUrl="https://www.holovaty.com/rss/"></outline>
       <outline htmlUrl="https://www.jeffgeerling.com/" title="Jeff Geerling's Blog" xmlUrl="https://www.jeffgeerling.com/blog.xml"></outline>
@@ -310,6 +318,7 @@
       <outline htmlUrl="https://www.joshwcomeau.com/" title="Josh Comeau's blog" xmlUrl="https://www.joshwcomeau.com/rss.xml"></outline>
       <outline htmlUrl="https://www.jvt.me/kind/articles/" title="articles on Jamie Tanna | Software Engineer" xmlUrl="https://www.jvt.me/kind/articles/feed.xml"></outline>
       <outline htmlUrl="https://www.karltarvas.com/" title="Karl Tarvas" xmlUrl="https://www.karltarvas.com/feed.xml"></outline>
+      <outline htmlUrl="https://www.kryogenix.org/days/" title="as days pass by" xmlUrl="https://www.kryogenix.org/days/feed"></outline>
       <outline htmlUrl="https://www.mgaudet.ca/technical/" title="Tech Blog - Matthew Gaudet" xmlUrl="https://www.mgaudet.ca/technical?format=rss"></outline>
       <outline htmlUrl="https://www.mikeperham.com/" title="Mike Perham" xmlUrl="https://www.mikeperham.com/index.xml"></outline>
       <outline htmlUrl="https://www.okteto.com" title="Okteto Blog" xmlUrl="https://www.okteto.com/rss.xml"></outline>
@@ -333,13 +342,13 @@
       <outline htmlUrl="http://giuliomagnifico.blog/" title="etcetera" xmlUrl="https://giuliomagnifico.blog/feed.xml"></outline>
       <outline htmlUrl="https://about.gitlab.com/blog/" title="GitLab" xmlUrl="https://about.gitlab.com/atom.xml"></outline>
       <outline htmlUrl="https://benn.substack.com" title="benn.substack" xmlUrl="https://benn.substack.com//feed"></outline>
-      <outline htmlUrl="https://blog.google/" title="The Keyword" xmlUrl="https://blog.google/rss/"></outline>
       <outline htmlUrl="https://discord.com" title="Discord Blog" xmlUrl="https://discord.com/blog/rss.xml"></outline>
       <outline htmlUrl="https://jukkaniiranen.com/" title="Jukka Niiranen" xmlUrl="https://jukkaniiranen.com/feed/"></outline>
       <outline htmlUrl="https://keunwoo.com/" title="Keunwoo Lee's Minimum Viable Homepage" xmlUrl="https://keunwoo.com/feed.atom"></outline>
       <outline htmlUrl="https://krausefx.com/" title="Felix Krause" xmlUrl="https://krausefx.com/feed.xml"></outline>
       <outline htmlUrl="https://manualdousuario.net" title="Manual do Usuário" xmlUrl="https://manualdousuario.net/feed/"></outline>
       <outline htmlUrl="https://notes.ghed.in/" title="Notes" xmlUrl="https://notes.ghed.in/index.xml"></outline>
+      <outline htmlUrl="https://samyaksahu.me/" title="Samyak's Nook" xmlUrl="https://samyaksahu.me/feed/"></outline>
       <outline htmlUrl="https://staysaasy.com/" title="Stay SaaSy" xmlUrl="https://staysaasy.com/feed.xml"></outline>
       <outline htmlUrl="https://www.autodidacts.io/" title="The Autodidacts" xmlUrl="https://autodidacts.io/rss/"></outline>
     </outline>
