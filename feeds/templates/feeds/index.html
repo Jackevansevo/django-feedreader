@@ -109,38 +109,38 @@
     {% for entry in page_obj %}
     <div
       class="card"
-      style="box-sizing: border-box"
+      style="box-sizing: border-box; height: 20rem;"
     >
       {% if entry.thumbnail %}
       <a href="{{ entry.get_absolute_url }}">
         <img
           class="card-img-top"
-          style="max-height: 20rem"
+          style="max-height: 15rem"
           src="{{ entry.thumbnail }}"
           alt="Card image cap"
         />
       </a>
       {% endif %}
       <div
-        class="card-body pb-1"
-        style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis"
+        class="card-body d-flex flex-column align-items-start"
+        style="overflow: hidden; text-overflow: ellipsis"
       >
-        <h6 class="card-title">
+        <h5 class="card-title">
           <a
             class="link-dark text-decoration-none"
             href="{{ entry.get_absolute_url }}"
             >{{ entry.title }}</a
           >
-        </h6>
+        </h5>
         {% if not entry.thumbnail %} {% if entry.summary %}
         <p class="card-text">{{ entry.summary|striptags }}</p>
         {% else %}
         <p class="card-text">{{ entry.content|striptags }}</p>
         {% endif %} {% endif %}
-        <small class="text-muted">{{ entry.published|timesince }} ago</small>
+        <small class="text-muted mt-auto">{{ entry.published|timesince }} ago</small>
       </div>
       <div
-        class="card-footer"
+        class="card-footer mt-2"
         style="overflow: hidden; white-space: nowrap; text-overflow: ellipsis"
       >
         <small class="text-muted"
