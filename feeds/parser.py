@@ -1,6 +1,7 @@
 import io
 import posixpath
 from datetime import datetime, timedelta
+from os.path import splitext
 from urllib.parse import urljoin, urlparse
 
 import bleach
@@ -14,6 +15,7 @@ from django.utils.text import slugify
 from lxml import etree
 from unidecode import unidecode
 
+import feeds.crawler as crawler
 from feeds.models import Entry
 
 XML_PARSER = etree.XMLParser(recover=True, remove_comments=True)
@@ -100,7 +102,7 @@ def parse(f):
 
     if isinstance(f, str) and is_valid_url(f):
         resp = httpx.get(
-            f, follow_redirects=True, headers={"User-Agent": tasks.USER_AGENT}
+            f, follow_redirects=True, headers={"User-Agent": crawler.USER_AGENT}
         )
         f = io.BytesIO(resp.content)
 
@@ -124,7 +126,7 @@ def parse(f):
         case "feed":
             parser = AtomParser(et)
         case _:
-            raise NotImplemented
+            raise NotImplementedError
 
     # TODO Do we want to save some of these attributes in slots in a class
     attributes = {
@@ -290,7 +292,7 @@ class AtomParser:
                 tag = element.tag
 
             match tag:
-                case "title" | "guid" | "updated" | "id" | "published" | "updated" | "summary":
+                case "title" | "guid" | "updated" | "id" | "published" | "updated" | "summary":  # noqa
                     entry[tag] = element.text
                 case "link":
                     entry[tag] = element.get("href")
@@ -439,11 +441,12 @@ def parse_feed_entry(entry, feed):
             img["class"] = "rounded mx-auto d-block"
 
             # TODO use the biggest image as the thumbnail
-            # TODO avoid using gifs as thumbails
             if thumbnail is None:
                 src = img.get("src")
-                if src is not None and len(src) < 500:
-                    thumbnail = src
+                fname, ext = splitext(urlparse(src).path)
+                if ext != ".gif":
+                    if src is not None and len(src) < 500:
+                        thumbnail = src
 
         content = str(soup)
 
