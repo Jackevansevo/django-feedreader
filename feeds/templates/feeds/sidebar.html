@@ -77,7 +77,7 @@
 	  <li>
 	    <a href={{ subscription.feed.get_absolute_url }} class="link-dark rounded d-flex align-items-center">
 	      {% if subscription.feed.favicon %}
-	        <img style="border-radius: 50%; width: 25px; height: 25px; margin-right: 10px" src="{{ subscription.feed.favicon.url }}" loading="lazy"></img>
+	        <img style="width: 25px; height: 25px; margin-right: 10px; object-fit: contain;" src="{{ subscription.feed.favicon.url }}" loading="lazy"></img>
 	      {% endif %}
 	      <b>{{ subscription.feed.title }}</b>
 	    </a>
