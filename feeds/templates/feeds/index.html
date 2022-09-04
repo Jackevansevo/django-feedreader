@@ -101,7 +101,7 @@
     style="
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      grid-auto-rows: auto;
+      grid-auto-rows: 1fr;
       gap: 1rem;
     "
     class="pb-4"
@@ -109,13 +109,13 @@
     {% for entry in page_obj %}
     <div
       class="card"
-      style="box-sizing: border-box; height: 20rem;"
+      style="box-sizing: border-box;"
     >
       {% if entry.thumbnail %}
       <a href="{{ entry.get_absolute_url }}">
         <img
           class="card-img-top"
-          style="max-height: 15rem"
+          style="max-height: 12rem; object-fit: cover;"
           src="{{ entry.thumbnail }}"
           alt="Card image cap"
         />
@@ -123,7 +123,6 @@
       {% endif %}
       <div
         class="card-body d-flex flex-column align-items-start"
-        style="overflow: hidden; text-overflow: ellipsis"
       >
         <h5 class="card-title">
           <a
