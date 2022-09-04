@@ -444,7 +444,7 @@ def parse_feed_entry(entry, feed):
             if thumbnail is None:
                 src = img.get("src")
                 fname, ext = splitext(urlparse(src).path)
-                if ext != ".gif":
+                if ext != ".gif" and ext != ".svg":
                     if src is not None and len(src) < 500:
                         thumbnail = src
 
