@@ -131,10 +131,11 @@
             >{{ entry.title }}</a
           >
         </h5>
-        {% if not entry.thumbnail %} {% if entry.summary %}
-        <p class="card-text">{{ entry.summary|striptags }}</p>
+        {% if not entry.thumbnail %}
+        {% if entry.summary %}
+        <p class="card-text">{{ entry.summary|striptags|truncatewords:"35" }}</p>
         {% else %}
-        <p class="card-text">{{ entry.content|striptags }}</p>
+        <p class="card-text">{{ entry.content|striptags|truncatewords:"35" }}</p>
         {% endif %} {% endif %}
         <small class="text-muted mt-auto">{{ entry.published|timesince }} ago</small>
       </div>
