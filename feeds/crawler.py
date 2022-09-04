@@ -277,11 +277,11 @@ class Crawler:
                         self.add_target(ext)
 
                 if self.html_resp is None:
+                    if parsed_url.path.endswith("/"):
+                        parsed_url = parsed_url._replace(
+                            path=parsed_url.path.rstrip("/")
+                        )
                     if parsed_url.path:
-                        if parsed_url.path.endswith("/"):
-                            url = parsed_url._replace(
-                                path=parsed_url.path.rstrip("/")
-                            ).geturl()
                         link = posixpath.dirname(url)
                         self.add_target(link)
 
