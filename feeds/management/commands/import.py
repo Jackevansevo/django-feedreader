@@ -13,6 +13,8 @@ from feeds.models import Category, Feed, Subscription
 
 user = User.objects.first()
 
+limit = asyncio.Semaphore(200)
+
 
 def ingest(resp, parsed, favicon, category_name):
     try:
@@ -29,31 +31,34 @@ def ingest(resp, parsed, favicon, category_name):
 sync_ingest = sync_to_async(ingest)
 
 
-async def crawl_url(client, url):
-    return await crawler.Crawler(client, url).crawl()
+async def import_feed(client, feed):
+    async with limit:
+        print("Fetching:", feed["url"])
+        resp, parsed_feed, favicon = await crawler.Crawler(client, feed["url"]).crawl()
+        print("Got:", resp.url, resp.status_code)
+        await sync_ingest(resp, parsed_feed, favicon, feed["categories"][0][0])
+
+        if limit.locked():
+            print("Limit reached, sleeping temporarily")
+            await asyncio.sleep(0.5)
 
 
 async def main(infile):
 
     parsed = listparser.parse(infile.read())
 
-    timeout = httpx.Timeout(10.0)
-    limits = httpx.Limits(
-        max_keepalive_connections=None, max_connections=None, keepalive_expiry=10
-    )
-
     subscribed = set()
     async for url in Feed.objects.values_list("url", flat=True):
         subscribed.add(url)
 
-    async with httpx.AsyncClient(
-        timeout=timeout, limits=limits, follow_redirects=True
-    ) as client:
-        for feed in parsed["feeds"]:
-            print(feed["url"])
-            if feed["url"] not in subscribed:
-                resp = await crawl_url(client, feed["url"])
-                await sync_ingest(*resp, feed["categories"][0][0])
+    async with httpx.AsyncClient(follow_redirects=True, timeout=60) as client:
+        await asyncio.gather(
+            *[
+                import_feed(client, feed)
+                for feed in parsed["feeds"]
+                if feed["url"] not in subscribed
+            ],
+        )
 
 
 class Command(BaseCommand):
