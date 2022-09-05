@@ -38,6 +38,7 @@ uvicorn = "*"
 python-dateutil = "*"
 boto3 = "*"
 django-storages = "*"
+rich = "*"
 
 [pipenv]
 allow_prereleases = true

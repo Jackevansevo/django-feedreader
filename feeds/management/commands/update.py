@@ -8,6 +8,7 @@ from asgiref.sync import sync_to_async
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 from django.utils.http import http_date
+from rich.progress import track
 
 import feeds.parser as parser
 from feeds.models import Entry, Feed
@@ -29,56 +30,51 @@ async def main(filter: Optional[str]):
     async with httpx.AsyncClient(follow_redirects=True, timeout=60) as client:
 
         feed_query = Feed.objects.values("url", "etag", "last_modified")
-
         if filter is not None:
             feed_query = feed_query.filter(url__icontains=filter)
 
-        print("Fetching feeds...")
+        tasks = [update_feed(client, **kwargs) async for kwargs in feed_query]
+        total_tasks = len(tasks)
 
-        results = await asyncio.gather(
-            *[update_feed(client, **kwargs) async for kwargs in feed_query],
-            return_exceptions=True
-        )
+        for task in track(
+            asyncio.as_completed(tasks), description="Updating...", total=total_tasks
+        ):
+            result = await task
 
-    for result in results:
+            if isinstance(result, Exception):
+                continue
 
-        if isinstance(result, Exception):
-            print(result.request.url, result)
-            continue
+            feed = await Feed.objects.aget(url=result.url)
+            update_fields = ["last_checked"]
+            feed.last_checked = timezone.now()
 
-        feed = await Feed.objects.aget(url=result.url)
-        update_fields = ["last_checked"]
-        feed.last_checked = timezone.now()
+            if result.status_code == 200:
 
-        print(result.url, result.status_code)
+                parsed = parser.parse(io.BytesIO(result.content))
+                existing_entries = set()
 
-        if result.status_code == 200:
+                async for link in Entry.objects.filter(
+                    feed__url=result.url
+                ).values_list("link", flat=True):
+                    existing_entries.add(link)
 
-            parsed = parser.parse(io.BytesIO(result.content))
-            existing_entries = set()
+                for entry in parsed["entries"]:
+                    link = entry.get("link")
+                    if link is not None and link not in existing_entries:
+                        entry = parser.parse_feed_entry(entry, feed)
+                        await sync_to_async(entry.save)()
 
-            async for link in Entry.objects.filter(feed__url=result.url).values_list(
-                "link", flat=True
-            ):
-                existing_entries.add(link)
+                etag = result.headers.get("etag")
+                if etag is not None:
+                    update_fields.append("etag")
+                    feed.etag = etag
 
-            for entry in parsed["entries"]:
-                link = entry.get("link")
-                if link is not None and link not in existing_entries:
-                    entry = parser.parse_feed_entry(entry, feed)
-                    await sync_to_async(entry.save)()
+                last_modified = result.headers.get("last-modified")
+                if last_modified is not None:
+                    update_fields.append("last_modified")
+                    feed.last_modified = dateutil.parser.parse(last_modified)
 
-            etag = result.headers.get("etag")
-            if etag is not None:
-                update_fields.append("etag")
-                feed.etag = etag
-
-            last_modified = result.headers.get("last-modified")
-            if last_modified is not None:
-                update_fields.append("last_modified")
-                feed.last_modified = dateutil.parser.parse(last_modified)
-
-        await sync_to_async(feed.save)(update_fields=update_fields)
+            await sync_to_async(feed.save)(update_fields=update_fields)
 
 
 class Command(BaseCommand):
