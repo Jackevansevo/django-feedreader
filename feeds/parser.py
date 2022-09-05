@@ -1,5 +1,6 @@
 import io
 import posixpath
+import re
 from datetime import datetime, timedelta
 from os.path import splitext
 from urllib.parse import urljoin, urlparse
@@ -446,6 +447,12 @@ def parse_feed_entry(entry, feed):
                 fname, ext = splitext(urlparse(src).path)
                 if ext != ".gif" and ext != ".svg":
                     if src is not None and len(src) < 500:
+                        # Check if dimensions are included in the image
+                        match = re.search(r"\d+x\d+", fname)
+                        if match:
+                            x, y = list(map(int, match.group().split("x")))
+                            if x < 100 or y < 100:
+                                continue
                         thumbnail = src
 
         content = str(soup)
