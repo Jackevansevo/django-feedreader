@@ -37,16 +37,30 @@ async def main(filter: Optional[str]):
         total_tasks = len(tasks)
 
         for task in track(
-            asyncio.as_completed(tasks), description="Updating...", total=total_tasks
+            asyncio.as_completed(tasks), total=total_tasks, description="Updating..."
         ):
             result = await task
 
             if isinstance(result, Exception):
                 continue
 
-            feed = await Feed.objects.aget(url=result.url)
+            lookup_url = result.url
+            if result.history:
+                lookup_url = result.history[0].url
+
+            try:
+                feed = await Feed.objects.aget(url=lookup_url)
+            except Feed.DoesNotExist:
+                breakpoint()
+
             update_fields = ["last_checked"]
             feed.last_checked = timezone.now()
+
+            # If we were redirected, update to the new URL
+            if result.history:
+                print(f"{feed.url} redirected -> {result.url}")
+                feed.url = str(result.url)
+                update_fields.append("url")
 
             if result.status_code == 200:
 
