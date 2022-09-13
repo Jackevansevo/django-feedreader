@@ -318,7 +318,7 @@ class AtomParser:
 
             for link in entry["links"]:
                 # Just return the first link
-                return link
+                return link.get("href")
 
         entry["link"] = find_link(entry)
 
