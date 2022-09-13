@@ -283,7 +283,7 @@ class AtomParser:
             return id_text
 
     def _parse_entry(self, raw_entry):
-        entry = {}
+        entry = {"links": []}
         for element in raw_entry:
             # TODO This is awful: Figure out how to deal with weird namespace
             # prefix '{http://www.w3.org/2005/Atom}title'
@@ -296,10 +296,31 @@ class AtomParser:
                 case "title" | "guid" | "updated" | "id" | "published" | "updated" | "summary":  # noqa
                     entry[tag] = element.text
                 case "link":
-                    entry[tag] = element.get("href")
+                    entry["links"].append(
+                        {
+                            "href": element.get("href"),
+                            "type": element.get("type"),
+                            "rel": element.get("rel"),
+                        }
+                    )
                 case _:
                     if "content" in element.tag:
                         entry["content"] = element.text
+
+        def find_link(entry):
+            for link in entry["links"]:
+                if link.get("rel") == "alternate" and link.get("type") == "text/html":
+                    return link.get("href")
+
+            for link in entry["links"]:
+                if link.get("rel") == "alternate":
+                    return link.get("href")
+
+            for link in entry["links"]:
+                # Just return the first link
+                return link
+
+        entry["link"] = find_link(entry)
 
         return entry
 
