@@ -8,6 +8,7 @@ from asgiref.sync import sync_to_async
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 from django.utils.http import http_date
+from urllib.parse import urljoin
 from rich.progress import track
 
 import feeds.parser as parser
@@ -16,7 +17,7 @@ from feeds.models import Entry, Feed
 USER_AGENT = "feedreader/1 +https://github.com/Jackevansevo/feedreader/"
 
 
-async def update_feed(client, url, etag=None, last_modified=None):
+async def fetch_feed(client, url, etag=None, last_modified=None):
     headers = {"User-Agent": USER_AGENT}
     if etag is not None:
         headers["If-None-Match"] = etag
@@ -33,7 +34,7 @@ async def main(filter: Optional[str]):
         if filter is not None:
             feed_query = feed_query.filter(url__icontains=filter)
 
-        tasks = [update_feed(client, **kwargs) async for kwargs in feed_query]
+        tasks = [fetch_feed(client, **kwargs) async for kwargs in feed_query]
         total_tasks = len(tasks)
 
         for task in track(
@@ -74,7 +75,10 @@ async def main(filter: Optional[str]):
 
                 for entry in parsed["entries"]:
                     link = entry.get("link")
-                    if link is not None and link not in existing_entries:
+                    if (
+                        link is not None
+                        and urljoin(feed.link, link) not in existing_entries
+                    ):
                         entry = parser.parse_feed_entry(entry, feed)
                         await sync_to_async(entry.save)()
 
