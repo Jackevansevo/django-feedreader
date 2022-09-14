@@ -4,4 +4,9 @@ __pycache__
 /media/
 data/
 secrets.env
-examples/
+celerybeat-schedule.bak
+celerybeat-schedule.dat
+celerybeat-schedule.dir
+django.bak
+django.dat
+django.dir

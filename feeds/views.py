@@ -29,7 +29,7 @@ from .models import Category, Entry, Feed, Subscription
 logger = logging.getLogger(__name__)
 
 
-def subscriptions_by_category(request):
+def subscriptions_by_category(request: HttpRequest):
     if request.user.is_authenticated:
         subscriptions = (
             Subscription.objects.select_related("category", "feed")

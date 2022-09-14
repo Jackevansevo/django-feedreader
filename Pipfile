@@ -23,7 +23,7 @@ python_version = "3.10"
 
 [packages]
 gunicorn = "*"
-django = "==4.1"
+django = "==4.1.1"
 unidecode = "*"
 listparser = "*"
 django-environ = "*"
@@ -39,6 +39,10 @@ python-dateutil = "*"
 boto3 = "*"
 django-storages = "*"
 rich = "*"
+setuptools = "*"
+django-celery-results = "*"
+django-celery-beat = "*"
+celery = {extras = ["redis"], version = "*"}
 
 [pipenv]
 allow_prereleases = true
