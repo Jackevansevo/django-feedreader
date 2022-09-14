@@ -4,3 +4,5 @@ docker-compose.yml
 examples/
 static/
 media/
+.env
+.secrets.env

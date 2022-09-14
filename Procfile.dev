@@ -1,0 +1,3 @@
+app: ./manage.py runserver
+celery: celery -A feedreader worker --beat --scheduler django --loglevel=info
+redis: docker run --rm -p 6379:6379 redis

@@ -2,9 +2,10 @@ ARG PYTHON_VERSION=3.10
 
 FROM python:${PYTHON_VERSION}-slim as base
 
-ENV DEBUG=False
-
-RUN apt-get update && apt-get upgrade -y && apt install -y gcc g++ sqlite3
+RUN rm -f /etc/apt/apt.conf.d/docker-clean; echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' > /etc/apt/apt.conf.d/keep-cache
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+  --mount=type=cache,target=/var/lib/apt,sharing=locked \
+  apt update && apt-get --no-install-recommends install -y gcc g++ sqlite3 wget tmux
 
 RUN mkdir -p /app
 WORKDIR /app
@@ -18,4 +19,6 @@ RUN python manage.py collectstatic --noinput
 
 EXPOSE 8080
 
-CMD ["gunicorn", "--bind", "0.0.0.0:8080", "feedreader.asgi:application", "-k", "uvicorn.workers.UvicornWorker"]
+RUN wget -O overmind.gz https://github.com/DarthSim/overmind/releases/download/v2.3.0/overmind-v2.3.0-linux-amd64.gz && gunzip overmind.gz && chmod +x overmind
+
+CMD ["./overmind", "start"]
