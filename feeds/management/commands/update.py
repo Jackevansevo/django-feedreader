@@ -42,9 +42,6 @@ async def main(filter: Optional[str]):
         ):
             result = await task
 
-            if isinstance(result, Exception):
-                continue
-
             lookup_url = result.url
             if result.history:
                 lookup_url = result.history[0].url
