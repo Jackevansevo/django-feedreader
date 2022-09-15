@@ -1,3 +1,3 @@
 app: ./manage.py runserver
-celery: celery -A feedreader worker --beat --scheduler django --loglevel=info
-redis: docker run --rm -p 6379:6379 redis
+celery: ./manage.py celery
+redis: trap 'docker stop feedreader-redis' EXIT > /dev/null; docker run --rm --name feedreader-redis -p 6379:6379 redis

@@ -79,7 +79,7 @@ async def main(filter: Optional[str], workers):
                 while True:
                     result = await results.get()
 
-                    print("Got response from:", result.url)
+                    print(f"Got response from: {result.url}")
 
                     lookup_url = result.url
                     if result.history:
