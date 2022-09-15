@@ -290,9 +290,6 @@ class Crawler:
                 if favicon is not None:
                     break
 
-        if self.feed_resp is None:
-            breakpoint()
-
         return self.feed_resp, self.feed, favicon
 
 

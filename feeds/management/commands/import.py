@@ -16,15 +16,12 @@ user = User.objects.first()
 
 
 def ingest(resp, parsed, favicon, category_name):
-    try:
-        feed = crawler.ingest_feed(resp, parsed, favicon)
-        if category_name:
-            category, _ = Category.objects.get_or_create(name=category_name, user=user)
-        else:
-            category = None
-        Subscription.objects.create(feed=feed, user=user, category=category)
-    except Exception:
-        breakpoint()
+    feed = crawler.ingest_feed(resp, parsed, favicon)
+    if category_name:
+        category, _ = Category.objects.get_or_create(name=category_name, user=user)
+    else:
+        category = None
+    Subscription.objects.create(feed=feed, user=user, category=category)
 
 
 sync_ingest = sync_to_async(ingest)

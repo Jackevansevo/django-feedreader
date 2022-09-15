@@ -88,7 +88,7 @@ async def main(filter: Optional[str], workers):
                     try:
                         feed = await Feed.objects.aget(url=lookup_url)
                     except Feed.DoesNotExist:
-                        breakpoint()
+                        return
 
                     update_fields = ["last_checked"]
                     feed.last_checked = timezone.now()
