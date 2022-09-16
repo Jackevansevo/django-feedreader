@@ -236,3 +236,5 @@ CELERY_BEAT_SCHEDULE = {
         "schedule": crontab(minute=0, hour="*/1"),
     },
 }
+
+CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
