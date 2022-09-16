@@ -9,6 +9,7 @@ from django.core.management.base import BaseCommand
 from django.utils import timezone
 from django.utils.http import http_date
 from urllib.parse import urljoin
+from django.db.models import F
 from rich.progress import Progress
 
 import feeds.parser as parser
@@ -26,21 +27,30 @@ async def fetch_feed(client, url, etag=None, last_modified=None):
     return await client.get(url, headers=headers)
 
 
-async def main(filter: Optional[str], workers):
+async def main(workers, force: bool = False, filter: Optional[str] = None):
 
     feed_query = Feed.objects.values("url", "etag", "last_modified")
+
     if filter is not None:
         feed_query = feed_query.filter(url__icontains=filter)
 
+    if not force:
+        # Respect the default feed TTL
+        feed_query = feed_query.filter(last_checked__lt=timezone.now() - F("ttl"))
+
+    if await sync_to_async(feed_query.count)() == 0:
+        print("nothing to update")
+        return
+
+    queue = asyncio.Queue()
+
+    results = asyncio.Queue()
+
+    async for feed in feed_query:
+        queue.put_nowait(feed)
+
     async with httpx.AsyncClient(follow_redirects=True, timeout=60) as client:
         with Progress() as progress:
-
-            queue = asyncio.Queue()
-
-            results = asyncio.Queue()
-
-            async for feed in feed_query:
-                queue.put_nowait(feed)
 
             fetch_task = progress.add_task("Fetching...", total=queue.qsize())
 
@@ -147,6 +157,13 @@ class Command(BaseCommand):
             type=str,
         )
         parser.add_argument("--workers", nargs="?", type=int, default=100)
+        parser.add_argument("--force", action="store_true")
 
     def handle(self, *args, **options):
-        asyncio.run(main(options["filter"], options["workers"]))
+        asyncio.run(
+            main(
+                options["workers"],
+                options["force"],
+                options["filter"],
+            )
+        )

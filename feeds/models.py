@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import uuid
 
+from datetime import timedelta
+
 from django.conf import settings
 from django.core.validators import MinLengthValidator
 from django.db import models
@@ -46,7 +48,7 @@ class Feed(models.Model):
     last_checked = models.DateTimeField(auto_now=True)
     created_at = models.DateTimeField(auto_now_add=True)
     favicon = models.ImageField(blank=True, null=True)
-    ttl = models.IntegerField(default=3600)
+    ttl = models.DurationField(default=timedelta(hours=1))
 
     def get_absolute_url(self):
         return reverse("feeds:feed-detail", kwargs={"feed_slug": self.slug})
