@@ -1,15 +1,15 @@
 import asyncio
 import io
 from typing import Optional
+from urllib.parse import urljoin
 
 import dateutil.parser
 import httpx
 from asgiref.sync import sync_to_async
 from django.core.management.base import BaseCommand
+from django.db.models import F
 from django.utils import timezone
 from django.utils.http import http_date
-from urllib.parse import urljoin
-from django.db.models import F
 from rich.progress import Progress
 
 import feeds.parser as parser

@@ -12,9 +12,8 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 import os
 from pathlib import Path
 
-from celery.schedules import crontab
-
 import environ
+from celery.schedules import crontab
 from django.urls import reverse_lazy
 
 env = environ.Env(
