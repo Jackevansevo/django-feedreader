@@ -60,14 +60,17 @@ async def main(workers, force: bool = False, filter: Optional[str] = None):
                     feed = await queue.get()
 
                     # Sleep for the "sleep_for" seconds.
-                    resp = await fetch_feed(client, **feed)
+                    try:
+                        resp = await fetch_feed(client, **feed)
+                    except httpx.ConnectError as e:
+                        print(f"failed to fetch {feed}: {err}")
+                    else:
+                        results.put_nowait(resp)
+                    finally:
+                        # Notify the queue that the "work item" has been processed.
+                        queue.task_done()
 
-                    # Notify the queue that the "work item" has been processed.
-                    queue.task_done()
-
-                    results.put_nowait(resp)
-
-                    progress.advance(fetch_task)
+                        progress.advance(fetch_task)
 
             # Create three worker tasks to process the queue concurrently.
             tasks = []
