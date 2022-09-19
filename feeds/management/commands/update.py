@@ -62,7 +62,7 @@ async def main(workers, force: bool = False, filter: Optional[str] = None):
                     # Sleep for the "sleep_for" seconds.
                     try:
                         resp = await fetch_feed(client, **feed)
-                    except httpx.ConnectError as e:
+                    except httpx.ConnectError as err:
                         print(f"failed to fetch {feed}: {err}")
                     else:
                         results.put_nowait(resp)
