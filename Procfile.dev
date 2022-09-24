@@ -1,3 +1,3 @@
 app: ./manage.py runserver
-celery: ./manage.py celery
-redis: trap 'docker stop feedreader-redis' EXIT > /dev/null; docker run --rm --name feedreader-redis -p 6379:6379 redis
+beat: celery -A feedreader beat -S django -l INFO
+celery: watchfiles 'celery -A feedreader worker -l INFO -E' --ignore-paths db.sqlite
