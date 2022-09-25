@@ -1,20 +1,41 @@
 {% extends 'feeds/base.html' %}
 {% load humanize %}
 {% block title %} - {{ feed.title }}{% endblock %}
-{% block style %}
-<style>
-h1, h2, h3, h4, h5, h6 {
-  font-family: "Playfair Display", Georgia, "Times New Roman", serif/*rtl:Amiri, Georgia, "Times New Roman", serif*/;
-}
-
-.container {
-  max-width: 42rem;
-}
-
-</style>
-{% endblock %}
 {% block content %}
-<div class="container mx-auto">
+<div class="container-fluid">
+  <div class="d-flex align-items-baseline">
+  <div class="dropdown" style="padding-right:1em">
+    <button
+      class="btn btn-light dropdown-toggle btn-sm"
+      type="button"
+      id="dropdownMenuButton1"
+      data-bs-toggle="dropdown"
+      aria-expanded="false"
+    >
+      <span class="icon">
+        <i class="fas fa-eye"></i>
+      </span>
+      &nbsp;Layout
+    </button>
+    <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+      <li>
+        <a class="dropdown-item" href="?view=card">
+          <span class="icon">
+            <i class="fas fa-grip"></i>
+          </span>
+          &nbsp;Card
+        </a>
+      </li>
+      <li>
+        <a class="dropdown-item" href="?view=list">
+          <span class="icon">
+            <i class="fas fa-list"></i>
+          </span>
+          &nbsp;Table
+        </a>
+      </li>
+    </ul>
+  </div>
   <nav aria-label="breadcrumb">
     <ol class="breadcrumb">
       <li class="breadcrumb-item"><a href="{% url 'feeds:index' %}">Home</a></li>
@@ -22,6 +43,7 @@ h1, h2, h3, h4, h5, h6 {
       <li class="breadcrumb-item active">{{ feed.title }}</li>
     </ol>
   </nav>
+  </div>
 
   <div class="row">
 
@@ -77,8 +99,94 @@ h1, h2, h3, h4, h5, h6 {
       {% endif %}
     </div>
   </div>
-  <br>
+  </br>
 
+  {% if request.GET.view|default:"grid" == "list" %}
+  <table
+    class="table table-hover table-responsive table-striped table-hoverable text-decoration-none"
+  >
+    <tr>
+      <th>
+        <span class="icon-text">
+          <span class="icon">
+            <i class="fas fa-list"></i>
+          </span>
+          <span>&nbsp;Title</span>
+        </span>
+      </th>
+      <th class="text-nowrap d-none d-lg-table-cell">
+        <span class="icon-text">
+          <span class="icon">
+            <i class="fas fa-calendar"></i>
+          </span>
+          <span>&nbsp;Published</span>
+        </span>
+      </th>
+    </tr>
+    {% for entry in feed.entries.all %}
+    <tr>
+      <td>
+        <a
+          class="text-decoration-none link-dark"
+          href="{{ entry.get_absolute_url }}"
+          >{{ entry.title }}</a
+        >
+      </td>
+      <td class="d-none d-lg-table-cell col">{{ entry.published | date }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% elif request.GET.view|default:"card" == "card" %}
+  <div
+    style="
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      grid-auto-rows: 1fr;
+      gap: 1rem;
+    "
+    class="pb-4"
+  >
+    {% for entry in feed.entries.all %}
+    <div
+      class="card"
+      style="box-sizing: border-box;"
+    >
+      {% if entry.thumbnail %}
+      <a href="{{ entry.get_absolute_url }}">
+        <img
+          class="card-img-top"
+          style="max-height: 12rem; object-fit: cover;"
+          src="{{ entry.thumbnail }}"
+          alt="Card image cap"
+          loading="lazy"
+        />
+      </a>
+      {% endif %}
+      <div
+        class="card-body d-flex flex-column align-items-start"
+      >
+        <h5 class="card-title">
+          <a
+            class="link-dark text-decoration-none"
+            href="{{ entry.get_absolute_url }}"
+            >{{ entry.title }}</a
+          >
+        </h5>
+        {% if not entry.thumbnail %}
+        {% if entry.summary %}
+        <p class="card-text">{{ entry.summary|striptags|truncatewords:"35" }}</p>
+        {% elif entry.content %}
+        <p class="card-text">{{ entry.content|striptags|truncatewords:"35" }}</p>
+        {% endif %} {% endif %}
+        <small class="text-muted mt-auto">{{ entry.published|timesince }} ago</small>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  {% endif %}
+
+  {% comment %}
   {% for entry in feed.entries.all %}
   <div class="row g-0 border rounded overflow-hidden flex-md-row mb-4 shadow-sm h-md-250 position-relative">
     <div class="col p-4 d-flex flex-column position-static">
@@ -98,6 +206,7 @@ h1, h2, h3, h4, h5, h6 {
     {% endif %}
   </div>
   {% endfor %}
+  {% endcomment %}
 
 </div>
 
