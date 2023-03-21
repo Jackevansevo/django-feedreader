@@ -1,3 +1,4 @@
+![Screenshot](Screenshot_20230321_092330.png)
 
 # Setup
 
@@ -22,12 +23,12 @@ Create a superuser/root/administrator account:
 
 # Running
 
-        
+
 Start celery worker / beat
 
     celery -A feedreader worker --beat --scheduler django --loglevel=info
-        
-                
+
+
 Start a redis instance in the background:
 
     docker run --name redis -p 6379:6379 -d redis
