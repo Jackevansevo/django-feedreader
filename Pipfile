@@ -16,14 +16,13 @@ pre-commit = "*"
 django-stubs = {extras = ["compatible-mypy"], version = "*"}
 litecli = "*"
 django-browser-reload = "*"
-django-watchfiles = "*"
 
 [requires]
-python_version = "3.10"
+python_version = "3.11"
 
 [packages]
 gunicorn = "*"
-django = "==4.1.1"
+django = "*"
 unidecode = "*"
 listparser = "*"
 django-environ = "*"
@@ -33,7 +32,6 @@ httpx = "*"
 django-allauth = "*"
 pillow = "*"
 lxml = "*"
-cchardet = "*"
 uvicorn = "*"
 python-dateutil = "*"
 boto3 = "*"
